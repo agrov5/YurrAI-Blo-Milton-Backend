@@ -1,4 +1,6 @@
-import { log } from "console";
+// BASIC AUTH MIDDLEWARE
+// This middleware checks for Basic Authentication credentials in the request headers.
+
 import { Request, Response, NextFunction } from "express";
 require("dotenv").config();
 

@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-import { DatabaseReceptionistName } from "../models/Types";
 
 require("dotenv").config();
 
@@ -31,3 +30,4 @@ export const clearDB = async () => {
     console.error("Error clearing MongoDB database:", error);
   }
 };
+

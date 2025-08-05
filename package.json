@@ -1,22 +1,20 @@
 {
-  "name": "gawc-backend",
+  "name": "blo-milton-backend",
   "version": "1.0.0",
-  "description": "",
-  "homepage": "https://github.com/agrov5/Glow-Aesthetics-Wellness-Clinic-Backend#readme",
-  "bugs": {
-    "url": "https://github.com/agrov5/Glow-Aesthetics-Wellness-Clinic-Backend/issues"
-  },
+  "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/agrov5/Glow-Aesthetics-Wellness-Clinic-Backend.git"
+    "url": "git+https://github.com/agrov5/YurrAI-Blo-Milton-Backend.git"
   },
-  "license": "ISC",
   "author": "",
-  "type": "commonjs",
-  "main": "index.js",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/agrov5/YurrAI-Blo-Milton-Backend/issues"
+  },
+  "homepage": "https://github.com/agrov5/YurrAI-Blo-Milton-Backend#readme",
+  "description": "",
   "scripts": {
-    "build-render": "npm i && tsc",
-    "build-azure": "tsc",
+    "build": "npm i && tsc",
     "start": "node dist/server.js",
     "dev": "tsc && node dist/server.js"
   },
@@ -36,6 +34,7 @@
   "dependencies": {
     "bcrypt": "^6.0.0",
     "cron": "^4.3.1",
-    "mongoose": "^8.14.3"
+    "mongoose": "^8.14.3",
+    "requests": "^0.3.0"
   }
 }

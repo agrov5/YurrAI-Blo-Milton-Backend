@@ -1,9 +1,17 @@
 import {CronJob} from 'cron'
 import https from "https";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const job = new CronJob("*/14 * * * *", function () {
+  const url = process.env.PRODUCTION_URL;
+  if (!url) {
+    console.error("PRODUCTION_URL environment variable is not defined.");
+    return;
+  }
   https
-    .get("https://api.yurrai.com/gawc", (res) => {
+    .get(url, (res) => { // TODO: Change the URL for Blo Milton Endpoint
       if (res.statusCode === 200) console.log("GET request sent successfully");
       else console.log("GET request failed", res.statusCode);
     })
