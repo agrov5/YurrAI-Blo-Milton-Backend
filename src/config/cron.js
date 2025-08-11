@@ -1,8 +1,6 @@
 import {CronJob} from 'cron'
 import https from "https";
-import dotenv from "dotenv";
 
-dotenv.config();
 
 const job = new CronJob("*/14 * * * *", function () {
   const url = process.env.PRODUCTION_URL;

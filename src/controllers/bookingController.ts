@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { Request, Response } from "express";
-import { Booking, BookingModel } from "../models/GAWC-Booking";
+import { Booking, BookingModel } from "../models/Booking";
 import { id } from "../models/Types";
 
 export const getAllBookings = async (

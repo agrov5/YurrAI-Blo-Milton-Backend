@@ -1,12 +1,11 @@
 const mongoose = require("mongoose");
 
-require("dotenv").config();
+const url = process.env.DATABASE_URL || "mongodb://localhost:27017/test";
 
 export const connectDB = async () => {
-
   try {
-    await mongoose.connect(process.env.DATABASE_URL, {});
-    console.log("Connected to MongoDB");
+    await mongoose.connect(url, {});
+    console.log(`Connected to MongoDB at (${url})`);
   } catch (error) {
     console.error("MongoDB connection error:", error);
     process.exit(1);
@@ -30,4 +29,3 @@ export const clearDB = async () => {
     console.error("Error clearing MongoDB database:", error);
   }
 };
-
