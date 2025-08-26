@@ -1,3 +1,121 @@
+import mongoose, { Schema, Document } from "mongoose";
+
+export interface ITreatment extends Document {
+  AllowCustomersToBookOnline?: boolean;
+  BillableItemID?: number;
+  Category?: any;
+  SubCategory?: any;
+  DepositOptions?: any;
+  Description?: string | null;
+  DisplayName?: string | null;
+  ID?: number;
+  IsActive?: boolean;
+  IsDeleted?: boolean;
+  Name?: string;
+  Price?: any;
+  TotalDuration?: number;
+  TreatmentDuration?: number;
+  ImageURL?: string | null;
+  DurationType?: any;
+  FlexiblePriceIncrementType?: any;
+  IsBoundingService?: boolean;
+  IsFlexiblePrice?: boolean;
+  IsSharedService?: boolean;
+  MaxTreatmentDuration?: number | null;
+  MinTreatmentDuration?: number | null;
+  SharedRoomGuestCount?: number | null;
+  ColorCode?: string | null;
+  DoesNotRequireStaff?: boolean;
+  IsForCouples?: boolean;
+  AvailableInAdvance?: number;
+  DateCreated?: string;
+  DateLastModified?: string;
+  AvailableInAdvanceDateUnitType?: any;
+  CustomerRecordType?: any;
+  IsClass?: boolean;
+  CustomerTypeID?: number;
+  CustomerTypeName?: string;
+  RequiresTwoTechnicians?: boolean;
+  DateCreatedOffset?: string;
+  DateLastModifiedOffset?: string;
+  OnlineMenuType?: any;
+  IsVerifiedVisibleInOnlineBooking?: boolean;
+  EmployeeIDs?: number[];
+  RoomIDs?: number[];
+  EmployeeRecoveryDuration?: number;
+  RoomRecoveryDuration?: number;
+  RequiresProcessingTime?: boolean;
+  ProcessingTimeDuration?: number;
+  ProcessingTimeAppliedToEmployee?: boolean;
+  ProcessingTimeAppliedToRoom?: boolean;
+  FinishTimeDuration?: number;
+  FinishTimeAppliedToEmployee?: boolean;
+  FinishTimeAppliedToRoom?: boolean;
+  EmployeeTreatments?: any[] | null;
+  BrandTreatmentID?: number | null;
+}
+
+const TreatmentSchema = new Schema({
+  //   AllowCustomersToBookOnline: { type: Boolean, required: false },
+  //   BillableItemID: { type: Number, required: false },
+  ID: { type: Number, required: false },
+  TreatmentName: { type: String, required: false },
+  Price: { type: Object, required: false },
+  Category: { type: Object, required: false },
+  SubCategory: { type: Object, required: false },
+  //   DepositOptions: { type: Object, required: false },
+  //   Description: { type: String, required: false },
+  //   DisplayName: { type: String, required: false },
+
+  //   IsActive: { type: Boolean, required: false },
+  //   IsDeleted: { type: Boolean, required: false },
+
+  //   TotalDuration: { type: Number, required: false },
+  //   TreatmentDuration: { type: Number, required: false },
+  //   ImageURL: { type: String, required: false },
+  //   DurationType: { type: Object, required: false },
+  //   FlexiblePriceIncrementType: { type: Object, required: false },
+  //   IsBoundingService: { type: Boolean, required: false },
+  //   IsFlexiblePrice: { type: Boolean, required: false },
+  //   IsSharedService: { type: Boolean, required: false },
+  //   MaxTreatmentDuration: { type: Number, required: false },
+  //   MinTreatmentDuration: { type: Number, required: false },
+  //   SharedRoomGuestCount: { type: Number, required: false },
+  //   ColorCode: { type: String, required: false },
+  //   DoesNotRequireStaff: { type: Boolean, required: false },
+  //   IsForCouples: { type: Boolean, required: false },
+  //   AvailableInAdvance: { type: Number, required: false },
+  //   DateCreated: { type: String, required: false },
+  //   DateLastModified: { type: String, required: false },
+  //   AvailableInAdvanceDateUnitType: { type: Object, required: false },
+  //   CustomerRecordType: { type: Object, required: false },
+  //   IsClass: { type: Boolean, required: false },
+  //   CustomerTypeID: { type: Number, required: false },
+  //   CustomerTypeName: { type: String, required: false },
+  //   RequiresTwoTechnicians: { type: Boolean, required: false },
+  //   DateCreatedOffset: { type: String, required: false },
+  //   DateLastModifiedOffset: { type: String, required: false },
+  //   OnlineMenuType: { type: Object, required: false },
+  //   IsVerifiedVisibleInOnlineBooking: { type: Boolean, required: false },
+  EmployeeIDs: { type: [Number], required: false },
+  RoomIDs: { type: [Number], required: false },
+  //   EmployeeRecoveryDuration: { type: Number, required: false },
+  //   RoomRecoveryDuration: { type: Number, required: false },
+  //   RequiresProcessingTime: { type: Boolean, required: false },
+  //   ProcessingTimeDuration: { type: Number, required: false },
+  //   ProcessingTimeAppliedToEmployee: { type: Boolean, required: false },
+  //   ProcessingTimeAppliedToRoom: { type: Boolean, required: false },
+  //   FinishTimeDuration: { type: Number, required: false },
+  //   FinishTimeAppliedToEmployee: { type: Boolean, required: false },
+  //   FinishTimeAppliedToRoom: { type: Boolean, required: false },
+  //   EmployeeTreatments: { type: [Object], required: false, default: undefined },
+  //   BrandTreatmentID: { type: Number, required: false },
+});
+
+const TreatmentModel = mongoose.model<ITreatment>("Treatment", TreatmentSchema);
+export { TreatmentModel };
+
+/** Root Response Interface */
 export interface FindTreatmentsResponse {
   ArgumentErrors?: ArgumentErrors[];
   ErrorCode?: number;
@@ -7,12 +125,57 @@ export interface FindTreatmentsResponse {
   TotalResultsCount?: number;
 }
 
-interface ArgumentErrors {
+/** Argument Errors */
+export interface ArgumentErrors {
   ArgumentName?: string;
   ErrorMessage?: string;
 }
 
+/** Treatment */
 export interface Treatment {
+  AllowCustomersToBookOnline?: boolean;
+  BillableItemID?: number;
+  Category?: LookupOption;
+  SubCategory?: LookupOption;
+  DepositOptions?: DepositOptions | null;
+  Description?: string | null;
+  DisplayName?: string | null;
+  ID?: number;
+  IsActive?: boolean;
+  IsDeleted?: boolean;
+  Name?: string;
+  Price?: Money;
+  TotalDuration?: number;
+  TreatmentDuration?: number;
+  ImageURL?: string | null;
+  DurationType?: LookupOption;
+  FlexiblePriceIncrementType?: LookupOption;
+  IsBoundingService?: boolean;
+  IsFlexiblePrice?: boolean;
+  IsSharedService?: boolean;
+  MaxTreatmentDuration?: number | null;
+  MinTreatmentDuration?: number | null;
+  SharedRoomGuestCount?: number | null;
+  ColorCode?: string | null;
+  DoesNotRequireStaff?: boolean;
+  IsForCouples?: boolean;
+  AvailableInAdvance?: number;
+  DateCreated?: string; // /Date(...)/
+  DateLastModified?: string; // /Date(...)/
+  AvailableInAdvanceDateUnitType?: LookupOption;
+  CustomerRecordType?: LookupOption;
+  IsClass?: boolean;
+  CustomerTypeID?: number;
+  CustomerTypeName?: string;
+  RequiresTwoTechnicians?: boolean;
+  DateCreatedOffset?: string;
+  DateLastModifiedOffset?: string;
+  OnlineMenuType?: LookupOption;
+  IsVerifiedVisibleInOnlineBooking?: boolean;
+
+  // Optional but included in some payloads:
+  EmployeeIDs?: number[];
+  RoomIDs?: number[];
   EmployeeRecoveryDuration?: number;
   RoomRecoveryDuration?: number;
   RequiresProcessingTime?: boolean;
@@ -22,53 +185,11 @@ export interface Treatment {
   FinishTimeDuration?: number;
   FinishTimeAppliedToEmployee?: boolean;
   FinishTimeAppliedToRoom?: boolean;
-  RoomIDs?: number[];
-  EmployeeIDs?: number[];
-  EmployeeTreatments?: EmployeeTreatment[];
-  BrandTreatmentID?: number;
-  ID?: number;
-  BillableItemID?: number;
-  IsActive?: boolean;
-  IsDeleted?: boolean;
-  Category?: LookupOption;
-  SubCategory?: LookupOption;
-  Name?: string;
-  DisplayName?: string;
-  Description?: string;
-  TotalDuration?: number;
-  TreatmentDuration?: number;
-  AllowCustomersToBookOnline?: boolean;
-  ImageURL?: string;
-  Price?: Money;
-  DurationType?: LookupOption;
-  MinTreatmentDuration?: number; // decimal
-  MaxTreatmentDuration?: number; // decimal
-  IsSharedService?: boolean;
-  SharedRoomGuestCount?: number;
-  IsBoundingService?: boolean;
-  IsFlexiblePrice?: boolean;
-  IsForCouples?: boolean;
-  DoesNotRequireStaff?: boolean;
-  AvailableInAdvance?: number;
-  AvailableInAdvanceDateUnitType?: LookupOption;
-  FlexiblePriceIncrementType?: LookupOption;
-  ColorCode?: string;
-  DateCreated?: string; // ISO datetime
-  DateLastModified?: string; // ISO datetime
-  CustomerRecordType?: LookupOption;
-  IsClass?: boolean;
-  CustomerTypeID?: number;
-  CustomerTypeName?: string;
-  RequiresTwoTechnicians?: boolean;
-  DateCreatedOffset?: string;
-  DateLastModifiedOffset?: string;
-  IsVerifiedVisibleInOnlineBooking?: boolean;
-  DepositOptions?: DepositOptions;
-  OnlineMenuType?: LookupOption;
+  EmployeeTreatments?: EmployeeTreatment[] | null;
+  BrandTreatmentID?: number | null;
 }
 
-/** ---- Referenced Types ---- */
-
+/** EmployeeTreatment */
 export interface EmployeeTreatment {
   EmployeeID?: number;
   TreatmentDuration?: number;
@@ -77,16 +198,19 @@ export interface EmployeeTreatment {
   ProcessingTimeDuration?: number;
 }
 
+/** LookupOption (used across many properties) */
 export interface LookupOption {
-  ID?: number;
-  Name?: string;
+  ID?: number | null;
+  Name?: string | null;
 }
 
+/** Money (for Price) */
 export interface Money {
   Amount?: number;
   CurrencyCode?: string;
 }
 
+/** DepositOptions */
 export interface DepositOptions {
   HasAmountType?: boolean;
   AmountType?: string;
@@ -94,165 +218,3 @@ export interface DepositOptions {
   Percentage?: number;
   Enabled?: boolean;
 }
-
-// Schema
-
-import mongoose, { Schema, Document } from "mongoose";
-
-interface ITreatment extends Document {
-  EmployeeRecoveryDuration?: number;
-  RoomRecoveryDuration?: number;
-  RequiresProcessingTime?: boolean;
-  ProcessingTimeDuration?: number;
-  ProcessingTimeAppliedToEmployee?: boolean;
-  ProcessingTimeAppliedToRoom?: boolean;
-  FinishTimeDuration?: number;
-  FinishTimeAppliedToEmployee?: boolean;
-  FinishTimeAppliedToRoom?: boolean;
-  RoomIDs?: number[];
-  EmployeeIDs?: number[];
-  EmployeeTreatments?: any[];
-  BrandTreatmentID?: number;
-  ID?: number;
-  BillableItemID?: number;
-  IsActive?: boolean;
-  IsDeleted?: boolean;
-  Category?: any;
-  SubCategory?: any;
-  Name?: string;
-  DisplayName?: string;
-  Description?: string;
-  TotalDuration?: number;
-  TreatmentDuration?: number;
-  AllowCustomersToBookOnline?: boolean;
-  ImageURL?: string;
-  Price?: any;
-  DurationType?: any;
-  MinTreatmentDuration?: number;
-  MaxTreatmentDuration?: number;
-  IsSharedService?: boolean;
-  SharedRoomGuestCount?: number;
-  IsBoundingService?: boolean;
-  IsFlexiblePrice?: boolean;
-  IsForCouples?: boolean;
-  DoesNotRequireStaff?: boolean;
-  AvailableInAdvance?: number;
-  AvailableInAdvanceDateUnitType?: any;
-  FlexiblePriceIncrementType?: any;
-  ColorCode?: string;
-  DateCreated?: string;
-  DateLastModified?: string;
-  CustomerRecordType?: any;
-  IsClass?: boolean;
-  CustomerTypeID?: number;
-  CustomerTypeName?: string;
-  RequiresTwoTechnicians?: boolean;
-  DateCreatedOffset?: string;
-  DateLastModifiedOffset?: string;
-  IsVerifiedVisibleInOnlineBooking?: boolean;
-  DepositOptions?: any;
-  OnlineMenuType?: any;
-}
-
-const TreatmentSchema: Schema = new Schema(
-  {
-    EmployeeRecoveryDuration: Number,
-    RoomRecoveryDuration: Number,
-    RequiresProcessingTime: Boolean,
-    ProcessingTimeDuration: Number,
-    ProcessingTimeAppliedToEmployee: Boolean,
-    ProcessingTimeAppliedToRoom: Boolean,
-    FinishTimeDuration: Number,
-    FinishTimeAppliedToEmployee: Boolean,
-    FinishTimeAppliedToRoom: Boolean,
-    RoomIDs: [Number],
-    EmployeeIDs: [Number],
-    EmployeeTreatments: {
-      type: [
-        {
-          EmployeeID: Number,
-          TreatmentDuration: Number,
-          RequestedPrice: Number,
-          FinishTimeDuration: Number,
-          ProcessingTimeDuration: Number,
-        },
-      ],
-      required: false,
-      default: undefined,
-    },
-    BrandTreatmentID: Number,
-    ID: Number,
-    BillableItemID: Number,
-    IsActive: Boolean,
-    IsDeleted: Boolean,
-    Category: {
-      ID: Number,
-      Name: String,
-    },
-    SubCategory: {
-      ID: Number,
-      Name: String,
-    },
-    Name: String,
-    DisplayName: String,
-    Description: String,
-    TotalDuration: Number,
-    TreatmentDuration: Number,
-    AllowCustomersToBookOnline: Boolean,
-    ImageURL: String,
-    Price: {
-      Amount: Number,
-      CurrencyCode: String,
-    },
-    DurationType: {
-      ID: Number,
-      Name: String,
-    },
-    MinTreatmentDuration: Number,
-    MaxTreatmentDuration: Number,
-    IsSharedService: Boolean,
-    SharedRoomGuestCount: Number,
-    IsBoundingService: Boolean,
-    IsFlexiblePrice: Boolean,
-    IsForCouples: Boolean,
-    DoesNotRequireStaff: Boolean,
-    AvailableInAdvance: Number,
-    AvailableInAdvanceDateUnitType: {
-      ID: Number,
-      Name: String,
-    },
-    FlexiblePriceIncrementType: {
-      ID: Number,
-      Name: String,
-    },
-    ColorCode: String,
-    DateCreated: String,
-    DateLastModified: String,
-    CustomerRecordType: {
-      ID: Number,
-      Name: String,
-    },
-    IsClass: Boolean,
-    CustomerTypeID: Number,
-    CustomerTypeName: String,
-    RequiresTwoTechnicians: Boolean,
-    DateCreatedOffset: String,
-    DateLastModifiedOffset: String,
-    IsVerifiedVisibleInOnlineBooking: Boolean,
-    DepositOptions: {
-      HasAmountType: Boolean,
-      AmountType: String,
-      Amount: Number,
-      Percentage: Number,
-      Enabled: Boolean,
-    },
-    OnlineMenuType: {
-      ID: Number,
-      Name: String,
-    },
-  },
-  { strict: true }
-);
-
-const TreatmentModel = mongoose.model<ITreatment>("Treatment", TreatmentSchema);
-export { TreatmentModel, TreatmentSchema, ITreatment };
