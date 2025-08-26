@@ -20,19 +20,26 @@ dotenv.config({
 console.log(`Running in ${env} mode`);
 
 // Import modules that depend on environment variables AFTER dotenv.config()
-import bookingRoutes from "./routes/bookingRoutes";
 import { authMiddleware } from "./auth/auth";
-import job from "./config/cron";
 import { loggerMiddleware } from "./middlewares/loggerMiddleware";
+
+import job from "./config/cron";
+import axios from "axios";
+
+import { route } from "./routes/bookingRoutes";
+
+axios.defaults.baseURL = process.env.BASE_URL || "http://localhost:5000";
 
 job.start();
 
 app.use(express.json());
 
 // Routes
-
-app.use("/gawc", authMiddleware);
+app.use(authMiddleware);
 app.use(loggerMiddleware);
-app.use("/gawc/bookings/", bookingRoutes);
+
+app.use("/blomilton", route);
+
+app.use("/blomilton/populateLocal", require("./util/populateLocal").default);
 
 export default app;
