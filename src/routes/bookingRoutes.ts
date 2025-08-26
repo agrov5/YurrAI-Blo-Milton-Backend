@@ -1,14 +1,9 @@
 import { Router } from "express";
-import {
-  createBooking,
-  getAllBookings,
-  cancelBooking,
-} from "../controllers/bookingController";
 
 const router = Router();
 
-router.post("/", createBooking);
-router.get("/", getAllBookings);
-router.delete("/", cancelBooking);
+export const route = router.get("/", (req, res) => {
+  res.send("Hello World!");
+});
 
 export default router;
