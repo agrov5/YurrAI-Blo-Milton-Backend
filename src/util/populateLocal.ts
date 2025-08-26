@@ -1,9 +1,19 @@
 import express, { Request, Response, NextFunction } from "express";
+import { findEmployees, findTreatments, findRooms } from "./booker_post_util";
+
 
 // Example function to run and populate local DB
 async function runPopulateFunctions() {
-  // Replace with your actual logic
-  // e.g., fetch data, transform, and insert into DB
+  try {
+    const employees = await findEmployees();
+    const treatments = await findTreatments();
+    const rooms = await findRooms();
+  } catch (error) {
+    console.log("Error populating local DB:", error);
+  }
+
+
+
   return { success: true, message: "Local DB populated." };
 }
 
