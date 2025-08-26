@@ -10,10 +10,10 @@ const job = new CronJob("*/14 * * * *", function () {
   }
   https
     .get(url, (res) => { // TODO: Change the URL for Blo Milton Endpoint
-      if (res.statusCode === 200) console.log("GET request sent successfully");
-      else console.log("GET request failed", res.statusCode);
+      if (res.statusCode === 200) console.log("GET request sent successfully (CRON.JS)");
+      else console.log("GET request failed (CRON.JS)", res.statusCode);
     })
-    .on("error", (e) => console.error("Error while sending request", e));
+    .on("error", (e) => console.error("Error while sending request (CRON.JS)", e));
 });
 
 export default job;

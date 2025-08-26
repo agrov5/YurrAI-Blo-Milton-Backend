@@ -1,5 +1,5 @@
 import express, { Request, Response, NextFunction } from "express";
-import { findEmployees, findTreatments, findRooms } from "./booker_post_util";
+import { findEmployees, findTreatments, findRooms } from "./booker_util";
 import { FindTreatmentsResponse, TreatmentModel } from "../models/Treatment";
 import { FindRoomsResponse, RoomModel } from "../models/Room";
 import { FindEmployeesResponse, EmployeeModel } from "../models/Employee";

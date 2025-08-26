@@ -35,11 +35,9 @@ job.start();
 app.use(express.json());
 
 // Routes
-app.use(authMiddleware);
 app.use(loggerMiddleware);
 
-app.use("/blomilton", route);
-
+app.use("/blomilton", authMiddleware, route);
 app.use("/blomilton/populateLocal", require("./util/populateLocal").default);
 
 export default app;
