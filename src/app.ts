@@ -26,7 +26,7 @@ import job from "./config/cron";
 import axios from "axios";
 import router from "./routes/getRoutes";
 
-axios.defaults.baseURL = process.env.BASE_URL || "http://localhost:5000";
+axios.defaults.baseURL = process.env.AXIOS_BASE_URL || "http://localhost:5000";
 
 job.start();
 
@@ -36,7 +36,7 @@ app.use(express.json());
 app.use(loggerMiddleware);
 
 // API routes with authentication
-// app.use("/blomilton", authMiddleware);
+app.use("/blomilton", authMiddleware);
 
 // Root router for /blomilton
 app.use("/blomilton", router);
