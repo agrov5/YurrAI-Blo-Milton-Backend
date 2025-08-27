@@ -1,5 +1,9 @@
 import { Router } from "express";
-import { getTreatments } from "../controllers/getController";
+import {
+  getTreatments,
+  getEmployees,
+  getRooms,
+} from "../controllers/getController";
 import {
   twilioController,
   twilioControllerFromParams,
@@ -14,6 +18,26 @@ const router = Router();
  */
 
 router.get("/treatments", getTreatments);
+
+/**
+ * @route   GET /employees
+ * @desc    Get all employees
+ * @access  Private (requires auth)
+ */
+router.get("/employees", getEmployees);
+
+/**
+ * @route   GET /rooms
+ * @desc    Get all rooms
+ * @access  Private (requires auth)
+ */
+router.get("/rooms", getRooms);
+
+/**
+ * @route   POST /sms
+ * @desc    Send SMS message via Twilio (body parameters)
+ * @access  Private (requires auth)
+ */
 
 /**
  * @route   POST /sms
@@ -64,13 +88,6 @@ router.get("/sms/:to/:body", twilioControllerFromParams);
  * @access  Private (requires auth)
  */
 // router.get("/employees/:id", getEmployeeById);
-
-/**
- * @route   GET /rooms
- * @desc    Get all rooms
- * @access  Private (requires auth)
- */
-// router.get("/rooms", getRooms);
 
 /**
  * @route   GET /rooms/:id
