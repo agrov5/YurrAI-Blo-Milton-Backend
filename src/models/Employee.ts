@@ -25,30 +25,33 @@ export interface IEmployee extends Document {
   DateCreatedOffset: string;
 }
 
-const EmployeeSchema = new Schema({
-  ID: { type: Number, required: true },
-  DisplayName: { type: String, required: true },
-  FirstName: { type: String, required: true },
-  LastName: { type: String, required: false },
-  Gender: { type: String, required: true },
-  //   LocationID: { type: Number, required: true },
-  //   Photo: { type: String, required: false },
-  //   ProfileDescription: { type: String, required: true },
-  //   Rank: { type: Number, required: false },
-  //   Type: { type: Number, required: true },
-  //   Email: { type: String, required: true },
-  //   HomePhone: { type: String, required: true },
-  //   MobilePhone: { type: String, required: true },
-  //   MobilePhoneCarrierID: { type: Number, required: false },
-  //   NotifyBySMS: { type: Boolean, required: true },
-  //   PreferredPhoneType: { type: Object, required: true },
-  //   DateCreated: { type: String, required: true },
-  //   UserID: { type: Number, required: true },
-  //   LockedToRoom: { type: Number, required: false },
-  //   Address: { type: Object, required: true },
-  //   Status: { type: Object, required: true },
-  //   DateCreatedOffset: { type: String, required: true },
-});
+const EmployeeSchema = new Schema(
+  {
+    ID: { type: Number, required: true },
+    DisplayName: { type: String, required: true },
+    FirstName: { type: String, required: true },
+    LastName: { type: String, required: false },
+    Gender: { type: String, required: true },
+    //   LocationID: { type: Number, required: true },
+    //   Photo: { type: String, required: false },
+    //   ProfileDescription: { type: String, required: true },
+    //   Rank: { type: Number, required: false },
+    //   Type: { type: Number, required: true },
+    //   Email: { type: String, required: true },
+    //   HomePhone: { type: String, required: true },
+    //   MobilePhone: { type: String, required: true },
+    //   MobilePhoneCarrierID: { type: Number, required: false },
+    //   NotifyBySMS: { type: Boolean, required: true },
+    //   PreferredPhoneType: { type: Object, required: true },
+    //   DateCreated: { type: String, required: true },
+    //   UserID: { type: Number, required: true },
+    //   LockedToRoom: { type: Number, required: false },
+    //   Address: { type: Object, required: true },
+    //   Status: { type: Object, required: true },
+    //   DateCreatedOffset: { type: String, required: true },
+  },
+  { versionKey: false, strict: true }
+);
 
 const EmployeeModel = mongoose.model<IEmployee>("Employee", EmployeeSchema);
 export { EmployeeModel };

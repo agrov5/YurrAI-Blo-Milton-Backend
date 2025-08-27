@@ -37,6 +37,7 @@
     "cron": "^4.3.1",
     "cross-env": "^10.0.0",
     "mongoose": "^8.14.3",
-    "requests": "^0.3.0"
+    "requests": "^0.3.0",
+    "twilio": "^5.8.0"
   }
 }

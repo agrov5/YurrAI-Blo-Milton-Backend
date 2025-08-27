@@ -16,7 +16,6 @@ interface ArgumentErrors {
   ErrorMessage?: string;
 }
 
-
 export interface Room {
   Type?: string;
   Capacity?: number;
@@ -66,7 +65,7 @@ const RoomSchema: Schema = new Schema(
     // DateCreatedOffset: String,
     // DateLastModifiedOffset: String,
   },
-  { strict: true }
+  { strict: true, versionKey: false }
 );
 
 const RoomModel = mongoose.model<IRoom>("Room", RoomSchema);
