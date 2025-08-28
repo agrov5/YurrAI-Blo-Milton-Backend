@@ -36,12 +36,12 @@ app.use(express.json());
 app.use(loggerMiddleware);
 
 // API routes with authentication
-app.use("/blomilton", authMiddleware);
+app.use("/api", authMiddleware);
 
 // Root router for /blomilton
-app.use("/blomilton", router);
+app.use("/api", router);
 
 // Utility routes
-app.use("/blomilton/populateLocal", require("./util/populateLocal").default);
+app.use("/api/populateLocal", require("./util/populateLocal").default);
 
 export default app;
