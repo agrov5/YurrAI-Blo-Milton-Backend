@@ -143,3 +143,5 @@ dist
 
 # NPM
 package-lock.json
+
+dist/
