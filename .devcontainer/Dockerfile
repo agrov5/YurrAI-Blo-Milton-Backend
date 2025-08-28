@@ -9,6 +9,7 @@ RUN . /etc/os-release \
     && apt-get install -y mongodb-mongosh \
     && if [ "$(dpkg --print-architecture)" = "amd64" ]; then apt-get install -y mongodb-database-tools; fi \
     && apt-get clean -y && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y git-lfs && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
 # [Optional] Uncomment this section to install additional OS packages.
 # RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
