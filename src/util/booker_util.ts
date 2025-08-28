@@ -28,11 +28,12 @@ const generateAccessToken = async () => {
   }
 };
 
-const accessToken = generateAccessToken();
+// Remove global accessToken, generate per function
 const locationID = 3749;
 
 export const findEmployees = async () => {
   try {
+    const accessToken = await generateAccessToken();
     const response = await axios.post("/v4.1/merchant/employees", {
       access_token: accessToken,
       LocationID: locationID,
@@ -46,6 +47,7 @@ export const findEmployees = async () => {
 
 export const findTreatments = async () => {
   try {
+    const accessToken = await generateAccessToken();
     const response = await axios.post("v4.1/merchant/treatments", {
       access_token: accessToken,
       LocationID: locationID,
@@ -59,6 +61,7 @@ export const findTreatments = async () => {
 
 export const findRooms = async () => {
   try {
+    const accessToken = await generateAccessToken();
     const response = await axios.post("v4.1/merchant/rooms", {
       access_token: accessToken,
       LocationID: locationID,
