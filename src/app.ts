@@ -36,7 +36,7 @@ app.use(express.json());
 app.use(loggerMiddleware);
 
 // API routes with authentication
-app.use("/api", authMiddleware);
+// app.use("/api", authMiddleware);
 
 // Root router for /blomilton
 app.use("/api", router);

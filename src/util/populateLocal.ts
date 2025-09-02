@@ -1,5 +1,5 @@
 import express, { Request, Response, NextFunction } from "express";
-import { findEmployees, findTreatments, findRooms } from "./booker_util";
+import { findEmployees, findTreatments /*findRooms*/ } from "./booker_util";
 import { FindTreatmentsResponse, TreatmentModel } from "../models/Treatment";
 import { FindRoomsResponse, RoomModel } from "../models/Room";
 import { FindEmployeesResponse, EmployeeModel } from "../models/Employee";
@@ -17,7 +17,7 @@ async function runPopulateFunctions() {
   try {
     const employees: FindEmployeesResponse = await findEmployees();
     const treatments: FindTreatmentsResponse = await findTreatments();
-    const rooms: FindRoomsResponse = await findRooms();
+    // const rooms: FindRoomsResponse = await findRooms();
 
     if (employees) {
       employees.Results?.forEach((employee) => {
@@ -47,29 +47,29 @@ async function runPopulateFunctions() {
       console.log("No employees found to populate.");
     }
 
-    if (rooms) {
-      rooms.Results?.forEach((room) => {
-        if (useFindAndUpdate) {
-          RoomModel.findOneAndUpdate(
-            { ID: room.ID },
-            {
-              ID: room.ID,
-              Name: room.Name,
-              TreatmentIDs: room.Treatments,
-            },
-            { upsert: true, new: true }
-          );
-        } else {
-          RoomModel.create({
-            ID: room.ID,
-            Name: room.Name,
-            TreatmentIDs: room.Treatments,
-          });
-        }
-      });
-    } else {
-      console.log("No active rooms found to populate.");
-    }
+    // if (rooms) {
+    //   rooms.Results?.forEach((room) => {
+    //     if (useFindAndUpdate) {
+    //       RoomModel.findOneAndUpdate(
+    //         { ID: room.ID },
+    //         {
+    //           ID: room.ID,
+    //           Name: room.Name,
+    //           TreatmentIDs: room.Treatments,
+    //         },
+    //         { upsert: true, new: true }
+    //       );
+    //     } else {
+    //       RoomModel.create({
+    //         ID: room.ID,
+    //         Name: room.Name,
+    //         TreatmentIDs: room.Treatments,
+    //       });
+    //     }
+    //   });
+    // } else {
+    //   console.log("No active rooms found to populate.");
+    // }
 
     if (treatments) {
       treatments.Treatments?.forEach((treatment) => {
