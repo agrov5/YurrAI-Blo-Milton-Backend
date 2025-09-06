@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import { fileURLToPath } from "url";
 
 const app = express();
 
@@ -25,6 +26,7 @@ import { loggerMiddleware } from "./middlewares/loggerMiddleware";
 import job from "./config/cron";
 import axios from "axios";
 import router from "./routes/getRoutes";
+import dashboardRouter from "./routes/dashboardRoutes";
 
 axios.defaults.baseURL = process.env.AXIOS_BASE_URL || "http://localhost:5000";
 
@@ -34,13 +36,11 @@ app.use(express.json());
 
 // Routes
 app.use(loggerMiddleware);
-
+app.use(dashboardRouter);
 // API routes with authentication
 app.use("/api", authMiddleware);
-
 // Root router for /blomilton
 app.use("/api", router);
-
 // Utility routes
 app.use("/api/populateLocal", require("./util/populateLocal").default);
 
