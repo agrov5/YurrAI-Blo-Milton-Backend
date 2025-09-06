@@ -14,13 +14,15 @@
   "homepage": "https://github.com/agrov5/YurrAI-Blo-Milton-Backend#readme",
   "description": "",
   "scripts": {
-    "build": "npm i && tsc",
+    "build": "tsc && npm run copy-public",
+    "copy-public": "npx copyfiles -u 1 src/public/**/* dist/",
     "start": "cross-env NODE_ENV=production && node dist/server.js",
-    "dev": "cross-env NODE_ENV=development && tsc && node dist/server.js"
+    "dev": "cross-env NODE_ENV=development && npm run build && node dist/server.js"
   },
   "devDependencies": {
     "@types/express": "^5.0.1",
     "@types/node": "^22.15.17",
+    "copyfiles": "^2.4.1",
     "dotenv": "^16.5.0",
     "eslint": "^9.26.0",
     "express": "^5.1.0",
