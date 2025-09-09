@@ -29,7 +29,7 @@ const generateAccessToken = async () => {
 };
 
 // Remove global accessToken, generate per function
-const locationID = 3749;
+export const locationID = 3749;
 
 export const findEmployees = async () => {
   try {
