@@ -1,5 +1,10 @@
 import express, { Request, Response, NextFunction } from "express";
-import { findEmployees, findTreatments, findRooms } from "./booker_util";
+import {
+  findEmployees,
+  findTreatments,
+  findRooms,
+  locationID,
+} from "./booker_util";
 import { FindTreatmentsResponse, TreatmentModel } from "../models/Treatment";
 import { FindRoomsResponse, RoomModel } from "../models/Room";
 import { FindEmployeesResponse, EmployeeModel } from "../models/Employee";
@@ -108,7 +113,11 @@ async function runPopulateFunctions() {
     console.log("Error populating local DB:", error);
   }
 
-  return { success: true, message: "Local DB updated." };
+  return {
+    success: true,
+    message: "Local DB updated.",
+    locationID: locationID,
+  };
 }
 
 // Controller
