@@ -34,10 +34,18 @@ export const locationID = 3749;
 export const findEmployees = async () => {
   try {
     const accessToken = await generateAccessToken();
-    const response = await axios.post("/v4.1/merchant/employees", {
-      access_token: accessToken,
-      LocationID: locationID,
-    });
+    const response = await axios.post(
+      "/v4.1/merchant/employees",
+      {
+        access_token: accessToken,
+        LocationID: locationID,
+      },
+      {
+        headers: {
+          "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
+        },
+      }
+    );
     return response.data;
   } catch (error) {
     console.error("Error finding employees:", error);
@@ -48,10 +56,18 @@ export const findEmployees = async () => {
 export const findTreatments = async () => {
   try {
     const accessToken = await generateAccessToken();
-    const response = await axios.post("v4.1/merchant/treatments", {
-      access_token: accessToken,
-      LocationID: locationID,
-    });
+    const response = await axios.post(
+      "v4.1/merchant/treatments",
+      {
+        access_token: accessToken,
+        LocationID: locationID,
+      },
+      {
+        headers: {
+          "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
+        },
+      }
+    );
     return response.data;
   } catch (error) {
     console.error("Error finding treatments:", error);
@@ -62,10 +78,18 @@ export const findTreatments = async () => {
 export const findRooms = async () => {
   try {
     const accessToken = await generateAccessToken();
-    const response = await axios.post("v4.1/merchant/rooms", {
-      access_token: accessToken,
-      LocationID: locationID,
-    });
+    const response = await axios.post(
+      "v4.1/merchant/rooms",
+      {
+        access_token: accessToken,
+        LocationID: locationID,
+      },
+      {
+        headers: {
+          "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
+        },
+      }
+    );
     return response.data;
   } catch (error) {
     console.error("Error finding rooms:", error);
