@@ -1,4 +1,6 @@
 import axios from "axios";
+import { Treatment } from "../models/Treatment";
+import { getTreatmentIds } from "./db_util";
 
 const generateAccessToken = async () => {
   try {
@@ -19,7 +21,7 @@ const generateAccessToken = async () => {
           "Content-Type": "application/x-www-form-urlencoded",
           "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
         },
-      }
+      },
     );
     return response.data.access_token;
   } catch (error) {
@@ -44,7 +46,7 @@ export const findEmployees = async () => {
         headers: {
           "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
         },
-      }
+      },
     );
     return response.data;
   } catch (error) {
@@ -66,7 +68,7 @@ export const findTreatments = async () => {
         headers: {
           "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
         },
-      }
+      },
     );
     return response.data;
   } catch (error) {
@@ -88,7 +90,7 @@ export const findRooms = async () => {
         headers: {
           "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
         },
-      }
+      },
     );
     return response.data;
   } catch (error) {

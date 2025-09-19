@@ -25,9 +25,9 @@ async function runPopulateFunctions() {
     const rooms: FindRoomsResponse = await findRooms();
 
     if (employees) {
-      employees.Results?.forEach((employee) => {
+      for (const employee of employees.Results || []) {
         if (useFindAndUpdate) {
-          EmployeeModel.findOneAndUpdate(
+          await EmployeeModel.findOneAndUpdate(
             { ID: employee.ID },
             {
               ID: employee.ID,
@@ -36,10 +36,10 @@ async function runPopulateFunctions() {
               LastName: employee.LastName,
               Gender: employee.Gender.Name,
             },
-            { upsert: true, new: true }
+            { upsert: true, new: true },
           );
         } else {
-          EmployeeModel.create({
+          await EmployeeModel.create({
             ID: employee.ID,
             DisplayName: employee.DisplayName,
             FirstName: employee.FirstName,
@@ -47,40 +47,40 @@ async function runPopulateFunctions() {
             Gender: employee.Gender.Name,
           });
         }
-      });
+      }
     } else {
       console.log("No employees found to populate.");
     }
 
     if (rooms) {
-      rooms.Results?.forEach((room) => {
+      for (const room of rooms.Results || []) {
         if (useFindAndUpdate) {
-          RoomModel.findOneAndUpdate(
+          await RoomModel.findOneAndUpdate(
             { ID: room.ID },
             {
               ID: room.ID,
               Name: room.Name,
               TreatmentIDs: room.Treatments,
             },
-            { upsert: true, new: true }
+            { upsert: true, new: true },
           );
         } else {
-          RoomModel.create({
+          await RoomModel.create({
             ID: room.ID,
             Name: room.Name,
             TreatmentIDs: room.Treatments,
           });
         }
-      });
+      }
     } else {
       console.log("No active rooms found to populate.");
     }
 
     if (treatments) {
-      treatments.Treatments?.forEach((treatment) => {
+      for (const treatment of treatments.Treatments || []) {
         if (treatment.IsActive && !treatment.IsDeleted) {
           if (useFindAndUpdate) {
-            TreatmentModel.findOneAndUpdate(
+            await TreatmentModel.findOneAndUpdate(
               { ID: treatment.ID },
               {
                 ID: treatment.ID,
@@ -91,10 +91,10 @@ async function runPopulateFunctions() {
                 EmployeeIDs: treatment.EmployeeIDs,
                 RoomIDs: treatment.RoomIDs,
               },
-              { upsert: true, new: true }
+              { upsert: true, new: true },
             );
           } else {
-            TreatmentModel.create({
+            await TreatmentModel.create({
               ID: treatment.ID,
               TreatmentName: treatment.Name,
               Price: treatment.Price,
@@ -105,7 +105,7 @@ async function runPopulateFunctions() {
             });
           }
         }
-      });
+      }
     } else {
       console.log("No treatments found to populate.");
     }
