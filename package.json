@@ -20,18 +20,26 @@
     "dev": "cross-env NODE_ENV=development && npm run build && node dist/server.js"
   },
   "devDependencies": {
+    "@eslint/js": "^9.35.0",
     "@types/express": "^5.0.1",
     "@types/node": "^22.15.17",
+    "@typescript-eslint/eslint-plugin": "^8.44.0",
+    "@typescript-eslint/parser": "^8.44.0",
     "copyfiles": "^2.4.1",
     "dotenv": "^16.5.0",
-    "eslint": "^9.26.0",
+    "eslint": "^9.35.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
     "express": "^5.1.0",
+    "globals": "^16.4.0",
     "install": "^0.13.0",
+    "jiti": "^2.5.1",
     "nodemon": "^3.1.10",
     "npm": "^11.3.0",
-    "prettier": "^3.5.3",
+    "prettier": "^3.6.2",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.44.0"
   },
   "dependencies": {
     "axios": "^1.11.0",
