@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - Admin Portal</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 600px;
+        margin: 2rem auto;
+        padding: 2rem;
+      }
+      button {
+        padding: 0.5rem 1rem;
+        margin: 0.5rem;
+      }
+      .result {
+        margin: 1rem 0;
+        padding: 1rem;
+        border-radius: 4px;
+      }
+      .success {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        color: #155724;
+      }
+      .error {
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+      }
+      input {
+        padding: 0.5rem;
+        margin: 0.5rem;
+        width: 200px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>API Login Test</h1>
+
+    <div>
+      <h3>Test Authentication</h3>
+      <div>
+        <label
+          >Username: <input type="text" id="username" value="admin" /></label
+        ><br />
+        <label
+          >Password: <input type="password" id="password" value="root" /></label
+        ><br />
+        <label
+          >Server URL:
+          <input
+            type="text"
+            id="serverUrl"
+            value="http://localhost:3000"
+            style="width: 300px" /></label
+        ><br />
+        <button onclick="testAuth()">Test Auth</button>
+        <button onclick="testHealth()">Test Health (No Auth)</button>
+        <button onclick="testOrder()">Test Order Endpoint</button>
+      </div>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+      function getCredentials() {
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+        return username + ":" + password;
+      }
+
+      function getServerUrl() {
+        return document.getElementById("serverUrl").value.replace(/\/$/, "");
+      }
+
+      function addResult(title, content, isError = false) {
+        const resultsDiv = document.getElementById("results");
+        const div = document.createElement("div");
+        div.className = "result " + (isError ? "error" : "success");
+        div.innerHTML = `<h4>${title}</h4><pre>${JSON.stringify(content, null, 2)}</pre>`;
+        resultsDiv.appendChild(div);
+      }
+
+      async function testHealth() {
+        try {
+          const response = await fetch(getServerUrl() + "/api/health");
+          const data = await response.json();
+          addResult(
+            "Health Check (No Auth)",
+            {
+              status: response.status,
+              data: data,
+            },
+            !response.ok
+          );
+        } catch (error) {
+          addResult(
+            "Health Check Error",
+            {
+              error: error.message,
+            },
+            true
+          );
+        }
+      }
+
+      async function testAuth() {
+        try {
+          const response = await fetch(getServerUrl() + "/api/auth-test", {
+            headers: {
+              Authorization: getCredentials(),
+            },
+          });
+          const data = await response.json();
+          addResult(
+            "Auth Test",
+            {
+              status: response.status,
+              headers: {
+                authorization: getCredentials(),
+              },
+              data: data,
+            },
+            !response.ok
+          );
+        } catch (error) {
+          addResult(
+            "Auth Test Error",
+            {
+              error: error.message,
+            },
+            true
+          );
+        }
+      }
+
+      async function testOrder() {
+        try {
+          const response = await fetch(getServerUrl() + "/api/order", {
+            headers: {
+              Authorization: getCredentials(),
+            },
+          });
+          const data = await response.json();
+          addResult(
+            "Order Endpoint Test",
+            {
+              status: response.status,
+              data: data,
+            },
+            !response.ok
+          );
+        } catch (error) {
+          addResult(
+            "Order Test Error",
+            {
+              error: error.message,
+            },
+            true
+          );
+        }
+      }
+
+      // Auto-test health on load
+      window.onload = () => {
+        console.log("Testing health endpoint...");
+        testHealth();
+      };
+    </script>
+  </body>
+</html>
