@@ -6,7 +6,7 @@ import { Request, Response, NextFunction } from "express";
 const VALID_USERNAME = process.env.AUTH_USERNAME?.toString();
 const VALID_PASSWORD = process.env.AUTH_PASSWORD?.toString();
 
-// console.log(`Using credentials: ${VALID_USERNAME}:${VALID_PASSWORD}`);
+console.log(`Using credentials: ${VALID_USERNAME}:${VALID_PASSWORD}`);
 
 // Middleware for Basic Auth
 export const authMiddleware = async (

@@ -8,6 +8,12 @@ import {
   twilioController,
   twilioControllerFromParams,
 } from "../controllers/twillioController";
+import {
+  getEmployeeOrder,
+  updateEmployeeOrder,
+  resetEmployeeOrder,
+  getEmployeesForOrdering,
+} from "../controllers/orderController";
 
 const router = Router();
 
@@ -34,6 +40,34 @@ router.get("/employees", getEmployees);
 router.get("/rooms", getRooms);
 
 /**
+ * @route   GET /order
+ * @desc    Get employee order
+ * @access  Private (requires auth)
+ */
+router.get("/order", getEmployeeOrder);
+
+/**
+ * @route   PUT /order
+ * @desc    Update employee order
+ * @access  Private (requires auth)
+ */
+router.put("/order", updateEmployeeOrder);
+
+/**
+ * @route   POST /order/reset
+ * @desc    Reset employee order to alphabetical
+ * @access  Private (requires auth)
+ */
+router.post("/order/reset", resetEmployeeOrder);
+
+/**
+ * @route   GET /all-employees
+ * @desc    Get all employees for ordering (for reference)
+ * @access  Private (requires auth)
+ */
+router.get("/all-employees", getEmployeesForOrdering);
+
+/**
  * @route   POST /sms
  * @desc    Send SMS message via Twilio (body parameters)
  * @access  Private (requires auth)
@@ -53,9 +87,6 @@ router.get("/sms", twilioController);
  * @example GET /sms/+1234567890/Hello%20World
  */
 router.get("/sms/:to/:body", twilioControllerFromParams);
-
-
-
 
 /**
  * @route   GET /treatments/:id
@@ -109,6 +140,19 @@ router.get("/health", (req, res) => {
     status: "OK",
     timestamp: new Date().toISOString(),
     service: "Blo Milton Backend API",
+  });
+});
+
+/**
+ * @route   GET /auth-test
+ * @desc    Test authentication endpoint
+ * @access  Private (requires auth)
+ */
+router.get("/auth-test", (req, res) => {
+  res.status(200).json({
+    status: "Authenticated",
+    timestamp: new Date().toISOString(),
+    message: "Authentication successful",
   });
 });
 
