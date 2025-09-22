@@ -3,6 +3,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const app = express();
+app.disable("etag");
 
 const dotenv = require("dotenv");
 
