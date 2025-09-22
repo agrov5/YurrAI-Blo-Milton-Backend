@@ -424,25 +424,13 @@
             </p>
           </div>
           <div style="display: flex; gap: 1rem; flex-wrap: wrap">
-            <button id="loadOrderBtn" class="btn btn-primary">
-              🔄 Load Current Order
-            </button>
-            <button id="saveOrderBtn" class="btn btn-success">
-              💾 Save Order
-            </button>
             <button id="repopulateBtn" class="btn btn-warning">
               📊 Repopulate Database
             </button>
           </div>
         </div>
 
-        <!-- Employee Order List -->
-        <div class="employee-order-container">
-          <h3 style="margin-bottom: 1.5rem; color: #2c3e50">Employee Order</h3>
-          <div id="orderLoading" class="loading">Loading employee order...</div>
-          <ul id="employeeList" class="employee-list"></ul>
-          <div id="orderMessage" class="message"></div>
-        </div>
+        <!-- Only Repopulate button shown, employee order UI removed -->
       </div>
     </div>
 
@@ -481,199 +469,184 @@
           document
             .getElementById("logoutBtn")
             .addEventListener("click", () => this.logout());
-        }
+        // Minimal dashboard for repopulate only
+        class MinimalAdminDashboard {
+          constructor() {
+            this.isLoggedIn = false;
+            this.authCredentials = null;
+            this.apiBase = window.PRODUCTION_URL || "";
+            this.init();
+          }
 
-        async setCreds() {
-          this.authCredentials =
-            document.getElementById("username").value +
-            ":" +
-            document.getElementById("password").value;
-        }
+          init() {
+            this.bindEvents();
+            this.checkAuthState();
+          }
 
-        async handleLogin(e) {
-          e.preventDefault();
-          this.setCreds();
-          const username = document.getElementById("username").value;
-          const password = document.getElementById("password").value;
-          const messageDiv = document.getElementById("loginMessage");
-          const loadingDiv = document.getElementById("loginLoading");
+          bindEvents() {
+            document
+              .getElementById("loginForm")
+              .addEventListener("submit", (e) => this.handleLogin(e));
+            document
+              .getElementById("repopulateBtn")
+              .addEventListener("click", () => this.repopulateDatabase());
+            document
+              .getElementById("logoutBtn")
+              .addEventListener("click", () => this.logout());
+          }
 
-          messageDiv.textContent = "";
-          messageDiv.className = "message";
-          loadingDiv.classList.add("show");
+          async setCreds() {
+            this.authCredentials =
+              document.getElementById("username").value +
+              ":" +
+              document.getElementById("password").value;
+          }
 
-          try {
-            // Test authentication with auth-test endpoint
-            const response = await fetch(this.getApiUrl("/auth-test"), {
+          async handleLogin(e) {
+            e.preventDefault();
+            this.setCreds();
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            const messageDiv = document.getElementById("loginMessage");
+            const loadingDiv = document.getElementById("loginLoading");
+
+            messageDiv.textContent = "";
+            messageDiv.className = "message";
+            loadingDiv.classList.add("show");
+
+            try {
+              // Test authentication with auth-test endpoint
+              const response = await fetch(this.getApiUrl("/auth-test"), {
+                headers: {
+                  Authorization: this.authCredentials,
+                },
+              });
+
+              const responseData = await response.json();
+
+              if (response.ok) {
+                this.isLoggedIn = true;
+                this.authCredentials = username + ":" + password;
+                localStorage.setItem("authCredentials", this.authCredentials);
+                this.showDashboard();
+              } else {
+                throw new Error(responseData.message || "Invalid credentials");
+              }
+            } catch (err) {
+              messageDiv.textContent = "Login failed: " + err.message;
+              messageDiv.classList.add("error");
+            } finally {
+              loadingDiv.classList.remove("show");
+            }
+          }
+
+          checkAuthState() {
+            const stored = localStorage.getItem("authCredentials");
+            if (stored) {
+              this.authCredentials = stored;
+              this.isLoggedIn = true;
+              this.showDashboard();
+            }
+          }
+
+          showDashboard() {
+            document.getElementById("loginSection").style.display = "none";
+            document.getElementById("dashboardSection").style.display = "block";
+            document.getElementById("authStatus").textContent = "Logged in";
+            document.getElementById("logoutBtn").style.display = "inline-block";
+          }
+
+          logout() {
+            this.isLoggedIn = false;
+            this.authCredentials = null;
+            localStorage.removeItem("authCredentials");
+            document.getElementById("loginSection").style.display = "block";
+            document.getElementById("dashboardSection").style.display = "none";
+            document.getElementById("authStatus").textContent = "Not logged in";
+            document.getElementById("logoutBtn").style.display = "none";
+            document.getElementById("username").value = "";
+            document.getElementById("password").value = "";
+          }
+
+          getApiUrl(endpoint) {
+            const base = this.apiBase ? this.apiBase.replace(/\/$/, "") : "";
+            const url = base + "/api" + endpoint;
+            return url;
+          }
+
+          async makeAuthenticatedRequest(url, options = {}) {
+            if (!this.authCredentials) {
+              throw new Error("Not authenticated");
+            }
+
+            const defaultOptions = {
               headers: {
                 Authorization: this.authCredentials,
+                "Content-Type": "application/json",
               },
-            });
+            };
 
-            console.log("Login response status:", response.status);
-            const responseData = await response.json();
-            console.log("Login response data:", responseData);
+            // Merge options
+            const mergedOptions = {
+              ...defaultOptions,
+              ...options,
+              headers: {
+                ...defaultOptions.headers,
+                ...options.headers,
+              },
+            };
 
-            if (response.ok) {
-              this.isLoggedIn = true;
-              this.authCredentials = username + ":" + password;
-              localStorage.setItem("authCredentials", this.authCredentials);
-              this.showDashboard();
-              await this.loadEmployeeOrder();
-            } else {
-              throw new Error(responseData.message || "Invalid credentials");
+            return fetch(url, mergedOptions);
+          }
+
+          async repopulateDatabase() {
+            if (
+              !confirm(
+                "Are you sure you want to repopulate the database? This will fetch fresh data from the Booker API and may take a few moments."
+              )
+            ) {
+              return;
             }
-          } catch (err) {
-            console.error("Login error:", err);
-            messageDiv.textContent = "Login failed: " + err.message;
-            messageDiv.classList.add("error");
-          } finally {
-            loadingDiv.classList.remove("show");
-          }
-        }
 
-        checkAuthState() {
-          const stored = localStorage.getItem("authCredentials");
-          if (stored) {
-            this.authCredentials = stored;
-            this.isLoggedIn = true;
-            this.showDashboard();
-            this.loadEmployeeOrder();
-          }
-        }
+            // Use loginMessage for feedback since orderMessage is removed
+            const messageDiv = document.getElementById("loginMessage");
+            messageDiv.textContent = "Repopulating database from Booker API...";
+            messageDiv.className = "message";
 
-        showDashboard() {
-          document.getElementById("loginSection").style.display = "none";
-          document.getElementById("dashboardSection").style.display = "block";
-          document.getElementById("authStatus").textContent = "Logged in";
-          document.getElementById("logoutBtn").style.display = "inline-block";
-        }
+            try {
+              const response = await this.makeAuthenticatedRequest(
+                this.getApiUrl("/populateLocal"),
+                {
+                  method: "GET",
+                  headers: { Authorization: this.authCredentials },
+                }
+              );
 
-        logout() {
-          this.isLoggedIn = false;
-          this.authCredentials = null;
-          localStorage.removeItem("authCredentials");
-          document.getElementById("loginSection").style.display = "block";
-          document.getElementById("dashboardSection").style.display = "none";
-          document.getElementById("authStatus").textContent = "Not logged in";
-          document.getElementById("logoutBtn").style.display = "none";
-          document.getElementById("username").value = "";
-          document.getElementById("password").value = "";
-        }
+              const data = await response.json();
 
-        getApiUrl(endpoint) {
-          const base = this.apiBase ? this.apiBase.replace(/\/$/, "") : "";
-          const url = base + "/api" + endpoint;
-          return url;
-        }
+              if (response.ok) {
+                messageDiv.textContent =
+                  "Database repopulated successfully!";
+                messageDiv.className = "message success";
+              } else {
+                throw new Error(data.error || "Failed to repopulate database");
+              }
+            } catch (error) {
+              messageDiv.textContent = `Repopulation failed: ${error.message}`;
+              messageDiv.className = "message error";
 
-        async makeAuthenticatedRequest(url, options = {}) {
-          if (!this.authCredentials) {
-            throw new Error("Not authenticated");
-          }
-
-          const defaultOptions = {
-            headers: {
-              Authorization: this.authCredentials,
-              "Content-Type": "application/json",
-            },
-          };
-
-          // Merge options
-          const mergedOptions = {
-            ...defaultOptions,
-            ...options,
-            headers: {
-              ...defaultOptions.headers,
-              ...options.headers,
-            },
-          };
-
-          return fetch(url, mergedOptions);
-        }
-
-        async loadEmployeeOrder() {
-          const loadingDiv = document.getElementById("orderLoading");
-          const messageDiv = document.getElementById("orderMessage");
-
-          loadingDiv.classList.add("show");
-          messageDiv.textContent = "";
-          messageDiv.className = "message";
-
-          try {
-            const response = await this.makeAuthenticatedRequest(
-              this.getApiUrl("/order")
-            );
-            const data = await response.json();
-
-            if (data.success) {
-              this.currentOrder = data.data;
-              this.renderEmployeeList();
-              this.updateStats();
-              messageDiv.textContent = data.message;
-              messageDiv.classList.add("success");
-            } else {
-              throw new Error(data.error || "Failed to load employee order");
+              setTimeout(() => {
+                messageDiv.textContent = "";
+                messageDiv.className = "";
+              }, 5000);
             }
-          } catch (err) {
-            messageDiv.textContent =
-              "Error loading employee order: " + err.message;
-            messageDiv.classList.add("error");
-          } finally {
-            loadingDiv.classList.remove("show");
           }
         }
 
-        renderEmployeeList() {
-          const listElement = document.getElementById("employeeList");
-          listElement.innerHTML = "";
-
-          // Sort by current position for display
-          const sortedEmployees = [...this.currentOrder].sort(
-            (a, b) => a.OrderPosition - b.OrderPosition
-          );
-
-          sortedEmployees.forEach((employee, index) => {
-            const li = document.createElement("li");
-            li.className = "employee-item";
-            li.dataset.employeeId = employee.EmployeeID;
-
-            // Create elements programmatically to avoid inline event handlers
-            const employeeInfo = document.createElement("div");
-            employeeInfo.className = "employee-info";
-
-            const positionInput = document.createElement("input");
-            positionInput.type = "number";
-            positionInput.className = "position-input";
-            positionInput.value = employee.OrderPosition;
-            positionInput.min = "1";
-            positionInput.max = this.currentOrder.length;
-            positionInput.dataset.employeeId = employee.EmployeeID;
-
-            // Add event listeners properly
-            positionInput.addEventListener("change", (e) =>
-              this.updatePosition(e.target)
-            );
-            positionInput.addEventListener("input", (e) =>
-              this.validatePosition(e.target)
-            );
-
-            const employeeDetails = document.createElement("div");
-            employeeDetails.innerHTML = `
-              <div class="employee-name">${employee.EmployeeDisplayName}</div>
-              <div class="employee-id">ID: ${employee.EmployeeID}</div>
-            `;
-
-            employeeInfo.appendChild(positionInput);
-            employeeInfo.appendChild(employeeDetails);
-
-            const positionControls = document.createElement("div");
-            positionControls.className = "position-controls";
-
-            const upButton = document.createElement("button");
-            upButton.className = "btn-small btn-up";
-            upButton.textContent = "↑";
-            upButton.addEventListener("click", () =>
+        // Initialize the minimal dashboard when the page loads
+        document.addEventListener("DOMContentLoaded", () => {
+          window.dashboard = new MinimalAdminDashboard();
+        });
               this.moveUp(employee.EmployeeID)
             );
 
