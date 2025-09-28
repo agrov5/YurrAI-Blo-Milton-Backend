@@ -1,13 +1,33 @@
-// Redirect /dashboard to dashboard.html
-import { Request, Response, Router } from "express";
-const dashboardRouter = Router();
+import { Router, Request, Response } from "express";
+import path from "path";
 
-dashboardRouter.get("/dashboard", (req: Request, res: Response) => {
-  res.sendFile("dashboard.html", { root: __dirname + "/../public" });
+const router = Router();
+
+/**
+ * @route   GET /login
+ * @desc    Serve login page
+ * @access  Public
+ */
+router.get("/login", (req: Request, res: Response) => {
+  res.sendFile(path.join(__dirname, "../public/login.html"));
 });
 
-dashboardRouter.get("/login-test", (req: Request, res: Response) => {
-  res.sendFile("login-test.html", { root: __dirname + "/../public" });
+/**
+ * @route   GET /dashboard
+ * @desc    Serve dashboard page
+ * @access  Public (authentication handled client-side)
+ */
+router.get("/dashboard", (req: Request, res: Response) => {
+  res.sendFile(path.join(__dirname, "../public/dashboard.html"));
 });
 
-export default dashboardRouter;
+/**
+ * @route   GET /
+ * @desc    Redirect root to login
+ * @access  Public
+ */
+router.get("/", (req: Request, res: Response) => {
+  res.redirect("/login");
+});
+
+export default router;

@@ -8,12 +8,7 @@ import {
   twilioController,
   twilioControllerFromParams,
 } from "../controllers/twillioController";
-import {
-  getEmployeeOrder,
-  updateEmployeeOrder,
-  resetEmployeeOrder,
-  getEmployeesForOrdering,
-} from "../controllers/orderController";
+
 
 const router = Router();
 
@@ -38,34 +33,6 @@ router.get("/employees", getEmployees);
  * @access  Private (requires auth)
  */
 router.get("/rooms", getRooms);
-
-/**
- * @route   GET /order
- * @desc    Get employee order
- * @access  Private (requires auth)
- */
-router.get("/order", getEmployeeOrder);
-
-/**
- * @route   PUT /order
- * @desc    Update employee order
- * @access  Private (requires auth)
- */
-router.put("/order", updateEmployeeOrder);
-
-/**
- * @route   POST /order/reset
- * @desc    Reset employee order to alphabetical
- * @access  Private (requires auth)
- */
-router.post("/order/reset", resetEmployeeOrder);
-
-/**
- * @route   GET /all-employees
- * @desc    Get all employees for ordering (for reference)
- * @access  Private (requires auth)
- */
-router.get("/all-employees", getEmployeesForOrdering);
 
 /**
  * @route   POST /sms
@@ -155,5 +122,6 @@ router.get("/auth-test", (req, res) => {
     message: "Authentication successful",
   });
 });
+
 
 export default router;

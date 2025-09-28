@@ -27,7 +27,7 @@ import { loggerMiddleware } from "./middlewares/loggerMiddleware";
 import job from "./config/cron";
 import axios from "axios";
 import router from "./routes/getRoutes";
-import dashboardRouter from "./routes/dashboardRoutes";
+import dashboardRoutes from "./routes/dashboardRoutes";
 
 axios.defaults.baseURL = process.env.AXIOS_BASE_URL || "http://localhost:5000";
 
@@ -37,14 +37,20 @@ job.start();
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
+// Serve static files
+app.use(express.static(path.join(__dirname, "public")));
+
 // Routes
 app.use(loggerMiddleware);
-app.use(dashboardRouter);
+
+// Dashboard routes (public)
+app.use("/", dashboardRoutes);
+
 // API routes with authentication
 app.use("/api", authMiddleware);
 // Root router for /blomilton
 app.use("/api", router);
-// Utility routes
+// Utility routes (also protected by auth middleware)
 app.use("/api/populateLocal", require("./util/populateLocal").default);
 
 export default app;

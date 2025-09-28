@@ -3,10 +3,10 @@
 
 import { Request, Response, NextFunction } from "express";
 
-const VALID_USERNAME = process.env.AUTH_USERNAME?.toString();
-const VALID_PASSWORD = process.env.AUTH_PASSWORD?.toString();
+const VALID_USERNAME = process.env.AUTH_USERNAME?.toString().trim();
+const VALID_PASSWORD = process.env.AUTH_PASSWORD?.toString().trim();
 
-console.log(`Using credentials: ${VALID_USERNAME}:${VALID_PASSWORD}`);
+// console.log(`Using credentials: ${VALID_USERNAME}:${VALID_PASSWORD}`);
 
 // Middleware for Basic Auth
 export const authMiddleware = async (
@@ -22,11 +22,16 @@ export const authMiddleware = async (
       .json({ message: "Missing or invalid Authorization header" });
   }
 
-  // Decode base64 credentials
-  const [username, password] = authHeader.toString().split(":");
+  // Parse credentials from header
+  const [username, password] = authHeader.toString().trim().split(":");
 
-  // Validate credentials
-  if (username === VALID_USERNAME && password === VALID_PASSWORD) {
+  // Validate credentials - ensure both username and password exist and match
+  if (
+    username &&
+    password &&
+    username === VALID_USERNAME &&
+    password === VALID_PASSWORD
+  ) {
     next(); // Authorized
   } else {
     return res.status(401).json({ message: "Unauthorized" });

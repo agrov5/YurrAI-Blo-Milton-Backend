@@ -28,6 +28,7 @@ export interface IEmployee extends Document {
 const EmployeeSchema = new Schema(
   {
     ID: { type: Number, required: true },
+    Rank: { type: Number, required: false },
     DisplayName: { type: String, required: true },
     FirstName: { type: String, required: true },
     LastName: { type: String, required: false },
@@ -35,7 +36,6 @@ const EmployeeSchema = new Schema(
     //   LocationID: { type: Number, required: true },
     //   Photo: { type: String, required: false },
     //   ProfileDescription: { type: String, required: true },
-    //   Rank: { type: Number, required: false },
     //   Type: { type: Number, required: true },
     //   Email: { type: String, required: true },
     //   HomePhone: { type: String, required: true },
