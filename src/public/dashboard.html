@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Admin Portal</title>
+    <title>Admin Dashboard - Blo Milton Backend</title>
     <style>
       * {
         margin: 0;
@@ -12,980 +12,451 @@
       }
 
       body {
-        font-family:
-          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        background: #f8f9fa;
-        color: #333;
+        font-family: "Arial", sans-serif;
+        background: #f5f7fa;
+        min-height: 100vh;
       }
 
       .header {
-        background: #fff;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
         padding: 1rem 2rem;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         display: flex;
         justify-content: space-between;
         align-items: center;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
       }
 
       .header h1 {
-        color: #2c3e50;
         font-size: 1.5rem;
       }
 
-      .auth-section {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
+      .logout-btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+
+      .logout-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
       }
 
       .container {
         max-width: 1200px;
-        margin: 2rem auto;
-        padding: 0 2rem;
-      }
-
-      .login-container {
-        background: #fff;
+        margin: 0 auto;
         padding: 2rem;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        max-width: 400px;
-        margin: 4rem auto;
       }
 
-      .dashboard-container {
-        display: none;
-      }
-
-      .control-panel {
-        background: #fff;
-        padding: 1.5rem;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
         margin-bottom: 2rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 1rem;
       }
 
-      .employee-order-container {
-        background: #fff;
-        padding: 2rem;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      @media (max-width: 768px) {
+        .dashboard-grid {
+          grid-template-columns: 1fr;
+        }
       }
 
-      .employee-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
+      .card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s;
       }
 
-      .employee-item {
-        background: #f8f9fa;
-        border: 2px solid #e9ecef;
-        border-radius: 8px;
-        padding: 1rem;
+      .card:hover {
+        transform: translateY(-2px);
+      }
+
+      .card-header {
+        border-bottom: 2px solid #e1e5e9;
+        padding-bottom: 1rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .card-title {
+        font-size: 1.25rem;
+        color: #333;
         margin-bottom: 0.5rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        transition: all 0.2s ease;
       }
 
-      .employee-item:hover {
-        background: #e3f2fd;
-        border-color: #2196f3;
-      }
-
-      .employee-item.changed {
-        background: #fff3cd;
-        border-color: #ffc107;
-      }
-
-      .employee-info {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        flex: 1;
-      }
-
-      .position-input {
-        width: 60px;
-        padding: 0.5rem;
-        border: 2px solid #dee2e6;
-        border-radius: 6px;
-        text-align: center;
-        font-weight: bold;
-        font-size: 1rem;
-      }
-
-      .position-input:focus {
-        outline: none;
-        border-color: #007bff;
-        background: #fff;
-      }
-
-      .position-input.error {
-        border-color: #dc3545;
-        background: #f8d7da;
-      }
-
-      .employee-name {
-        font-weight: 600;
-        color: #2c3e50;
-        margin-bottom: 0.25rem;
-      }
-
-      .employee-id {
-        color: #6c757d;
+      .card-subtitle {
+        color: #666;
         font-size: 0.9rem;
       }
 
-      .position-controls {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-      }
-
-      .btn-small {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.8rem;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-weight: 500;
-      }
-
-      .btn-up {
-        background: #28a745;
-        color: white;
-      }
-
-      .btn-up:hover {
-        background: #1e7e34;
-      }
-
-      .btn-down {
-        background: #6c757d;
-        color: white;
-      }
-
-      .btn-down:hover {
-        background: #545b62;
-      }
-      input[type="text"],
-      input[type="password"] {
-        width: 100%;
-        padding: 0.75rem;
-        margin: 0.5rem 0;
-        border-radius: 8px;
-        border: 2px solid #e9ecef;
-        font-size: 1rem;
-        transition: border-color 0.2s ease;
-      }
-
-      input[type="text"]:focus,
-      input[type="password"]:focus {
-        outline: none;
-        border-color: #007bff;
-      }
-
-      .btn {
-        padding: 0.75rem 1.5rem;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 1rem;
-        font-weight: 600;
-        transition: all 0.2s ease;
-        text-decoration: none;
-        display: inline-block;
+      .admin-controls {
         text-align: center;
       }
 
-      .btn-primary {
-        background: #007bff;
+      .repopulate-btn {
+        background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
         color: white;
-      }
-
-      .btn-primary:hover {
-        background: #0056b3;
-      }
-
-      .btn-secondary {
-        background: #6c757d;
-        color: white;
-      }
-
-      .btn-secondary:hover {
-        background: #545b62;
-      }
-
-      .btn-success {
-        background: #28a745;
-        color: white;
-      }
-
-      .btn-success:hover {
-        background: #1e7e34;
-      }
-
-      .btn-warning {
-        background: #ffc107;
-        color: #212529;
-      }
-
-      .btn-warning:hover {
-        background: #e0a800;
-      }
-
-      .btn-full {
-        width: 100%;
-      }
-
-      .message {
-        margin-top: 1rem;
-        padding: 0.75rem;
+        border: none;
+        padding: 1rem 2rem;
+        font-size: 1.1rem;
         border-radius: 8px;
+        cursor: pointer;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+        margin: 1rem 0;
+      }
+
+      .repopulate-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(86, 171, 47, 0.4);
+      }
+
+      .repopulate-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .employee-list {
+        max-height: 400px;
+        overflow-y: auto;
+      }
+
+      .employee-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        border-bottom: 1px solid #e1e5e9;
+        transition: background 0.2s;
+      }
+
+      .employee-item:hover {
+        background: #f8f9fa;
+      }
+
+      .employee-item:last-child {
+        border-bottom: none;
+      }
+
+      .employee-name {
+        font-weight: 500;
+        color: #333;
+      }
+
+      .employee-id {
+        color: #666;
+        font-size: 0.9rem;
+        margin-left: 0.5rem;
+      }
+
+      .employee-rank {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.8rem;
         font-weight: 500;
       }
 
-      .message.success {
-        background: #d1edff;
-        color: #0c5460;
-        border: 1px solid #bee5eb;
+      .loading {
+        text-align: center;
+        padding: 2rem;
+        color: #666;
       }
 
-      .message.error {
+      .spinner {
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #667eea;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+        display: inline-block;
+        margin-right: 10px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .success-message,
+      .error-message {
+        padding: 1rem;
+        border-radius: 5px;
+        margin: 1rem 0;
+        display: none;
+      }
+
+      .success-message {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .error-message {
         background: #f8d7da;
         color: #721c24;
         border: 1px solid #f5c6cb;
       }
 
-      .loading {
-        display: none;
-        text-align: center;
-        margin: 1rem 0;
-        color: #007bff;
-        font-weight: 500;
-      }
-
-      .loading.show {
-        display: block;
-      }
-
       .stats {
-        display: flex;
-        gap: 2rem;
-        margin-bottom: 2rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin: 1rem 0;
       }
 
-      .stat-card {
-        background: #fff;
-        padding: 1.5rem;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      .stat-item {
         text-align: center;
-        flex: 1;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
       }
 
       .stat-number {
         font-size: 2rem;
         font-weight: bold;
-        color: #007bff;
+        color: #667eea;
       }
 
       .stat-label {
-        color: #6c757d;
+        color: #666;
         font-size: 0.9rem;
-        margin-top: 0.5rem;
-      }
-
-      .instructions {
-        background: #e7f3ff;
-        border: 1px solid #bee5eb;
-        border-radius: 8px;
-        padding: 1rem;
-        margin-bottom: 2rem;
-      }
-
-      .instructions h3 {
-        color: #0c5460;
-        margin-bottom: 0.5rem;
-      }
-
-      .instructions p {
-        color: #0c5460;
-        margin: 0;
-      }
-
-      @media (max-width: 768px) {
-        .header {
-          flex-direction: column;
-          gap: 1rem;
-        }
-
-        .control-panel {
-          flex-direction: column;
-          align-items: stretch;
-        }
-
-        .stats {
-          flex-direction: column;
-        }
-
-        .container {
-          padding: 0 1rem;
-        }
       }
     </style>
   </head>
   <body>
-    <!-- Header -->
     <div class="header">
-      <h1>🔧 Admin Portal</h1>
-      <div class="auth-section">
-        <span id="authStatus">Not logged in</span>
-        <button id="logoutBtn" class="btn btn-secondary" style="display: none">
-          Logout
-        </button>
-      </div>
+      <h1>Admin Dashboard</h1>
+      <button class="logout-btn" onclick="logout()">Logout</button>
     </div>
 
-    <!-- Login Section -->
-    <div id="loginSection" class="login-container">
-      <h2 style="margin-bottom: 1.5rem; text-align: center; color: #2c3e50">
-        Admin Portal Login
-      </h2>
-      <div
-        style="
-          background: #e7f3ff;
-          border: 1px solid #bee5eb;
-          border-radius: 8px;
-          padding: 1rem;
-          margin-bottom: 1rem;
-        "
-      ></div>
-      <form id="loginForm">
-        <input
-          type="text"
-          id="username"
-          placeholder="Username"
-          required
-          value="admin"
-        />
-        <input
-          type="password"
-          id="password"
-          placeholder="Password"
-          required
-          value="root"
-        />
-        <button type="submit" class="btn btn-primary btn-full">Login</button>
-      </form>
-      <div id="loginLoading" class="loading">Logging in...</div>
-      <div id="loginMessage" class="message"></div>
-    </div>
-
-    <!-- Dashboard Section -->
-    <div id="dashboardSection" class="dashboard-container">
-      <div class="container">
-        <!-- Stats -->
-        <div class="stats">
-          <div class="stat-card">
-            <div id="totalEmployees" class="stat-number">0</div>
-            <div class="stat-label">Total Employees</div>
+    <div class="container">
+      <div class="dashboard-grid">
+        <!-- Admin Controls Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Admin Controls</h2>
+            <p class="card-subtitle">System management and data operations</p>
           </div>
-          <div class="stat-card">
-            <div id="lastUpdated" class="stat-number">Never</div>
-            <div class="stat-label">Last Updated</div>
+
+          <div class="admin-controls">
+            <button
+              class="repopulate-btn"
+              id="repopulate-btn"
+              onclick="repopulateData()"
+            >
+              Repopulate Local Data
+            </button>
+
+            <div id="success-message" class="success-message"></div>
+            <div id="error-message" class="error-message"></div>
+
+            <p style="color: #666; font-size: 0.9rem; margin-top: 1rem">
+              This will refresh the local database with the latest data from the
+              remote source.
+            </p>
           </div>
         </div>
 
-        <!-- Instructions -->
-        <div class="instructions">
-          <h3>📋 How to Use</h3>
-          <p>
-            Enter position numbers in the input fields to reorder employees. Use
-            the up/down arrows for quick adjustments. Click "Save Order" to
-            apply changes or "Reset to Alphabetical" to start over.
+        <!-- Employee Statistics Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Employee Statistics</h2>
+            <!-- <p class="card-subtitle">Current employee ranking overview</p> -->
+          </div>
+
+          <div class="stats" id="employee-stats">
+            <div class="stat-item">
+              <div class="stat-number" id="total-employees">-</div>
+              <div class="stat-label">Total Employees</div>
+            </div>
+            <!-- <div class="stat-item">
+              <div class="stat-number" id="first-rank">-</div>
+              <div class="stat-label">First in Queue</div>
+            </div> -->
+            <div class="stat-item">
+              <div class="stat-number" id="last-updated">-</div>
+              <div class="stat-label">Last Updated</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Employee Rankings Card -->
+      <!--
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Employee Rankings</h2>
+          <p class="card-subtitle">
+            Current order positions from MongoDB Order Model
           </p>
         </div>
 
-        <!-- Control Panel -->
-        <div class="control-panel">
-          <div>
-            <h3 style="margin: 0; color: #2c3e50">Admin Controls</h3>
-            <p style="margin: 0.5rem 0 0 0; color: #6c757d">
-              Manage the order of employees for scheduling and display
-            </p>
-          </div>
-          <div style="display: flex; gap: 1rem; flex-wrap: wrap">
-            <button id="repopulateBtn" class="btn btn-warning">
-              📊 Repopulate Database
-            </button>
-          </div>
+        <div id="employee-loading" class="loading">
+          <div class="spinner"></div>
+          Loading employee rankings...
         </div>
 
-        <!-- Only Repopulate button shown, employee order UI removed -->
-      </div>
+        <div class="employee-list" id="employee-list" style="display: none">
+          Employee items will be loaded here
+        </div>
+      </div> -->
     </div>
 
     <script>
-      class EmployeeOrderDashboard {
-        constructor() {
-          this.isLoggedIn = false;
-          this.authCredentials = null;
-          this.currentOrder = [];
-          this.draggedElement = null;
-          this.apiBase = window.PRODUCTION_URL || "";
-          this.init();
+      let authCredentials = "";
+
+      // Check authentication on page load
+      window.addEventListener("load", function () {
+        authCredentials = sessionStorage.getItem("authCredentials");
+        if (!authCredentials) {
+          window.location.href = "/login";
+          return;
         }
 
-        init() {
-          this.bindEvents();
-          this.checkAuthState();
-        }
-
-        bindEvents() {
-          // Login form
-          document
-            .getElementById("loginForm")
-            .addEventListener("submit", (e) => this.handleLogin(e));
-
-          // Control buttons
-          document
-            .getElementById("loadOrderBtn")
-            .addEventListener("click", () => this.loadEmployeeOrder());
-          document
-            .getElementById("saveOrderBtn")
-            .addEventListener("click", () => this.saveEmployeeOrder());
-          document
-            .getElementById("repopulateBtn")
-            .addEventListener("click", () => this.repopulateDatabase());
-          document
-            .getElementById("logoutBtn")
-            .addEventListener("click", () => this.logout());
-        // Minimal dashboard for repopulate only
-        class MinimalAdminDashboard {
-          constructor() {
-            this.isLoggedIn = false;
-            this.authCredentials = null;
-            this.apiBase = window.PRODUCTION_URL || "";
-            this.init();
-          }
-
-          init() {
-            this.bindEvents();
-            this.checkAuthState();
-          }
-
-          bindEvents() {
-            document
-              .getElementById("loginForm")
-              .addEventListener("submit", (e) => this.handleLogin(e));
-            document
-              .getElementById("repopulateBtn")
-              .addEventListener("click", () => this.repopulateDatabase());
-            document
-              .getElementById("logoutBtn")
-              .addEventListener("click", () => this.logout());
-          }
-
-          async setCreds() {
-            this.authCredentials =
-              document.getElementById("username").value +
-              ":" +
-              document.getElementById("password").value;
-          }
-
-          async handleLogin(e) {
-            e.preventDefault();
-            this.setCreds();
-            const username = document.getElementById("username").value;
-            const password = document.getElementById("password").value;
-            const messageDiv = document.getElementById("loginMessage");
-            const loadingDiv = document.getElementById("loginLoading");
-
-            messageDiv.textContent = "";
-            messageDiv.className = "message";
-            loadingDiv.classList.add("show");
-
-            try {
-              // Test authentication with auth-test endpoint
-              const response = await fetch(this.getApiUrl("/auth-test"), {
-                headers: {
-                  Authorization: this.authCredentials,
-                },
-              });
-
-              const responseData = await response.json();
-
-              if (response.ok) {
-                this.isLoggedIn = true;
-                this.authCredentials = username + ":" + password;
-                localStorage.setItem("authCredentials", this.authCredentials);
-                this.showDashboard();
-              } else {
-                throw new Error(responseData.message || "Invalid credentials");
-              }
-            } catch (err) {
-              messageDiv.textContent = "Login failed: " + err.message;
-              messageDiv.classList.add("error");
-            } finally {
-              loadingDiv.classList.remove("show");
-            }
-          }
-
-          checkAuthState() {
-            const stored = localStorage.getItem("authCredentials");
-            if (stored) {
-              this.authCredentials = stored;
-              this.isLoggedIn = true;
-              this.showDashboard();
-            }
-          }
-
-          showDashboard() {
-            document.getElementById("loginSection").style.display = "none";
-            document.getElementById("dashboardSection").style.display = "block";
-            document.getElementById("authStatus").textContent = "Logged in";
-            document.getElementById("logoutBtn").style.display = "inline-block";
-          }
-
-          logout() {
-            this.isLoggedIn = false;
-            this.authCredentials = null;
-            localStorage.removeItem("authCredentials");
-            document.getElementById("loginSection").style.display = "block";
-            document.getElementById("dashboardSection").style.display = "none";
-            document.getElementById("authStatus").textContent = "Not logged in";
-            document.getElementById("logoutBtn").style.display = "none";
-            document.getElementById("username").value = "";
-            document.getElementById("password").value = "";
-          }
-
-          getApiUrl(endpoint) {
-            const base = this.apiBase ? this.apiBase.replace(/\/$/, "") : "";
-            const url = base + "/api" + endpoint;
-            return url;
-          }
-
-          async makeAuthenticatedRequest(url, options = {}) {
-            if (!this.authCredentials) {
-              throw new Error("Not authenticated");
-            }
-
-            const defaultOptions = {
-              headers: {
-                Authorization: this.authCredentials,
-                "Content-Type": "application/json",
-              },
-            };
-
-            // Merge options
-            const mergedOptions = {
-              ...defaultOptions,
-              ...options,
-              headers: {
-                ...defaultOptions.headers,
-                ...options.headers,
-              },
-            };
-
-            return fetch(url, mergedOptions);
-          }
-
-          async repopulateDatabase() {
-            if (
-              !confirm(
-                "Are you sure you want to repopulate the database? This will fetch fresh data from the Booker API and may take a few moments."
-              )
-            ) {
-              return;
-            }
-
-            // Use loginMessage for feedback since orderMessage is removed
-            const messageDiv = document.getElementById("loginMessage");
-            messageDiv.textContent = "Repopulating database from Booker API...";
-            messageDiv.className = "message";
-
-            try {
-              const response = await this.makeAuthenticatedRequest(
-                this.getApiUrl("/populateLocal"),
-                {
-                  method: "GET",
-                  headers: { Authorization: this.authCredentials },
-                }
-              );
-
-              const data = await response.json();
-
-              if (response.ok) {
-                messageDiv.textContent =
-                  "Database repopulated successfully!";
-                messageDiv.className = "message success";
-              } else {
-                throw new Error(data.error || "Failed to repopulate database");
-              }
-            } catch (error) {
-              messageDiv.textContent = `Repopulation failed: ${error.message}`;
-              messageDiv.className = "message error";
-
-              setTimeout(() => {
-                messageDiv.textContent = "";
-                messageDiv.className = "";
-              }, 5000);
-            }
-          }
-        }
-
-        // Initialize the minimal dashboard when the page loads
-        document.addEventListener("DOMContentLoaded", () => {
-          window.dashboard = new MinimalAdminDashboard();
-        });
-              this.moveUp(employee.EmployeeID)
+        // Verify credentials are still valid
+        console.log("Dashboard: Verifying credentials:", authCredentials);
+        fetch("/api/auth-test", {
+          headers: { Authorization: authCredentials },
+        })
+          .then((response) => {
+            console.log(
+              "Dashboard: Auth verification response status:",
+              response.status
             );
-
-            const downButton = document.createElement("button");
-            downButton.className = "btn-small btn-down";
-            downButton.textContent = "↓";
-            downButton.addEventListener("click", () =>
-              this.moveDown(employee.EmployeeID)
-            );
-
-            positionControls.appendChild(upButton);
-            positionControls.appendChild(downButton);
-
-            li.appendChild(employeeInfo);
-            li.appendChild(positionControls);
-            listElement.appendChild(li);
-          });
-        }
-
-        updatePosition(input) {
-          const employeeId = parseInt(input.dataset.employeeId);
-          const newPosition = parseInt(input.value);
-          const maxPosition = this.currentOrder.length;
-
-          // Validate position range
-          if (
-            isNaN(newPosition) ||
-            newPosition < 1 ||
-            newPosition > maxPosition
-          ) {
-            input.classList.add("error");
-            // Reset to original value
-            const employee = this.currentOrder.find(
-              (emp) => emp.EmployeeID === employeeId
-            );
-            if (employee) {
-              input.value = employee.OrderPosition;
-            }
-            return;
-          }
-
-          input.classList.remove("error");
-
-          // Find the employee and current employee at target position
-          const employee = this.currentOrder.find(
-            (emp) => emp.EmployeeID === employeeId
-          );
-          const conflictEmployee = this.currentOrder.find(
-            (emp) =>
-              emp.OrderPosition === newPosition && emp.EmployeeID !== employeeId
-          );
-
-          if (employee) {
-            const oldPosition = employee.OrderPosition;
-
-            if (conflictEmployee) {
-              // Swap positions
-              conflictEmployee.OrderPosition = oldPosition;
-              employee.OrderPosition = newPosition;
+            if (!response.ok) {
+              console.log("Dashboard: Auth failed, redirecting to login");
+              logout();
             } else {
-              // No conflict, just update position
-              employee.OrderPosition = newPosition;
+              console.log("Dashboard: Auth successful, loading dashboard");
+              loadEmployeeRankings();
             }
+          })
+          .catch(() => {
+            logout();
+          });
+      });
 
-            this.markAsChanged(input);
-            // Re-render to show updated positions
-            setTimeout(() => this.renderEmployeeList(), 100);
-          }
+      function logout() {
+        sessionStorage.removeItem("authCredentials");
+        window.location.href = "/login";
+      }
+
+      async function loadEmployeeRankings() {
+        // Show loading state
+        const totalElement = document.getElementById("total-employees");
+        if (totalElement) {
+          totalElement.textContent = "...";
         }
 
-        validatePosition(input) {
-          const newPosition = parseInt(input.value);
-          const maxPosition = this.currentOrder.length;
-
-          if (
-            isNaN(newPosition) ||
-            newPosition < 1 ||
-            newPosition > maxPosition
-          ) {
-            input.classList.add("error");
-          } else {
-            input.classList.remove("error");
-          }
-        }
-
-        markAsChanged(input) {
-          const listItem = input.closest(".employee-item");
-          listItem.classList.add("changed");
-        }
-
-        moveUp(employeeId) {
-          const employee = this.currentOrder.find(
-            (emp) => emp.EmployeeID === employeeId
-          );
-          if (!employee || employee.OrderPosition <= 1) return;
-
-          // Find employee currently at the target position
-          const targetPosition = employee.OrderPosition - 1;
-          const targetEmployee = this.currentOrder.find(
-            (emp) => emp.OrderPosition === targetPosition
-          );
-
-          if (targetEmployee) {
-            // Swap positions
-            targetEmployee.OrderPosition = employee.OrderPosition;
-            employee.OrderPosition = targetPosition;
-          } else {
-            // No conflict, just move up
-            employee.OrderPosition = targetPosition;
-          }
-
-          this.renderEmployeeList();
-          this.markEmployeeAsChanged(employeeId);
-        }
-
-        moveDown(employeeId) {
-          const employee = this.currentOrder.find(
-            (emp) => emp.EmployeeID === employeeId
-          );
-          if (!employee || employee.OrderPosition >= this.currentOrder.length)
-            return;
-
-          // Find employee currently at the target position
-          const targetPosition = employee.OrderPosition + 1;
-          const targetEmployee = this.currentOrder.find(
-            (emp) => emp.OrderPosition === targetPosition
-          );
-
-          if (targetEmployee) {
-            // Swap positions
-            targetEmployee.OrderPosition = employee.OrderPosition;
-            employee.OrderPosition = targetPosition;
-          } else {
-            // No conflict, just move down
-            employee.OrderPosition = targetPosition;
-          }
-
-          this.renderEmployeeList();
-          this.markEmployeeAsChanged(employeeId);
-        }
-
-        markEmployeeAsChanged(employeeId) {
-          const employeeItem = document.querySelector(
-            `[data-employee-id="${employeeId}"]`
-          );
-          if (employeeItem) {
-            const listItem = employeeItem.closest(".employee-item");
-            if (listItem) {
-              listItem.classList.add("changed");
-            }
-          }
-        }
-
-        sortByPosition() {
-          // Create a clean sequence of positions 1, 2, 3, etc.
-          const sortedByPosition = [...this.currentOrder].sort(
-            (a, b) => a.OrderPosition - b.OrderPosition
-          );
-
-          // Reassign positions sequentially
-          sortedByPosition.forEach((employee, index) => {
-            employee.OrderPosition = index + 1;
+        try {
+          // Fetch employee data to populate stats
+          const response = await fetch("/api/employees", {
+            headers: { Authorization: authCredentials },
           });
 
-          this.renderEmployeeList();
-
-          // Show message
-          const messageDiv = document.getElementById("orderMessage");
-          messageDiv.textContent = "Positions sorted and conflicts resolved!";
-          messageDiv.className = "message success";
-
-          setTimeout(() => {
-            messageDiv.textContent = "";
-            messageDiv.className = "";
-          }, 3000);
-        }
-
-        async saveEmployeeOrder() {
-          const messageDiv = document.getElementById("orderMessage");
-
-          messageDiv.textContent = "Saving employee order...";
-          messageDiv.className = "message";
-
-          try {
-            // Validate all positions before saving
-            const positions = this.currentOrder.map((emp) => emp.OrderPosition);
-            const uniquePositions = new Set(positions);
-
-            if (uniquePositions.size !== positions.length) {
-              throw new Error(
-                "Duplicate positions detected. Please fix conflicts before saving."
-              );
-            }
-
-            const response = await this.makeAuthenticatedRequest(
-              this.getApiUrl("/order"),
-              {
-                method: "PUT",
-                body: JSON.stringify({ orderedEmployees: this.currentOrder }),
-              }
-            );
-
+          if (response.ok) {
             const data = await response.json();
+            const employees = data.results || [];
 
-            if (response.ok) {
-              const result =
-                data.message || "Employee order saved successfully!";
-              messageDiv.textContent = result;
-              messageDiv.className = "message success";
-
-              // Remove all changed highlighting
-              document
-                .querySelectorAll(".employee-item.changed")
-                .forEach((item) => {
-                  item.classList.remove("changed");
-                });
-
-              // Update stats
-              this.updateStats();
-
-              setTimeout(() => {
-                messageDiv.textContent = "";
-                messageDiv.className = "";
-              }, 3000);
-            } else {
-              throw new Error(data.error || "Failed to save employee order");
-            }
-          } catch (error) {
-            console.error("Error saving employee order:", error);
-            messageDiv.textContent = `Save failed: ${error.message}`;
-            messageDiv.className = "message error";
-
-            setTimeout(() => {
-              messageDiv.textContent = "";
-              messageDiv.className = "";
-            }, 5000);
-          }
-        }
-
-        async resetEmployeeOrder() {
-          if (
-            !confirm(
-              "Are you sure you want to reset the employee order to alphabetical? This cannot be undone."
-            )
-          ) {
-            return;
-          }
-
-          const messageDiv = document.getElementById("orderMessage");
-          messageDiv.textContent = "Resetting to alphabetical order...";
-          messageDiv.className = "message";
-
-          try {
-            const response = await this.makeAuthenticatedRequest(
-              this.getApiUrl("/order/reset"),
-              {
-                method: "POST",
-              }
+            // Update employee stats
+            updateEmployeeStats(employees);
+            console.log(`Loaded ${employees.length} employees`);
+          } else {
+            console.log(
+              "Failed to fetch employee data, status:",
+              response.status
             );
-
-            const data = await response.json();
-
-            if (data.success) {
-              this.currentOrder = data.data;
-              this.renderEmployeeList();
-              this.updateStats();
-              messageDiv.textContent =
-                "Employee order reset to alphabetical successfully!";
-              messageDiv.classList.add("success");
-            } else {
-              throw new Error(data.error || "Failed to reset employee order");
+            // Show error state
+            if (totalElement) {
+              totalElement.textContent = "Error";
             }
-          } catch (err) {
-            messageDiv.textContent =
-              "Error resetting employee order: " + err.message;
-            messageDiv.classList.add("error");
-          }
-        }
-
-        async repopulateDatabase() {
-          if (
-            !confirm(
-              "Are you sure you want to repopulate the database? This will fetch fresh data from the Booker API and may take a few moments."
-            )
-          ) {
-            return;
-          }
-
-          const messageDiv = document.getElementById("orderMessage");
-          messageDiv.textContent = "Repopulating database from Booker API...";
-          messageDiv.className = "message";
-
-          try {
-            const response = await this.makeAuthenticatedRequest(
-              this.getApiUrl("/populateLocal"),
-              {
-                method: "GET",
-                headers: { Authorization: this.authCredentials },
-              }
-            );
-
-            const data = await response.json();
-
-            if (response.ok) {
-              messageDiv.textContent =
-                "Database repopulated successfully! Reloading employee order...";
-              messageDiv.className = "message success";
-
-              // Reload the employee order after repopulation
-              setTimeout(() => {
-                this.loadEmployeeOrder();
-              }, 2000);
-            } else {
-              throw new Error(data.error || "Failed to repopulate database");
+            // Still update timestamp
+            const lastUpdatedElement = document.getElementById("last-updated");
+            if (lastUpdatedElement) {
+              lastUpdatedElement.textContent = new Date().toLocaleTimeString();
             }
-          } catch (error) {
-            console.error("Error repopulating database:", error);
-            messageDiv.textContent = `Repopulation failed: ${error.message}`;
-            messageDiv.className = "message error";
-
-            setTimeout(() => {
-              messageDiv.textContent = "";
-              messageDiv.className = "";
-            }, 5000);
           }
-        }
-
-        updateStats() {
-          document.getElementById("totalEmployees").textContent =
-            this.currentOrder.length;
-          document.getElementById("lastUpdated").textContent =
-            new Date().toLocaleTimeString();
+        } catch (error) {
+          console.error("Error fetching employee data:", error);
+          // Show error state
+          if (totalElement) {
+            totalElement.textContent = "Error";
+          }
+          // Still update timestamp
+          const lastUpdatedElement = document.getElementById("last-updated");
+          if (lastUpdatedElement) {
+            lastUpdatedElement.textContent = new Date().toLocaleTimeString();
+          }
         }
       }
 
-      // Initialize the dashboard when the page loads
-      document.addEventListener("DOMContentLoaded", () => {
-        window.dashboard = new EmployeeOrderDashboard();
-      });
+      function updateEmployeeStats(employees) {
+        const totalElement = document.getElementById("total-employees");
+        const lastUpdatedElement = document.getElementById("last-updated");
+
+        // Update total employees count
+        if (totalElement) {
+          totalElement.textContent =
+            employees && employees.length ? employees.length : "0";
+        }
+
+        // Update last updated timestamp
+        if (lastUpdatedElement) {
+          lastUpdatedElement.textContent = new Date().toLocaleTimeString();
+        }
+      }
+
+      async function repopulateData() {
+        const btn = document.getElementById("repopulate-btn");
+        const successMsg = document.getElementById("success-message");
+        const errorMsg = document.getElementById("error-message");
+
+        // Hide previous messages
+        successMsg.style.display = "none";
+        errorMsg.style.display = "none";
+
+        // Disable button and show loading
+        btn.disabled = true;
+        btn.innerHTML = '<div class="spinner"></div> Repopulating...';
+
+        try {
+          const response = await fetch("/api/populateLocal", {
+            headers: { Authorization: authCredentials },
+          });
+
+          if (!response.ok) {
+            throw new Error(`Failed to repopulate: ${response.statusText}`);
+          }
+
+          const result = await response.text();
+
+          successMsg.textContent = "Data repopulation completed successfully!";
+          successMsg.style.display = "block";
+          // Reload employee stats after repopulation
+          loadEmployeeRankings();
+        } catch (error) {
+          errorMsg.textContent = "Failed to repopulate data: " + error.message;
+          errorMsg.style.display = "block";
+        } finally {
+          // Reset button
+          btn.disabled = false;
+          btn.textContent = "Repopulate Local Data";
+        }
+      }
     </script>
   </body>
 </html>

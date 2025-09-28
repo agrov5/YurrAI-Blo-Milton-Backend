@@ -21,7 +21,7 @@ const generateAccessToken = async () => {
           "Content-Type": "application/x-www-form-urlencoded",
           "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
         },
-      },
+      }
     );
     return response.data.access_token;
   } catch (error) {
@@ -31,7 +31,7 @@ const generateAccessToken = async () => {
 };
 
 // Remove global accessToken, generate per function
-export const locationID = 3749;
+export const locationID = process.env.LOCATION_ID; // 46929 - Production, 3749 - Dev
 
 export const findEmployees = async () => {
   try {
@@ -46,8 +46,9 @@ export const findEmployees = async () => {
         headers: {
           "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
         },
-      },
+      }
     );
+    // console.log("Employees fetched:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error finding employees:", error);
@@ -68,7 +69,7 @@ export const findTreatments = async () => {
         headers: {
           "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
         },
-      },
+      }
     );
     return response.data;
   } catch (error) {
@@ -90,7 +91,7 @@ export const findRooms = async () => {
         headers: {
           "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
         },
-      },
+      }
     );
     return response.data;
   } catch (error) {

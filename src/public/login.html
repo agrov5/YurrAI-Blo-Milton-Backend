@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Login - Blo Milton Backend</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Arial", sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .login-container {
+        background: white;
+        padding: 2rem;
+        border-radius: 10px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 400px;
+      }
+
+      .login-header {
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+
+      .login-header h1 {
+        color: #333;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .login-header p {
+        color: #666;
+        font-size: 0.9rem;
+      }
+
+      .form-group {
+        margin-bottom: 1.5rem;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #333;
+        font-weight: 500;
+      }
+
+      input[type="text"],
+      input[type="password"] {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e1e5e9;
+        border-radius: 5px;
+        font-size: 1rem;
+        transition: border-color 0.3s;
+      }
+
+      input[type="text"]:focus,
+      input[type="password"]:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .login-btn {
+        width: 100%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem;
+        font-size: 1rem;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+
+      .login-btn:hover {
+        transform: translateY(-2px);
+      }
+
+      .login-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .error-message {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 0.75rem;
+        border-radius: 5px;
+        margin-bottom: 1rem;
+        display: none;
+      }
+
+      .loading {
+        display: none;
+        text-align: center;
+        margin-top: 1rem;
+      }
+
+      .spinner {
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #667eea;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        animation: spin 1s linear infinite;
+        display: inline-block;
+        margin-right: 10px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-container">
+      <div class="login-header">
+        <h1>Admin Login</h1>
+        <p>Enter your credentials to access the dashboard</p>
+      </div>
+
+      <div id="error-message" class="error-message"></div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label for="username">Username:</label>
+          <input type="text" id="username" name="username" required />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password:</label>
+          <input type="password" id="password" name="password" required />
+        </div>
+
+        <button type="submit" class="login-btn" id="login-btn">Login</button>
+
+        <div class="loading" id="loading">
+          <div class="spinner"></div>
+          Authenticating...
+        </div>
+      </form>
+    </div>
+
+    <script>
+      document
+        .getElementById("login-form")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const username = document.getElementById("username").value;
+          const password = document.getElementById("password").value;
+          const errorDiv = document.getElementById("error-message");
+          const loginBtn = document.getElementById("login-btn");
+          const loading = document.getElementById("loading");
+
+          // Clear previous errors
+          errorDiv.style.display = "none";
+
+          // Show loading state
+          loginBtn.disabled = true;
+          loginBtn.textContent = "Logging in...";
+          loading.style.display = "block";
+
+          try {
+            // Create Basic Auth header - format as username:password for the auth middleware
+            const credentials = username + ":" + password;
+
+            const response = await fetch("/api/auth-test", {
+              method: "GET",
+              headers: {
+                Authorization: credentials,
+              },
+            });
+
+            if (response.ok) {
+              // Store credentials in sessionStorage for the dashboard
+              sessionStorage.setItem("authCredentials", credentials);
+              console.log("Login successful, credentials stored:", credentials);
+              // Redirect to dashboard
+              window.location.href = "/dashboard";
+            } else {
+              console.log("Login failed, response status:", response.status);
+              throw new Error("Invalid credentials");
+            }
+          } catch (error) {
+            errorDiv.textContent =
+              "Invalid username or password. Please try again.";
+            errorDiv.style.display = "block";
+          } finally {
+            // Reset loading state
+            loginBtn.disabled = false;
+            loginBtn.textContent = "Login";
+            loading.style.display = "none";
+          }
+        });
+
+      // Check if already authenticated
+      window.addEventListener("load", function () {
+        const credentials = sessionStorage.getItem("authCredentials");
+        if (credentials) {
+          // Verify credentials are still valid
+          fetch("/api/auth-test", {
+            headers: { Authorization: credentials },
+          }).then((response) => {
+            if (response.ok) {
+              window.location.href = "/dashboard";
+            }
+          });
+        }
+      });
+    </script>
+  </body>
+</html>

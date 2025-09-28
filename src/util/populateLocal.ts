@@ -9,6 +9,7 @@ import { FindTreatmentsResponse, TreatmentModel } from "../models/Treatment";
 import { FindRoomsResponse, RoomModel } from "../models/Room";
 import { FindEmployeesResponse, EmployeeModel } from "../models/Employee";
 import { clearDB } from "../config/database";
+import { sortEmployeeIdsInTreatementsByRank } from "./db_util";
 
 // Example function to run and populate local DB
 async function runPopulateFunctions() {
@@ -31,16 +32,18 @@ async function runPopulateFunctions() {
             { ID: employee.ID },
             {
               ID: employee.ID,
+              Rank: employee.Rank,
               DisplayName: employee.DisplayName,
               FirstName: employee.FirstName,
               LastName: employee.LastName,
               Gender: employee.Gender.Name,
             },
-            { upsert: true, new: true },
+            { upsert: true, new: true }
           );
         } else {
           await EmployeeModel.create({
             ID: employee.ID,
+            Rank: employee.Rank,
             DisplayName: employee.DisplayName,
             FirstName: employee.FirstName,
             LastName: employee.LastName,
@@ -62,7 +65,7 @@ async function runPopulateFunctions() {
               Name: room.Name,
               TreatmentIDs: room.Treatments,
             },
-            { upsert: true, new: true },
+            { upsert: true, new: true }
           );
         } else {
           await RoomModel.create({
@@ -91,7 +94,7 @@ async function runPopulateFunctions() {
                 EmployeeIDs: treatment.EmployeeIDs,
                 RoomIDs: treatment.RoomIDs,
               },
-              { upsert: true, new: true },
+              { upsert: true, new: true }
             );
           } else {
             await TreatmentModel.create({
@@ -112,6 +115,8 @@ async function runPopulateFunctions() {
   } catch (error) {
     console.log("Error populating local DB:", error);
   }
+
+  await sortEmployeeIdsInTreatementsByRank();
 
   return {
     success: true,
