@@ -1,6 +1,14 @@
 import axios from "axios";
-import { Treatment } from "../models/Treatment";
-import { getTreatmentIds } from "./db_util";
+import { Treatment, TreatmentModel } from "../models/Treatment";
+import {
+  getTreatmentIds,
+  dateToISO,
+  treatmentLookupByName,
+  employeeLookupByName,
+} from "./db_util";
+import { saveAsJson, saveAsJsonAsync } from "../middlewares/loggerMiddleware";
+import { AgentAppointment } from "../models/Appointment";
+import { Employee } from "../models/Employee";
 
 const generateAccessToken = async () => {
   try {
@@ -99,3 +107,168 @@ export const findRooms = async () => {
     throw error;
   }
 };
+
+export const findAvailableDates = async (options: {
+  fromDate: string;
+  toDate: string;
+  employeeId?: number;
+}) => {
+  try {
+    const accessToken = await generateAccessToken();
+
+    // Build query parameters
+    const params = new URLSearchParams();
+    params.append("locationIds", locationID?.toString() || "");
+    params.append("fromDate", dateToISO(options.fromDate));
+    params.append("toDate", dateToISO(options.toDate));
+
+    if (options.employeeId) {
+      params.append("employeeId", options.employeeId.toString());
+    }
+
+    const response = await axios.get(
+      `v5/realtime_availability/AvailableDates?${params.toString()}`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Ocp-Apim-Subscription-Key": process.env.BOOKER_AVAILABILITY_KEY,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error finding available dates", error);
+    throw error;
+  }
+};
+
+export const findAvailableTimes = async (options: {
+  fromDateTime: string;
+  serviceId: number;
+  employeeId?: number;
+}) => {
+  try {
+    const accessToken = await generateAccessToken();
+
+    // Build query parameters
+    const params = new URLSearchParams();
+    params.append("locationIds", locationID?.toString() || "");
+    params.append("fromDateTime", options.fromDateTime);
+    params.append("serviceId[]", options.serviceId.toString());
+
+    if (options.employeeId) {
+      params.append("employeeId", options.employeeId.toString());
+    }
+
+    const response = await axios.get(
+      `v5/realtime_availability/availability/1day/?${params.toString()}`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Ocp-Apim-Subscription-Key": process.env.BOOKER_AVAILABILITY_KEY,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error finding available dates", error);
+    throw error;
+  }
+};
+
+// NOTE: fix this, very prone to errors
+export const createAppointment = async (appointment: AgentAppointment) => {
+  const treatmentID = await treatmentLookupByName(
+    appointment.treatmentName
+  ).then((treatment: Treatment | null) => {
+    if (treatment) {
+      console.log("Found treatment ID:", treatment.ID);
+      return treatment.ID;
+    } else {
+      return 0;
+    }
+  });
+
+  const roomID = await TreatmentModel.findOne({ ID: treatmentID }).then(
+    (treatment) => {
+      if (treatment && treatment.RoomIDs && treatment.RoomIDs.length > 0) {
+        console.log("Found room ID:", treatment.RoomIDs[0]);
+        return treatment.RoomIDs[0];
+      }
+    }
+  );
+
+  const getEmployeeId = async (name: string): Promise<number | null> => {
+    const employee = await employeeLookupByName(name);
+    return employee ? employee.ID : null;
+  };
+
+  const determineEmployeeId = (treatmentId: number) => {
+    TreatmentModel.findOne({ ID: treatmentId }).then((treatment) => {
+      if (
+        treatment &&
+        treatment.EmployeeIDs &&
+        treatment.EmployeeIDs.length > 0
+      ) {
+        for (const empId of treatment.EmployeeIDs) {
+          findAvailableTimes({
+            fromDateTime: appointment.appointmentDate, // NOTE: Check this maybe it won't work.
+            serviceId: treatmentId,
+            employeeId: empId,
+          }).then((availability) => {
+            if (availability && availability.length > 0) {
+              console.log("Determined employee ID:", empId);
+              return empId;
+            }
+          });
+        }
+      } else {
+        return null; // No employees associated with this treatment
+      }
+    });
+  };
+
+  try {
+    const accessToken = await generateAccessToken();
+    const response = await axios.post(
+      "v4.1/merchant/appointment",
+      {
+        access_token: accessToken,
+        LocationID: locationID,
+        ResourceTypeID: 1,
+        Customer: {
+          Email: appointment.email,
+          FirstName: appointment.firstName,
+          LastName: appointment.lastName,
+        },
+        AppointmentDateOffset: appointment.appointmentDate,
+        AppointmentTreatmentDTOs: [
+          {
+            TreatmentID: treatmentID,
+            EmployeeID: appointment.employeeName
+              ? await getEmployeeId(appointment.employeeName)
+              : determineEmployeeId(treatmentID || 0),
+            RoomID: roomID,
+            StartTimeOffset: appointment.startTime,
+            EndTimeOffset: appointment.endTime,
+          },
+        ],
+      },
+      {
+        headers: {
+          "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error creating appointment:", error);
+    throw error;
+  }
+};
+
+// AppointmentDateOffset
+// LocationID
+// access_token
+// AppointmentTreatmentDTOs

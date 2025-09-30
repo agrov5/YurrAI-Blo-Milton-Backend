@@ -4,9 +4,12 @@ export interface AgentAppointment {
   email: string;
   firstName: string;
   lastName: string;
-  startTimeOffset: string;
-  endTimeOffset: string;
-  appointmentDateOffset: string;
+  treatmentName: string;
+  employeeName?: string;
+  roomName?: string;
+  startTime: string;
+  endTime: string;
+  appointmentDate: string;
 }
 
 export interface Appointment {
@@ -33,5 +36,3 @@ export interface AppointmentTreatmentDTO {
 }
 
 // export const BookingModel = model("Booking", bookingSchema);
-
-

@@ -26,7 +26,8 @@ import { authMiddleware } from "./auth/auth";
 import { loggerMiddleware } from "./middlewares/loggerMiddleware";
 import job from "./config/cron";
 import axios from "axios";
-import router from "./routes/getRoutes";
+import getRouter from "./routes/getRoutes";
+import postRouter from "./routes/postRoutes";
 import dashboardRoutes from "./routes/dashboardRoutes";
 
 axios.defaults.baseURL = process.env.AXIOS_BASE_URL || "http://localhost:5000";
@@ -47,9 +48,11 @@ app.use(loggerMiddleware);
 app.use("/", dashboardRoutes);
 
 // API routes with authentication
-app.use("/api", authMiddleware);
-// Root router for /blomilton
-app.use("/api", router);
+// app.use("/api", authMiddleware);
+
+app.use("/api/get", getRouter);
+app.use("/api/post", postRouter);
+
 // Utility routes (also protected by auth middleware)
 app.use("/api/populateLocal", require("./util/populateLocal").default);
 
