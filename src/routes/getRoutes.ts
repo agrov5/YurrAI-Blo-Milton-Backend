@@ -10,7 +10,7 @@ import {
 } from "../controllers/twillioController";
 
 
-const router = Router();
+const getRouter = Router();
 
 /**
  * @route   GET /treatments
@@ -18,21 +18,21 @@ const router = Router();
  * @access  Private (requires auth)
  */
 
-router.get("/treatments", getTreatments);
+getRouter.get("/treatments", getTreatments);
 
 /**
  * @route   GET /employees
  * @desc    Get all employees
  * @access  Private (requires auth)
  */
-router.get("/employees", getEmployees);
+getRouter.get("/employees", getEmployees);
 
 /**
  * @route   GET /rooms
  * @desc    Get all rooms
  * @access  Private (requires auth)
  */
-router.get("/rooms", getRooms);
+getRouter.get("/rooms", getRooms);
 
 /**
  * @route   POST /sms
@@ -45,7 +45,7 @@ router.get("/rooms", getRooms);
  * @desc    Send SMS message via Twilio (body parameters)
  * @access  Private (requires auth)
  */
-router.get("/sms", twilioController);
+getRouter.get("/sms", twilioController);
 
 /**
  * @route   GET /sms/:to/:body
@@ -53,7 +53,7 @@ router.get("/sms", twilioController);
  * @access  Private (requires auth)
  * @example GET /sms/+1234567890/Hello%20World
  */
-router.get("/sms/:to/:body", twilioControllerFromParams);
+getRouter.get("/sms/:to/:body", twilioControllerFromParams);
 
 /**
  * @route   GET /treatments/:id
@@ -102,7 +102,7 @@ router.get("/sms/:to/:body", twilioControllerFromParams);
  * @desc    Health check endpoint
  * @access  Public
  */
-router.get("/health", (req, res) => {
+getRouter.get("/health", (req, res) => {
   res.status(200).json({
     status: "OK",
     timestamp: new Date().toISOString(),
@@ -115,7 +115,7 @@ router.get("/health", (req, res) => {
  * @desc    Test authentication endpoint
  * @access  Private (requires auth)
  */
-router.get("/auth-test", (req, res) => {
+getRouter.get("/auth-test", (req, res) => {
   res.status(200).json({
     status: "Authenticated",
     timestamp: new Date().toISOString(),
@@ -124,4 +124,4 @@ router.get("/auth-test", (req, res) => {
 });
 
 
-export default router;
+export default getRouter;
