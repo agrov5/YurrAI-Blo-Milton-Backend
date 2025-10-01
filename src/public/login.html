@@ -183,7 +183,7 @@
             // Create Basic Auth header - format as username:password for the auth middleware
             const credentials = username + ":" + password;
 
-            const response = await fetch("/api/auth-test", {
+            const response = await fetch("/api/get/auth-test", {
               method: "GET",
               headers: {
                 Authorization: credentials,
@@ -217,7 +217,7 @@
         const credentials = sessionStorage.getItem("authCredentials");
         if (credentials) {
           // Verify credentials are still valid
-          fetch("/api/auth-test", {
+          fetch("/api/get/auth-test", {
             headers: { Authorization: credentials },
           }).then((response) => {
             if (response.ok) {

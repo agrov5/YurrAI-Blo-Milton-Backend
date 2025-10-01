@@ -329,7 +329,7 @@
 
         // Verify credentials are still valid
         console.log("Dashboard: Verifying credentials:", authCredentials);
-        fetch("/api/auth-test", {
+        fetch("/api/get/auth-test", {
           headers: { Authorization: authCredentials },
         })
           .then((response) => {
@@ -364,7 +364,7 @@
 
         try {
           // Fetch employee data to populate stats
-          const response = await fetch("/api/employees", {
+          const response = await fetch("/api/get/employees", {
             headers: { Authorization: authCredentials },
           });
 
