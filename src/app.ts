@@ -48,7 +48,7 @@ app.use(loggerMiddleware);
 app.use("/", dashboardRoutes);
 
 // API routes with authentication
-// app.use("/api", authMiddleware);
+app.use("/api", authMiddleware);
 
 app.use("/api/get", getRouter);
 app.use("/api/post", postRouter);
