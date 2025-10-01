@@ -2,7 +2,11 @@ import { Request, Response } from "express";
 import { ITreatment, TreatmentModel } from "../models/Treatment";
 import { EmployeeModel, IEmployee } from "../models/Employee";
 import { IRoom, RoomModel } from "../models/Room";
-import { locationID } from "../util/booker_util";
+import {
+  findAvailableDates,
+  findAvailableTimes,
+  locationID,
+} from "../util/booker_util";
 
 export const getTreatments = async (req: Request, res: Response) => {
   try {
@@ -13,6 +17,51 @@ export const getTreatments = async (req: Request, res: Response) => {
       count: treatments.length,
       results: treatments,
     });
+  } catch (error) {
+    res.status(500).json({ message: "error", errorMessage: error });
+  }
+};
+
+export const getTreatmentByName = async (req: Request, res: Response) => {
+  const body: { name: string } = req.body;
+
+  try {
+    if (!body.name) {
+      return res.status(400).json({ message: "name is required." });
+    }
+    const treatment = await TreatmentModel.findOne({
+      TreatmentName: body.name,
+    }).exec();
+    if (treatment) {
+      res.status(200).json({
+        message: "success",
+        locationID: locationID,
+        result: treatment,
+      });
+    } else {
+      res.status(404).json({ message: "Treatment not found." });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "error", errorMessage: error });
+  }
+};
+
+export const getTreatmentById = async (req: Request, res: Response) => {
+  const body: { id: number } = req.body;
+  try {
+    if (!body.id) {
+      return res.status(400).json({ message: "id is required." });
+    }
+    const treatment = await TreatmentModel.findOne({ ID: body.id }).exec();
+    if (treatment) {
+      res.status(200).json({
+        message: "success",
+        locationID: locationID,
+        result: treatment,
+      });
+    } else {
+      res.status(404).json({ message: "Treatment not found." });
+    }
   } catch (error) {
     res.status(500).json({ message: "error", errorMessage: error });
   }
@@ -32,6 +81,50 @@ export const getEmployees = async (req: Request, res: Response) => {
   }
 };
 
+export const getEmployeeByName = async (req: Request, res: Response) => {
+  const body: { name: string } = req.body;
+  try {
+    if (!body.name) {
+      return res.status(400).json({ message: "name is required." });
+    }
+    const employee = await EmployeeModel.findOne({
+      DisplayName: body.name,
+    }).exec();
+    if (employee) {
+      res.status(200).json({
+        message: "success",
+        locationID: locationID,
+        result: employee,
+      });
+    } else {
+      res.status(404).json({ message: "Employee not found." });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "error", errorMessage: error });
+  }
+};
+
+export const getEmployeeById = async (req: Request, res: Response) => {
+  const body: { id: number } = req.body;
+  try {
+    if (!body.id) {
+      return res.status(400).json({ message: "id is required." });
+    }
+    const employee = await EmployeeModel.findOne({ ID: body.id }).exec();
+    if (employee) {
+      res.status(200).json({
+        message: "success",
+        locationID: locationID,
+        result: employee,
+      });
+    } else {
+      res.status(404).json({ message: "Employee not found." });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "error", errorMessage: error });
+  }
+};
+
 export const getRooms = async (req: Request, res: Response) => {
   try {
     const rooms: IRoom[] = await RoomModel.find();
@@ -46,6 +139,54 @@ export const getRooms = async (req: Request, res: Response) => {
   }
 };
 
+export const getAvaliableDates = async (req: Request, res: Response) => {
+  const body: {
+    fromDate: string;
+    toDate: string;
+    employeeId?: number;
+    serviceId?: number;
+  } = req.body;
+
+  try {
+    if (!body.fromDate || !body.toDate) {
+      return res
+        .status(400)
+        .json({ message: "fromDate and toDate are required." });
+    }
+    await findAvailableDates(body).then((availableDates) => {
+      res.status(200).json({
+        message: "success",
+        locationID: locationID,
+        results: availableDates,
+      });
+    });
+  } catch (error) {
+    res.status(500).json({ message: "error", errorMessage: error });
+  }
+};
+
+export const getAvaliableTimes = async (req: Request, res: Response) => {
+  const body: { fromDateTime: string; serviceId: number; employeeId?: number } =
+    req.body;
+
+  try {
+    if (!body.fromDateTime || !body.serviceId) {
+      return res
+        .status(400)
+        .json({ message: "fromDateTime and serviceId are required." });
+    }
+
+    await findAvailableTimes(body).then((availableTimes) => {
+      res.status(200).json({
+        message: "success",
+        locationID: locationID,
+        results: availableTimes,
+      });
+    });
+  } catch (error) {
+    res.status(500).json({ message: "error", errorMessage: error });
+  }
+};
 // export const getEmployeeRankings = async (req: Request, res: Response) => {
 //   try {
 //     const employeeRankings: IOrder[] = await OrderModel.find().sort({

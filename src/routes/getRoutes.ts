@@ -3,12 +3,18 @@ import {
   getTreatments,
   getEmployees,
   getRooms,
+  getAvaliableDates,
+  getAvaliableTimes,
+  getTreatmentById,
+  getTreatmentByName,
+  getEmployeeById,
+  getEmployeeByName,
 } from "../controllers/getController";
 import {
   twilioController,
   twilioControllerFromParams,
 } from "../controllers/twillioController";
-
+import { get } from "http";
 
 const getRouter = Router();
 
@@ -20,6 +26,9 @@ const getRouter = Router();
 
 getRouter.get("/treatments", getTreatments);
 
+getRouter.get("/treatments/id", getTreatmentById);
+getRouter.get("/treatments/name", getTreatmentByName);
+
 /**
  * @route   GET /employees
  * @desc    Get all employees
@@ -27,12 +36,30 @@ getRouter.get("/treatments", getTreatments);
  */
 getRouter.get("/employees", getEmployees);
 
+getRouter.get("/employees/id", getEmployeeById);
+getRouter.get("/employees/name", getEmployeeByName);
 /**
  * @route   GET /rooms
  * @desc    Get all rooms
  * @access  Private (requires auth)
  */
 getRouter.get("/rooms", getRooms);
+
+/**
+ * @route   GET /available-dates
+ * @desc    Get available dates for appointments
+ * @access  Private (requires auth)
+ * @body    { fromDate: string, toDate: string, employeeId?: number }
+ */
+getRouter.get("/available-dates", getAvaliableDates);
+
+/**
+ * @route   GET /available-times
+ * @desc    Get available times for appointments
+ * @access  Private (requires auth)
+ * @body    { date: string, employeeId?: number }
+ */
+getRouter.get("/avaliable-times", getAvaliableTimes);
 
 /**
  * @route   POST /sms
@@ -122,6 +149,5 @@ getRouter.get("/auth-test", (req, res) => {
     message: "Authentication successful",
   });
 });
-
 
 export default getRouter;

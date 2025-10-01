@@ -2,14 +2,14 @@
 
 export interface AgentAppointment {
   email: string;
+  phone: number;
   firstName: string;
   lastName: string;
   treatmentName: string;
   employeeName?: string;
   roomName?: string;
-  startTime: string;
-  endTime: string;
   appointmentDate: string;
+  startTime: string;
 }
 
 export interface Appointment {
@@ -23,6 +23,7 @@ export interface Appointment {
 
 export interface Customer {
   Email: string;
+  Phone: number;
   FirstName: string;
   LastName: string;
 }

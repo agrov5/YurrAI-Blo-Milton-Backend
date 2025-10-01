@@ -71,7 +71,7 @@ const TreatmentSchema = new Schema(
     //   IsActive: { type: Boolean, required: false },
     //   IsDeleted: { type: Boolean, required: false },
 
-    //   TotalDuration: { type: Number, required: false },
+    TotalDuration: { type: Number, required: false },
     //   TreatmentDuration: { type: Number, required: false },
     //   ImageURL: { type: String, required: false },
     //   DurationType: { type: Object, required: false },

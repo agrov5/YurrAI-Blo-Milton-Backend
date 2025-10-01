@@ -68,7 +68,7 @@ export const findTreatments = async () => {
   try {
     const accessToken = await generateAccessToken();
     const response = await axios.post(
-      "v4.1/merchant/treatments",
+      "/v4.1/merchant/treatments",
       {
         access_token: accessToken,
         LocationID: locationID,
@@ -90,7 +90,7 @@ export const findRooms = async () => {
   try {
     const accessToken = await generateAccessToken();
     const response = await axios.post(
-      "v4.1/merchant/rooms",
+      "/v4.1/merchant/rooms",
       {
         access_token: accessToken,
         LocationID: locationID,
@@ -111,6 +111,7 @@ export const findRooms = async () => {
 export const findAvailableDates = async (options: {
   fromDate: string;
   toDate: string;
+  serviceId?: number;
   employeeId?: number;
 }) => {
   try {
@@ -126,8 +127,12 @@ export const findAvailableDates = async (options: {
       params.append("employeeId", options.employeeId.toString());
     }
 
+    if (options.serviceId) {
+      params.append("serviceId", options.serviceId.toString());
+    }
+
     const response = await axios.get(
-      `v5/realtime_availability/AvailableDates?${params.toString()}`,
+      `/v5/realtime_availability/AvailableDates?${params.toString()}`,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -152,16 +157,16 @@ export const findAvailableTimes = async (options: {
 
     // Build query parameters
     const params = new URLSearchParams();
-    params.append("locationIds", locationID?.toString() || "");
+    params.append("LocationIds", locationID?.toString() || "");
     params.append("fromDateTime", options.fromDateTime);
-    params.append("serviceId[]", options.serviceId.toString());
+    params.append("serviceId", options.serviceId.toString());
 
     if (options.employeeId) {
       params.append("employeeId", options.employeeId.toString());
     }
 
     const response = await axios.get(
-      `v5/realtime_availability/availability/1day/?${params.toString()}`,
+      `/v5/realtime_availability/availability/1day/?${params.toString()}`,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -182,7 +187,6 @@ export const createAppointment = async (appointment: AgentAppointment) => {
     appointment.treatmentName
   ).then((treatment: Treatment | null) => {
     if (treatment) {
-      console.log("Found treatment ID:", treatment.ID);
       return treatment.ID;
     } else {
       return 0;
@@ -192,7 +196,6 @@ export const createAppointment = async (appointment: AgentAppointment) => {
   const roomID = await TreatmentModel.findOne({ ID: treatmentID }).then(
     (treatment) => {
       if (treatment && treatment.RoomIDs && treatment.RoomIDs.length > 0) {
-        console.log("Found room ID:", treatment.RoomIDs[0]);
         return treatment.RoomIDs[0];
       }
     }
@@ -217,7 +220,6 @@ export const createAppointment = async (appointment: AgentAppointment) => {
             employeeId: empId,
           }).then((availability) => {
             if (availability && availability.length > 0) {
-              console.log("Determined employee ID:", empId);
               return empId;
             }
           });
@@ -228,20 +230,98 @@ export const createAppointment = async (appointment: AgentAppointment) => {
     });
   };
 
+  const determineEndTime = async (
+    startTime: string,
+    treatmentId: number,
+    appointmentDate: string
+  ) => {
+    const endTimeISO = await TreatmentModel.findOne({ ID: treatmentId }).then(
+      (treatment) => {
+        const [startHour, startMinute] = startTime.split(":").map(Number);
+        let totalMinutes: number;
+
+        if (treatment && treatment.TotalDuration) {
+          totalMinutes = treatment.TotalDuration;
+        } else {
+          // Fallback to 2 hours (120 minutes)
+          totalMinutes = 120;
+        }
+
+        const endHour =
+          startHour + Math.floor((startMinute + totalMinutes) / 60);
+        const endMinute = (startMinute + totalMinutes) % 60;
+
+        // Parse the date string more explicitly to avoid timezone issues
+        const [year, month, day] = appointmentDate.split("-").map(Number);
+        const date = new Date(year, month - 1, day, endHour, endMinute, 0, 0);
+
+        // Format to ISO string with fixed timezone offset (-04:00)
+        const isoString =
+          date.getFullYear() +
+          "-" +
+          String(date.getMonth() + 1).padStart(2, "0") +
+          "-" +
+          String(date.getDate()).padStart(2, "0") +
+          "T" +
+          String(date.getHours()).padStart(2, "0") +
+          ":" +
+          String(date.getMinutes()).padStart(2, "0") +
+          ":" +
+          String(date.getSeconds()).padStart(2, "0") +
+          "-04:00";
+
+        return isoString;
+      }
+    );
+
+    console.log("Determined end time:", endTimeISO);
+    return endTimeISO;
+  };
+  const convert24toISO = (time24: string, appointmentDate: string) => {
+    const [hours, minutes] = time24.split(":").map(Number);
+
+    // Parse the date string more explicitly to avoid timezone issues
+    const [year, month, day] = appointmentDate.split("-").map(Number);
+    const date = new Date(year, month - 1, day, hours, minutes, 0, 0);
+
+    // Format to ISO string with fixed timezone offset (-04:00)
+    const isoString =
+      date.getFullYear() +
+      "-" +
+      String(date.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(date.getDate()).padStart(2, "0") +
+      "T" +
+      String(date.getHours()).padStart(2, "0") +
+      ":" +
+      String(date.getMinutes()).padStart(2, "0") +
+      ":" +
+      String(date.getSeconds()).padStart(2, "0") +
+      "-04:00";
+
+    console.log("Converted time to ISO:", isoString);
+    return isoString;
+  };
+
   try {
     const accessToken = await generateAccessToken();
     const response = await axios.post(
-      "v4.1/merchant/appointment",
+      "/v4.1/merchant/appointment",
       {
         access_token: accessToken,
         LocationID: locationID,
+        Notes: "Booked via YurrAI",
         ResourceTypeID: 1,
         Customer: {
           Email: appointment.email,
+          MobilePhone: appointment.phone,
           FirstName: appointment.firstName,
           LastName: appointment.lastName,
         },
-        AppointmentDateOffset: appointment.appointmentDate,
+        AppointmentDateOffset: convert24toISO(
+          "00:00",
+          appointment.appointmentDate
+        ),
         AppointmentTreatmentDTOs: [
           {
             TreatmentID: treatmentID,
@@ -249,8 +329,15 @@ export const createAppointment = async (appointment: AgentAppointment) => {
               ? await getEmployeeId(appointment.employeeName)
               : determineEmployeeId(treatmentID || 0),
             RoomID: roomID,
-            StartTimeOffset: appointment.startTime,
-            EndTimeOffset: appointment.endTime,
+            StartTimeOffset: convert24toISO(
+              appointment.startTime,
+              appointment.appointmentDate
+            ),
+            EndTimeOffset: await determineEndTime(
+              appointment.startTime,
+              treatmentID || 0,
+              appointment.appointmentDate
+            ),
           },
         ],
       },
