@@ -166,14 +166,18 @@ export const getAvaliableDates = async (req: Request, res: Response) => {
 };
 
 export const getAvaliableTimes = async (req: Request, res: Response) => {
-  const body: { fromDateTime: string; serviceId: number; employeeId?: number } =
-    req.body;
+  const body: {
+    date: string;
+    time: string;
+    serviceId: number;
+    employeeId?: number;
+  } = req.body;
 
   try {
-    if (!body.fromDateTime || !body.serviceId) {
+    if (!body.date || !body.serviceId || !body.time) {
       return res
         .status(400)
-        .json({ message: "fromDateTime and serviceId are required." });
+        .json({ message: "date, time and serviceId are required." });
     }
 
     await findAvailableTimes(body).then((availableTimes) => {
