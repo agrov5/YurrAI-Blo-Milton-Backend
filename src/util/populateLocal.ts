@@ -91,6 +91,7 @@ async function runPopulateFunctions() {
                 Price: treatment.Price,
                 Category: treatment.Category,
                 SubCategory: treatment.SubCategory,
+                TotalDuration: treatment.TotalDuration,
                 EmployeeIDs: treatment.EmployeeIDs,
                 RoomIDs: treatment.RoomIDs,
               },
@@ -103,6 +104,7 @@ async function runPopulateFunctions() {
               Price: treatment.Price,
               Category: treatment.Category,
               SubCategory: treatment.SubCategory,
+              TotalDuration: treatment.TotalDuration,
               EmployeeIDs: treatment.EmployeeIDs,
               RoomIDs: treatment.RoomIDs,
             });
