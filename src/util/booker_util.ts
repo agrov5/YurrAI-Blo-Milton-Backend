@@ -184,6 +184,32 @@ export const findAvailableTimes = async (options: {
   }
 };
 
+export const checkCustomerExists = async (firstName: string, email: string) => {
+  try {
+    const accessToken = await generateAccessToken();
+    const response = await axios.post(
+      "/v4.1/merchant/customers",
+      {
+        access_token: accessToken,
+        LocationID: locationID,
+        Email: email,
+        FirstNameStart: firstName,
+      },
+      {
+        headers: {
+          "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
+        },
+      }
+    );
+    return response.data.Customers && response.data.Customers.length > 0
+      ? response.data.Customers[0]
+      : null;
+  } catch (error) {
+    console.error("Error creating appointment:", error);
+    throw error;
+  }
+};
+
 // NOTE: fix this, very prone to errors
 export const createAppointment = async (appointment: AgentAppointment) => {
   const treatmentID = await treatmentLookupByName(
@@ -234,6 +260,11 @@ export const createAppointment = async (appointment: AgentAppointment) => {
     });
   };
 
+  const customer = await checkCustomerExists(
+    appointment.firstName,
+    appointment.email
+  );
+
   try {
     const accessToken = await generateAccessToken();
     const response = await axios.post(
@@ -242,13 +273,16 @@ export const createAppointment = async (appointment: AgentAppointment) => {
         access_token: accessToken,
         LocationID: locationID,
         Notes: "Booked via YurrAI",
+        // CreateIncompleteAppointment: true,
         ResourceTypeID: 1,
-        Customer: {
-          Email: appointment.email,
-          MobilePhone: appointment.phone,
-          FirstName: appointment.firstName,
-          LastName: appointment.lastName,
-        },
+        Customer: customer
+          ? customer.Customer
+          : {
+              Email: appointment.email,
+              MobilePhone: appointment.phone,
+              FirstName: appointment.firstName,
+              LastName: appointment.lastName,
+            },
         AppointmentDateOffset: convert24toISO(
           "00:00",
           appointment.appointmentDate
@@ -260,6 +294,7 @@ export const createAppointment = async (appointment: AgentAppointment) => {
               ? await getEmployeeId(appointment.employeeName)
               : determineEmployeeId(treatmentID || 0),
             RoomID: roomID,
+            EmployeeWasRequested: appointment.employeeName ? true : false,
             StartTimeOffset: convert24toISO(
               appointment.startTime,
               appointment.appointmentDate
@@ -285,8 +320,3 @@ export const createAppointment = async (appointment: AgentAppointment) => {
     throw error;
   }
 };
-
-// AppointmentDateOffset
-// LocationID
-// access_token
-// AppointmentTreatmentDTOs

@@ -11,7 +11,7 @@ export const employeeLookup = async (empId: number) => {
 };
 
 export const employeeLookupByName = async (name: string) => {
-  const employee = await EmployeeModel.findOne({ DisplayName: name }).exec();
+  const employee = await EmployeeModel.findOne({ FullName: name }).exec();
   return employee;
 };
 

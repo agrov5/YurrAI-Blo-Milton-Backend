@@ -9,6 +9,8 @@ import {
   getTreatmentByName,
   getEmployeeById,
   getEmployeeByName,
+  getEmployeesSimplified,
+  getTreatmentsSimplified,
 } from "../controllers/getController";
 import {
   twilioController,
@@ -18,111 +20,23 @@ import { get } from "http";
 
 const getRouter = Router();
 
-/**
- * @route   GET /treatments
- * @desc    Get all treatments
- * @access  Private (requires auth)
- */
-
 getRouter.get("/treatments", getTreatments);
-
 getRouter.get("/treatments/id", getTreatmentById);
 getRouter.get("/treatments/name", getTreatmentByName);
+getRouter.get("/treatments/agent", getTreatmentsSimplified);
 
-/**
- * @route   GET /employees
- * @desc    Get all employees
- * @access  Private (requires auth)
- */
 getRouter.get("/employees", getEmployees);
-
 getRouter.get("/employees/id", getEmployeeById);
 getRouter.get("/employees/name", getEmployeeByName);
-/**
- * @route   GET /rooms
- * @desc    Get all rooms
- * @access  Private (requires auth)
- */
+getRouter.get("/employees/agent", getEmployeesSimplified);
+
 getRouter.get("/rooms", getRooms);
 
-/**
- * @route   GET /available-dates
- * @desc    Get available dates for appointments
- * @access  Private (requires auth)
- * @body    { fromDate: string, toDate: string, employeeId?: number }
- */
 getRouter.get("/available-dates", getAvaliableDates);
-
-/**
- * @route   GET /available-times
- * @desc    Get available times for appointments
- * @access  Private (requires auth)
- * @body    { date: string, employeeId?: number }
- */
 getRouter.get("/avaliable-times", getAvaliableTimes);
 
-/**
- * @route   POST /sms
- * @desc    Send SMS message via Twilio (body parameters)
- * @access  Private (requires auth)
- */
-
-/**
- * @route   POST /sms
- * @desc    Send SMS message via Twilio (body parameters)
- * @access  Private (requires auth)
- */
 getRouter.get("/sms", twilioController);
-
-/**
- * @route   GET /sms/:to/:body
- * @desc    Send SMS message via Twilio (URL parameters)
- * @access  Private (requires auth)
- * @example GET /sms/+1234567890/Hello%20World
- */
 getRouter.get("/sms/:to/:body", twilioControllerFromParams);
-
-/**
- * @route   GET /treatments/:id
- * @desc    Get treatment by ID
- * @access  Private (requires auth)
- */
-// router.get("/treatments/:id", getTreatmentById);
-
-/**
- * @route   GET /appointments
- * @desc    Get all appointments
- * @access  Private (requires auth)
- */
-// router.get("/appointments", getAppointments);
-
-/**
- * @route   GET /appointments/:id
- * @desc    Get appointment by ID
- * @access  Private (requires auth)
- */
-// router.get("/appointments/:id", getAppointmentById);
-
-/**
- * @route   GET /employees
- * @desc    Get all employees
- * @access  Private (requires auth)
- */
-// router.get("/employees", getEmployees);
-
-/**
- * @route   GET /employees/:id
- * @desc    Get employee by ID
- * @access  Private (requires auth)
- */
-// router.get("/employees/:id", getEmployeeById);
-
-/**
- * @route   GET /rooms/:id
- * @desc    Get room by ID
- * @access  Private (requires auth)
- */
-// router.get("/rooms/:id", getRoomById);
 
 /**
  * @route   GET /health

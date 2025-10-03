@@ -2,6 +2,7 @@ import mongoose, { Schema, Document } from "mongoose";
 
 export interface IEmployee extends Document {
   DisplayName: string;
+  FullName?: string;
   FirstName: string;
   Gender: any;
   ID: number;
@@ -28,6 +29,7 @@ export interface IEmployee extends Document {
 const EmployeeSchema = new Schema(
   {
     ID: { type: Number, required: true },
+    FullName: { type: String, required: false },
     Rank: { type: Number, required: false },
     DisplayName: { type: String, required: true },
     FirstName: { type: String, required: true },
@@ -74,6 +76,7 @@ export interface Employee extends User {}
 
 export interface User {
   DisplayName: string;
+  FullName: string;
   FirstName: string;
   Gender: Gender;
   ID: number;
