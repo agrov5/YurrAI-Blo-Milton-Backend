@@ -67,6 +67,22 @@ export const getTreatmentById = async (req: Request, res: Response) => {
   }
 };
 
+export const getTreatmentsSimplified = async (req: Request, res: Response) => {
+  try {
+    const treatments: ITreatment[] = await TreatmentModel.find(
+      {},
+      { _id: 0 }
+    ).select("ID TreatmentName Price TotalDuration");
+    res.status(200).json({
+      message: "success",
+      locationID: locationID,
+      count: treatments.length,
+      results: treatments,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "error", errorMessage: error });
+  }
+};
 export const getEmployees = async (req: Request, res: Response) => {
   try {
     const employees: IEmployee[] = await EmployeeModel.find();
@@ -88,7 +104,7 @@ export const getEmployeeByName = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "name is required." });
     }
     const employee = await EmployeeModel.findOne({
-      DisplayName: body.name,
+      FullName: body.name,
     }).exec();
     if (employee) {
       res.status(200).json({
@@ -120,6 +136,23 @@ export const getEmployeeById = async (req: Request, res: Response) => {
     } else {
       res.status(404).json({ message: "Employee not found." });
     }
+  } catch (error) {
+    res.status(500).json({ message: "error", errorMessage: error });
+  }
+};
+
+export const getEmployeesSimplified = async (req: Request, res: Response) => {
+  try {
+    const employees: IEmployee[] = await EmployeeModel.find(
+      {},
+      { _id: 0 }
+    ).select("ID FullName");
+    res.status(200).json({
+      message: "success",
+      locationID: locationID,
+      count: employees.length,
+      results: employees,
+    });
   } catch (error) {
     res.status(500).json({ message: "error", errorMessage: error });
   }

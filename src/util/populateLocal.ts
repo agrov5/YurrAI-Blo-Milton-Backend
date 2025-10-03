@@ -32,6 +32,7 @@ async function runPopulateFunctions() {
             { ID: employee.ID },
             {
               ID: employee.ID,
+              FullName: employee.FirstName + " " + employee.LastName,
               Rank: employee.Rank,
               DisplayName: employee.DisplayName,
               FirstName: employee.FirstName,
@@ -43,6 +44,7 @@ async function runPopulateFunctions() {
         } else {
           await EmployeeModel.create({
             ID: employee.ID,
+            FullName: employee.FirstName + " " + employee.LastName,
             Rank: employee.Rank,
             DisplayName: employee.DisplayName,
             FirstName: employee.FirstName,
