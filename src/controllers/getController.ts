@@ -69,10 +69,18 @@ export const getTreatmentById = async (req: Request, res: Response) => {
 
 export const getTreatmentsSimplified = async (req: Request, res: Response) => {
   try {
-    const treatments: ITreatment[] = await TreatmentModel.find(
-      {},
-      { _id: 0 }
-    ).select("ID TreatmentName Price TotalDuration");
+    const treatments = await TreatmentModel.aggregate([
+      {
+        $project: {
+          _id: 0,
+          ID: 1,
+          TreatmentName: 1,
+          Price: "$Price.Amount",
+          TotalDuration: 1,
+        },
+      },
+    ]);
+
     res.status(200).json({
       message: "success",
       locationID: locationID,
@@ -83,6 +91,7 @@ export const getTreatmentsSimplified = async (req: Request, res: Response) => {
     res.status(500).json({ message: "error", errorMessage: error });
   }
 };
+
 export const getEmployees = async (req: Request, res: Response) => {
   try {
     const employees: IEmployee[] = await EmployeeModel.find();
@@ -145,8 +154,8 @@ export const getEmployeesSimplified = async (req: Request, res: Response) => {
   try {
     const employees: IEmployee[] = await EmployeeModel.find(
       {},
-      { _id: 0 }
-    ).select("ID FullName");
+      { ID: 1, FullName: 1, _id: 0 }
+    );
     res.status(200).json({
       message: "success",
       locationID: locationID,
