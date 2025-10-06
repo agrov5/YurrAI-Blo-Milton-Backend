@@ -235,31 +235,101 @@ export const createAppointment = async (appointment: AgentAppointment) => {
     return employee ? employee.ID : null;
   };
 
-  const determineEmployeeId = (treatmentId: number) => {
-    TreatmentModel.findOne({ ID: treatmentId }).then((treatment) => {
+  const checkTimeSlotAvailability = (
+    availabilityData: any[],
+    requestedTime: string,
+    requestedDate: string
+  ): boolean => {
+    try {
+      // Convert requested time to ISO format for comparison
+      const requestedDateTime = new Date(
+        convert24toISO(requestedTime, requestedDate)
+      );
+
+      for (const location of availabilityData) {
+        const startTimeInterval = location.startTimeInterval || 15;
+
+        for (const category of location.serviceCategories || []) {
+          for (const service of category.services || []) {
+            for (const availabilityBlock of service.availability || []) {
+              const blockStart = new Date(availabilityBlock.startDateTime);
+              const blockEnd = new Date(availabilityBlock.endDateTime);
+
+              // Check if requested time falls within this availability block
+              if (
+                requestedDateTime >= blockStart &&
+                requestedDateTime <= blockEnd
+              ) {
+                // Check if the time aligns with the location's start time interval
+                const minutesSinceBlockStart =
+                  (requestedDateTime.getTime() - blockStart.getTime()) /
+                  (1000 * 60);
+
+                // Verify the time slot aligns with the interval (e.g., 15, 30, 60 minutes)
+                if (minutesSinceBlockStart % startTimeInterval === 0) {
+                  return true;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      return false;
+    } catch (error) {
+      console.error("Error checking time slot availability:", error);
+      return false;
+    }
+  };
+
+  const determineEmployeeId = async (
+    treatmentId: number
+  ): Promise<number | null> => {
+    try {
+      const treatment = await TreatmentModel.findOne({ ID: treatmentId });
       if (
         treatment &&
         treatment.EmployeeIDs &&
         treatment.EmployeeIDs.length > 0
       ) {
+        // Check each employee for availability
         for (const empId of treatment.EmployeeIDs) {
-          findAvailableTimes({
-            date: appointment.appointmentDate, // NOTE: Check this maybe it won't work.
+          const availability = await findAvailableTimes({
+            date: appointment.appointmentDate,
             time: appointment.startTime,
             serviceId: treatmentId,
             employeeId: empId,
-          }).then((availability) => {
-            const avaliableEmployees: number[] = availability.serviceCategories[0].services[0].availabilty[0].employees
-            const avaliable: boolean = avaliableEmployees.includes(empId);
-            if (avaliable) {
-              return empId;
-            }
           });
+
+          // Check if this employee has availability for the requested time
+          if (availability && availability.length > 0) {
+            const hasTimeSlot = checkTimeSlotAvailability(
+              availability,
+              appointment.startTime,
+              appointment.appointmentDate
+            );
+            if (hasTimeSlot) {
+              // Also check if the employee is listed in the availability block
+              for (const location of availability) {
+                for (const category of location.serviceCategories || []) {
+                  for (const service of category.services || []) {
+                    for (const block of service.availability || []) {
+                      if (block.employees && block.employees.includes(empId)) {
+                        return empId;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
-      } else {
-        return null; // No employees associated with this treatment
       }
-    });
+      return null; // No available employees found
+    } catch (error) {
+      console.error("Error determining employee ID:", error);
+      return null;
+    }
   };
 
   const customer = await checkCustomerExists(
@@ -294,7 +364,7 @@ export const createAppointment = async (appointment: AgentAppointment) => {
             TreatmentID: treatmentID,
             EmployeeID: appointment.employeeName
               ? await getEmployeeId(appointment.employeeName)
-              : determineEmployeeId(treatmentID || 0),
+              : await determineEmployeeId(treatmentID || 0),
             RoomID: roomID,
             EmployeeWasRequested: appointment.employeeName ? true : false,
             StartTimeOffset: convert24toISO(
