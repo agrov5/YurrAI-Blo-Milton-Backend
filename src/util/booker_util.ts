@@ -249,7 +249,9 @@ export const createAppointment = async (appointment: AgentAppointment) => {
             serviceId: treatmentId,
             employeeId: empId,
           }).then((availability) => {
-            if (availability && availability.length > 0) {
+            const avaliableEmployees: number[] = availability.serviceCategories[0].services[0].availabilty[0].employees
+            const avaliable: boolean = avaliableEmployees.includes(empId);
+            if (avaliable) {
               return empId;
             }
           });
