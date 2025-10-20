@@ -35,8 +35,7 @@ getRouter.get("/rooms", getRooms);
 getRouter.get("/available-dates", getAvaliableDates);
 getRouter.get("/avaliable-times", getAvaliableTimes);
 
-getRouter.get("/sms", twilioController);
-getRouter.get("/sms/:to/:body", twilioControllerFromParams);
+
 
 /**
  * @route   GET /health

@@ -35,8 +35,8 @@ axios.defaults.baseURL = process.env.AXIOS_BASE_URL || "http://localhost:5000";
 job.start();
 
 // Body parsing middleware with increased limits
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ limit: "10mb", extended: true }));
+app.use(express.json({ limit: "100mb" }));
+app.use(express.urlencoded({ limit: "100mb", extended: true }));
 
 // Serve static files
 app.use(express.static(path.join(__dirname, "public")));
