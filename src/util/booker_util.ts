@@ -344,7 +344,7 @@ export const createAppointment = async (appointment: AgentAppointment) => {
       {
         access_token: accessToken,
         LocationID: locationID,
-        Notes: "Booked via YurrAI",
+        Notes: appointment.notes ? `Booked via YurrAI. \n --- \n Agent Notes: ${appointment.notes}` : "Booked via YurrAI",
         // CreateIncompleteAppointment: true,
         ResourceTypeID: 1,
         Customer: customer

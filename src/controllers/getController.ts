@@ -233,13 +233,3 @@ export const getAvaliableTimes = async (req: Request, res: Response) => {
     res.status(500).json({ message: "error", errorMessage: error });
   }
 };
-// export const getEmployeeRankings = async (req: Request, res: Response) => {
-//   try {
-//     const employeeRankings: IOrder[] = await OrderModel.find().sort({
-//       OrderPosition: 1,
-//     });
-//     res.status(200).json(employeeRankings);
-//   } catch (error) {
-//     res.status(500).json({ message: "error", errorMessage: error });
-//   }
-// };

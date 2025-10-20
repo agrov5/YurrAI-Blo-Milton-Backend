@@ -1,4 +1,5 @@
 // import { Schema, model } from "mongoose";
+import { ArgumentErrors } from "./Treatment";
 
 export interface AgentAppointment {
   email: string;
@@ -10,6 +11,7 @@ export interface AgentAppointment {
   roomName?: string;
   appointmentDate: string;
   startTime: string;
+  notes?: string;
 }
 
 export interface Appointment {
@@ -34,6 +36,14 @@ export interface AppointmentTreatmentDTO {
   RoomID: number; // 194349 - All Services Room
   StartTimeOffset: string; // ISO datetime string
   EndTimeOffset: string; // ISO datetime string
+}
+
+export interface AppointmentResponse {
+  Appointment: any;
+  IsSuccess: boolean;
+  ErrorCode: number;
+  ErrorMessage: string;
+  ArgumentErrors: ArgumentErrors[];
 }
 
 // export const BookingModel = model("Booking", bookingSchema);
