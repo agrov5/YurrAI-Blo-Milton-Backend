@@ -184,7 +184,7 @@ export const findAvailableTimes = async (options: {
   }
 };
 
-export const checkCustomerExists = async (firstName: string, email: string) => {
+export const checkCustomerExists = async (firstName: string, phone: string) => {
   try {
     const accessToken = await generateAccessToken();
     const response = await axios.post(
@@ -192,7 +192,7 @@ export const checkCustomerExists = async (firstName: string, email: string) => {
       {
         access_token: accessToken,
         LocationID: locationID,
-        Email: email,
+        Phone: phone,
         FirstNameStart: firstName,
       },
       {
@@ -334,7 +334,7 @@ export const createAppointment = async (appointment: AgentAppointment) => {
 
   const customer = await checkCustomerExists(
     appointment.firstName,
-    appointment.email
+    appointment.phone.toString()
   );
 
   try {
