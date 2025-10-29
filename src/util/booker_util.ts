@@ -9,7 +9,7 @@ import {
   convert24toISO,
 } from "./db_util";
 import { saveAsJson, saveAsJsonAsync } from "../middlewares/loggerMiddleware";
-import { AgentAppointment } from "../models/Appointment";
+import { AgentAppointment, CancelAppointment } from "../models/Appointment";
 import { Employee } from "../models/Employee";
 
 const generateAccessToken = async () => {
@@ -344,7 +344,9 @@ export const createAppointment = async (appointment: AgentAppointment) => {
       {
         access_token: accessToken,
         LocationID: locationID,
-        Notes: appointment.notes ? `Booked via YurrAI. \n --- \n Agent Notes: ${appointment.notes}` : "Booked via YurrAI",
+        Notes: appointment.notes
+          ? `Booked via YurrAI. \n --- \n Agent Notes: ${appointment.notes}`
+          : "Booked via YurrAI",
         // CreateIncompleteAppointment: true,
         ResourceTypeID: 1,
         Customer: customer
@@ -390,5 +392,16 @@ export const createAppointment = async (appointment: AgentAppointment) => {
   } catch (error) {
     console.error("Error creating appointment:", error);
     throw error;
+  }
+};
+
+export const getAppointment = async () => {};
+
+export const cancelAppointment = async (appointment: CancelAppointment) => {
+  try {
+    const accessToken = await generateAccessToken();
+    const response = await axios.put();
+  } catch (error) {
+    console.error("Error cancelling appointment:", error);
   }
 };

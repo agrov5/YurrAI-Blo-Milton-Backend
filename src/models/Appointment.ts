@@ -3,6 +3,12 @@ import { ArgumentErrors, Treatment } from "./Treatment";
 import { Room } from "./Room";
 import { Employee } from "./Employee";
 
+export interface CancelAppointment {
+  customerName: string;
+  customerPhone: string;
+  appointmentStartTime: string;
+}
+
 export interface AgentAppointment {
   email: string;
   phone: number;
