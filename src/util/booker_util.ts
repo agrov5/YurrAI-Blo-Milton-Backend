@@ -11,6 +11,7 @@ import {
 import { saveAsJson, saveAsJsonAsync } from "../middlewares/loggerMiddleware";
 import { AgentAppointment, CancelAppointment } from "../models/Appointment";
 import { Employee } from "../models/Employee";
+import { CreditCardResponse, CreditCardRecord } from "../models/CreditCard";
 
 const generateAccessToken = async () => {
   try {
@@ -391,6 +392,31 @@ export const createAppointment = async (appointment: AgentAppointment) => {
     return response.data;
   } catch (error) {
     console.error("Error creating appointment:", error);
+    throw error;
+  }
+};
+
+export const getCustomerCreditCardInfo = async (
+  cusId: number
+): Promise<CreditCardRecord | null> => {
+  try {
+    const accessToken = await generateAccessToken();
+    const response = await axios.post("v4.1/merchant/customer/creditcards", {
+      access_token: accessToken,
+      CustomerID: cusId,
+      SpaID: locationID,
+    });
+
+    const ccResponse: CreditCardResponse = response.data;
+
+    return ccResponse.IsSuccess &&
+      ccResponse.CreditCards &&
+      ccResponse.CreditCards.length > 0
+      ? ccResponse.CreditCards.find((card) => card.IsDefault) ||
+          ccResponse.CreditCards[0]
+      : null;
+  } catch (error) {
+    console.error("Error fetching customer credit cards:", error);
     throw error;
   }
 };
