@@ -5,7 +5,10 @@ import { IRoom, RoomModel } from "../models/Room";
 import {
   findAvailableDates,
   findAvailableTimes,
+  getCustomerCreditCardInfo,
   locationID,
+  checkCustomerExists,
+  getWidgetAuthToken,
 } from "../util/booker_util";
 
 export const getTreatments = async (req: Request, res: Response) => {
@@ -228,6 +231,60 @@ export const getAvaliableTimes = async (req: Request, res: Response) => {
         locationID: locationID,
         results: availableTimes,
       });
+    });
+  } catch (error) {
+    res.status(500).json({ message: "error", errorMessage: error });
+  }
+};
+
+export const getCustomerCCInfo = async (req: Request, res: Response) => {
+  const body: { customerId: number } = req.body;
+
+  if (!body.customerId) {
+    return res.status(400).json({ message: "customerId is required." });
+  }
+
+  try {
+    await getCustomerCreditCardInfo(body.customerId).then((ccInfo) => {
+      res.status(200).json({
+        message: "success",
+        locationID: locationID,
+        results: ccInfo,
+      });
+    });
+  } catch (error) {
+    res.status(500).json({ message: "error", errorMessage: error });
+  }
+};
+
+export const getCustomer = async (req: Request, res: Response) => {
+  const body: { firstName: string; phone: string } = req.body;
+  try {
+    if (!body.firstName || !body.phone) {
+      return res.status(400).json({
+        message:
+          "Following fields are required: firstName: string, phone: string",
+      });
+    }
+
+    await checkCustomerExists(body.firstName, body.phone).then((cus) => {
+      res.status(200).json({
+        message: "success",
+        locationID: locationID,
+        customer: cus,
+      });
+    });
+  } catch (error) {
+    res.status(500).json({ message: "error", errorMessage: error });
+  }
+};
+
+export const getWidgetAuth = async (req: Request, res: Response) => {
+  try {
+    const token = await getWidgetAuthToken();
+    res.status(200).json({
+      message: "success",
+      token: token,
     });
   } catch (error) {
     res.status(500).json({ message: "error", errorMessage: error });

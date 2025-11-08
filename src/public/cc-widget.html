@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Credit Card Widget</title>
+  </head>
+  <body>
+    <div id="booker-cc-widget-container"></div>
+
+    <script
+      type="text/javascript"
+      src="https://ccwidget.secure-booker.com/cc-widget-beacon.js"
+    ></script>
+    <script>
+      function getUrlParams() {
+        const params = new URLSearchParams(window.location.search);
+        return {
+          customerId: params.get("customerId"),
+          token: params.get("token"),
+          spaId: params.get("spaId"),
+          locale: params.get("locale") || "en-US",
+        };
+      }
+
+      function getClientToken() {
+        const params = getUrlParams();
+        return Promise.resolve(params.token);
+      }
+
+      function onWidgetEvent(data) {
+        console.log("Widget event:", data);
+      }
+
+      window.addEventListener("load", function () {
+        const params = getUrlParams();
+
+        if (
+          window.ccWidgetBeacon &&
+          params.customerId &&
+          params.spaId &&
+          params.token
+        ) {
+          window.ccWidgetBeacon.loadWidget({
+            getClientToken: getClientToken,
+            onEvent: onWidgetEvent,
+            spaId: parseInt(params.spaId),
+            customerId: parseInt(params.customerId),
+            locale: params.locale,
+          });
+        }
+      });
+    </script>
+  </body>
+</html>
