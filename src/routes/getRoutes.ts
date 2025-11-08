@@ -11,6 +11,9 @@ import {
   getEmployeeByName,
   getEmployeesSimplified,
   getTreatmentsSimplified,
+  getCustomerCCInfo,
+  getCustomer,
+  getWidgetAuth,
 } from "../controllers/getController";
 import {
   twilioController,
@@ -35,7 +38,9 @@ getRouter.get("/rooms", getRooms);
 getRouter.get("/available-dates", getAvaliableDates);
 getRouter.get("/avaliable-times", getAvaliableTimes);
 
-
+getRouter.get("/cc-info", getCustomerCCInfo);
+getRouter.get("/customer", getCustomer);
+getRouter.get("/widget/auth", getWidgetAuth);
 
 /**
  * @route   GET /health
@@ -47,6 +52,7 @@ getRouter.get("/health", (req, res) => {
     status: "OK",
     timestamp: new Date().toISOString(),
     service: "Blo Milton Backend API",
+    locationID: process.env.LOCATION_ID,
   });
 });
 

@@ -2,7 +2,6 @@
 import { EmployeeModel, Employee, IEmployee } from "../models/Employee";
 import { TreatmentModel } from "../models/Treatment";
 
-
 export const customerLookup = (cusId: number) => {};
 
 export const employeeLookup = async (empId: number) => {
@@ -21,7 +20,9 @@ export const treatmentLookup = (treatId: number) => {
 };
 
 export const treatmentLookupByName = async (name: string) => {
-  const treatment = await TreatmentModel.findOne({ TreatmentName: name }).exec();
+  const treatment = await TreatmentModel.findOne({
+    TreatmentName: name,
+  }).exec();
   return treatment;
 };
 
@@ -82,75 +83,72 @@ export const isoToDate = (isoStr: string): string => {
 };
 
 export const determineEndTime = async (
-    startTime: string,
-    treatmentId: number,
-    appointmentDate: string
-  ) => {
-    const endTimeISO = await TreatmentModel.findOne({ ID: treatmentId }).then(
-      (treatment) => {
-        const [startHour, startMinute] = startTime.split(":").map(Number);
-        let totalMinutes: number;
+  startTime: string,
+  treatmentId: number,
+  appointmentDate: string
+) => {
+  const endTimeISO = await TreatmentModel.findOne({ ID: treatmentId }).then(
+    (treatment) => {
+      const [startHour, startMinute] = startTime.split(":").map(Number);
+      let totalMinutes: number;
 
-        if (treatment && treatment.TotalDuration) {
-          totalMinutes = treatment.TotalDuration;
-        } else {
-          // Fallback to 2 hours (120 minutes)
-          totalMinutes = 120;
-        }
-
-        const endHour =
-          startHour + Math.floor((startMinute + totalMinutes) / 60);
-        const endMinute = (startMinute + totalMinutes) % 60;
-
-        // Parse the date string more explicitly to avoid timezone issues
-        const [year, month, day] = appointmentDate.split("-").map(Number);
-        const date = new Date(year, month - 1, day, endHour, endMinute, 0, 0);
-
-        // Format to ISO string with fixed timezone offset (-04:00)
-        const isoString =
-          date.getFullYear() +
-          "-" +
-          String(date.getMonth() + 1).padStart(2, "0") +
-          "-" +
-          String(date.getDate()).padStart(2, "0") +
-          "T" +
-          String(date.getHours()).padStart(2, "0") +
-          ":" +
-          String(date.getMinutes()).padStart(2, "0") +
-          ":" +
-          String(date.getSeconds()).padStart(2, "0") +
-          "-04:00";
-
-        return isoString;
+      if (treatment && treatment.TotalDuration) {
+        totalMinutes = treatment.TotalDuration;
+      } else {
+        // Fallback to 2 hours (120 minutes)
+        totalMinutes = 120;
       }
-    );
 
-    console.log("Determined end time:", endTimeISO);
-    return endTimeISO;
-  };
-  
-  export const convert24toISO = (time24: string, appointmentDate: string) => {
-    const [hours, minutes] = time24.split(":").map(Number);
+      const endHour = startHour + Math.floor((startMinute + totalMinutes) / 60);
+      const endMinute = (startMinute + totalMinutes) % 60;
 
-    // Parse the date string more explicitly to avoid timezone issues
-    const [year, month, day] = appointmentDate.split("-").map(Number);
-    const date = new Date(year, month - 1, day, hours, minutes, 0, 0);
+      // Parse the date string more explicitly to avoid timezone issues
+      const [year, month, day] = appointmentDate.split("-").map(Number);
+      const date = new Date(year, month - 1, day, endHour, endMinute, 0, 0);
 
-    // Format to ISO string with fixed timezone offset (-04:00)
-    const isoString =
-      date.getFullYear() +
-      "-" +
-      String(date.getMonth() + 1).padStart(2, "0") +
-      "-" +
-      String(date.getDate()).padStart(2, "0") +
-      "T" +
-      String(date.getHours()).padStart(2, "0") +
-      ":" +
-      String(date.getMinutes()).padStart(2, "0") +
-      ":" +
-      String(date.getSeconds()).padStart(2, "0") +
-      "-04:00";
+      // Format to ISO string with fixed timezone offset (-04:00)
+      const isoString =
+        date.getFullYear() +
+        "-" +
+        String(date.getMonth() + 1).padStart(2, "0") +
+        "-" +
+        String(date.getDate()).padStart(2, "0") +
+        "T" +
+        String(date.getHours()).padStart(2, "0") +
+        ":" +
+        String(date.getMinutes()).padStart(2, "0") +
+        ":" +
+        String(date.getSeconds()).padStart(2, "0") +
+        "-04:00";
 
-    console.log("Converted time to ISO:", isoString);
-    return isoString;
-  };
+      return isoString;
+    }
+  );
+
+  return endTimeISO;
+};
+
+export const convert24toISO = (time24: string, appointmentDate: string) => {
+  const [hours, minutes] = time24.split(":").map(Number);
+
+  // Parse the date string more explicitly to avoid timezone issues
+  const [year, month, day] = appointmentDate.split("-").map(Number);
+  const date = new Date(year, month - 1, day, hours, minutes, 0, 0);
+
+  // Format to ISO string with fixed timezone offset (-04:00)
+  const isoString =
+    date.getFullYear() +
+    "-" +
+    String(date.getMonth() + 1).padStart(2, "0") +
+    "-" +
+    String(date.getDate()).padStart(2, "0") +
+    "T" +
+    String(date.getHours()).padStart(2, "0") +
+    ":" +
+    String(date.getMinutes()).padStart(2, "0") +
+    ":" +
+    String(date.getSeconds()).padStart(2, "0") +
+    "-04:00";
+
+  return isoString;
+};

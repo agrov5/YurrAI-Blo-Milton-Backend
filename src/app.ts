@@ -28,6 +28,7 @@ import axios from "axios";
 import getRouter from "./routes/getRoutes";
 import postRouter from "./routes/postRoutes";
 import dashboardRoutes from "./routes/dashboardRoutes";
+import widgetRouter from "./routes/widgetRoutes";
 
 axios.defaults.baseURL = process.env.AXIOS_BASE_URL || "http://localhost:5000";
 
@@ -44,7 +45,10 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(loggerMiddleware);
 
 // Dashboard routes (public)
-app.use("/", dashboardRoutes);
+app.use("/admin", dashboardRoutes);
+
+// Widget route (public - accessed by customers via SMS link)
+app.use("/", widgetRouter);
 
 // API routes with authentication
 app.use("/api", authMiddleware);

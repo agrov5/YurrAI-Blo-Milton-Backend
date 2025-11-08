@@ -9,36 +9,146 @@ import {
   convert24toISO,
 } from "./db_util";
 import { saveAsJson, saveAsJsonAsync } from "../middlewares/loggerMiddleware";
-import { AgentAppointment, CancelAppointment } from "../models/Appointment";
+import {
+  AgentAppointment,
+  CancelAppointment,
+  CreateAppointmentResponse,
+  FullAppointmentObject,
+} from "../models/Appointment";
 import { Employee } from "../models/Employee";
 import { CreditCardResponse, CreditCardRecord } from "../models/CreditCard";
+import { sendMessage } from "./twillo_util";
 
-const generateAccessToken = async () => {
-  try {
-    // Header: {"Content-Type": "application/x-www-form-urlencoded", "Ocp-Apim-Subscription-Key": "your_subscription_key"}
-    // Body: {"grant_type": "personal_access_token", "client_id": "your_client_id", "client_secret": "your_client_secret", "scope": "merchant", "personal_access_token": "your_personal_access_token"}
+// const generateAccessToken = async () => {
+//   try {
+//     // Header: {"Content-Type": "application/x-www-form-urlencoded", "Ocp-Apim-Subscription-Key": "your_subscription_key"}
+//     // Body: {"grant_type": "personal_access_token", "client_id": "your_client_id", "client_secret": "your_client_secret", "scope": "merchant", "personal_access_token": "your_personal_access_token"}
 
-    const response = await axios.post(
-      "v5/auth/connect/token",
-      {
-        grant_type: "personal_access_token",
-        client_id: process.env.BOOKER_CLIENT_ID,
-        client_secret: process.env.BOOKER_CLIENT_SECRET,
-        scope: "merchant",
-        personal_access_token: process.env.BOOKER_PERSONAL_ACCESS_TOKEN,
-      },
-      {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
-        },
-      }
-    );
-    return response.data.access_token;
-  } catch (error) {
-    console.error("Error generating access token:", error);
-    throw error;
+//     const response = await axios.post(
+//       "v5/auth/connect/token",
+//       {
+//         grant_type: "personal_access_token",
+//         client_id: process.env.BOOKER_CLIENT_ID,
+//         client_secret: process.env.BOOKER_CLIENT_SECRET,
+//         scope: "merchant",
+//         personal_access_token: process.env.BOOKER_PERSONAL_ACCESS_TOKEN,
+//       },
+//       {
+//         headers: {
+//           "Content-Type": "application/x-www-form-urlencoded",
+//           "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
+//         },
+//       }
+//     );
+//     return response.data.access_token;
+//   } catch (error) {
+//     console.error("Error generating access token:", error);
+//     throw error;
+//   }
+// };
+
+// Cached access token to avoid requesting a new token on every call.
+// This implements a simple sliding-refresh strategy: when the token is
+// close to expiry (within TOKEN_REFRESH_BUFFER_MS) the function will
+// request a fresh token. Concurrent callers will share the same
+// in-flight request to avoid duplicate token calls.
+interface CachedToken {
+  token: string;
+  expiry: number; // sliding expiry (epoch ms)
+}
+
+let cachedToken: CachedToken | null = null;
+let tokenRequestPromise: Promise<string> | null = null;
+
+// Configurable sliding and absolute windows. Environment variables may be
+// provided to override defaults.
+const SLIDING_WINDOW_MS =
+  (process.env.BOOKER_SLIDING_MINUTES
+    ? Number(process.env.BOOKER_SLIDING_MINUTES)
+    : 30) *
+  60 *
+  1000; // default 30 minutes
+
+// Refresh buffer is relative to sliding window but capped (safety margin).
+const TOKEN_REFRESH_BUFFER_MS = Math.min(
+  60 * 1000,
+  Math.floor(SLIDING_WINDOW_MS * 0.2)
+);
+
+const generateAccessToken = async (): Promise<string> => {
+  // If we have a cached token and it's not about to expire, return it.
+  if (
+    cachedToken &&
+    Date.now() + TOKEN_REFRESH_BUFFER_MS < cachedToken.expiry
+  ) {
+    return cachedToken.token;
   }
+
+  // If a token request is already in-flight, return the same promise so
+  // concurrent callers wait for the same request.
+  if (tokenRequestPromise) {
+    return tokenRequestPromise;
+  }
+
+  // Create a new in-flight request
+  tokenRequestPromise = (async () => {
+    try {
+      const response = await axios.post(
+        "v5/auth/connect/token",
+        {
+          grant_type: "personal_access_token",
+          client_id: process.env.BOOKER_CLIENT_ID,
+          client_secret: process.env.BOOKER_CLIENT_SECRET,
+          scope: "merchant",
+          personal_access_token: process.env.BOOKER_PERSONAL_ACCESS_TOKEN,
+        },
+        {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
+          },
+        }
+      );
+
+      const token = response.data.access_token;
+      // Many token endpoints return expires_in (seconds) which commonly
+      // indicates the inactivity/sliding window. If absent, fall back to
+      // our configured SLIDING_WINDOW_MS.
+      const expiresIn = Number(response.data.expires_in);
+      const slidingExpiry = expiresIn
+        ? Date.now() + expiresIn * 1000
+        : Date.now() + SLIDING_WINDOW_MS;
+
+      // Initialize sliding expiry from server-provided expires_in when
+      // available, otherwise use configured sliding window.
+      cachedToken = { token, expiry: slidingExpiry };
+
+      return token;
+    } catch (error) {
+      // Clear cached token on error so future calls will retry.
+      cachedToken = null;
+      console.error("Error generating access token:", error);
+      throw error;
+    } finally {
+      // Clear the in-flight marker whether success or failure so subsequent
+      // calls can trigger a new attempt if needed.
+      tokenRequestPromise = null;
+    }
+  })();
+
+  return tokenRequestPromise;
+};
+
+// Returns a valid access token for making a request and updates the
+// sliding expiry on each successful use so the token life is extended
+// by SLIDING_WINDOW_MS (capped by absoluteExpiry).
+const getAccessToken = async (): Promise<string> => {
+  const token = await generateAccessToken();
+  if (cachedToken) {
+    // Extend sliding expiry on use.
+    cachedToken.expiry = Date.now() + SLIDING_WINDOW_MS;
+  }
+  return token;
 };
 
 // Remove global accessToken, generate per function
@@ -46,7 +156,7 @@ export const locationID = process.env.LOCATION_ID; // 46929 - Production, 3749 -
 
 export const findEmployees = async () => {
   try {
-    const accessToken = await generateAccessToken();
+    const accessToken = await getAccessToken();
     const response = await axios.post(
       "/v4.1/merchant/employees",
       {
@@ -69,7 +179,7 @@ export const findEmployees = async () => {
 
 export const findTreatments = async () => {
   try {
-    const accessToken = await generateAccessToken();
+    const accessToken = await getAccessToken();
     const response = await axios.post(
       "/v4.1/merchant/treatments",
       {
@@ -91,7 +201,7 @@ export const findTreatments = async () => {
 
 export const findRooms = async () => {
   try {
-    const accessToken = await generateAccessToken();
+    const accessToken = await getAccessToken();
     const response = await axios.post(
       "/v4.1/merchant/rooms",
       {
@@ -118,7 +228,7 @@ export const findAvailableDates = async (options: {
   employeeId?: number;
 }) => {
   try {
-    const accessToken = await generateAccessToken();
+    const accessToken = await getAccessToken();
 
     // Build query parameters
     const params = new URLSearchParams();
@@ -157,7 +267,7 @@ export const findAvailableTimes = async (options: {
   employeeId?: number;
 }) => {
   try {
-    const accessToken = await generateAccessToken();
+    const accessToken = await getAccessToken();
 
     // Build query parameters
     const params = new URLSearchParams();
@@ -187,7 +297,7 @@ export const findAvailableTimes = async (options: {
 
 export const checkCustomerExists = async (firstName: string, phone: string) => {
   try {
-    const accessToken = await generateAccessToken();
+    const accessToken = await getAccessToken();
     const response = await axios.post(
       "/v4.1/merchant/customers",
       {
@@ -212,7 +322,9 @@ export const checkCustomerExists = async (firstName: string, phone: string) => {
 };
 
 // NOTE: fix this, very prone to errors
-export const createAppointment = async (appointment: AgentAppointment) => {
+export const createAppointment = async (
+  appointment: AgentAppointment
+): Promise<CreateAppointmentResponse> => {
   const treatmentID = await treatmentLookupByName(
     appointment.treatmentName
   ).then((treatment: Treatment | null) => {
@@ -338,9 +450,18 @@ export const createAppointment = async (appointment: AgentAppointment) => {
     appointment.phone.toString()
   );
 
+  let sendSMS = true;
+
+  if (customer) {
+    const ccInfo = await getCustomerCreditCardInfo(customer.Customer.ID);
+    if (ccInfo) {
+      sendSMS = false;
+    }
+  }
+
   try {
-    const accessToken = await generateAccessToken();
-    const response = await axios.post(
+    const accessToken = await getAccessToken();
+    const response = await axios.post<CreateAppointmentResponse>(
       "/v4.1/merchant/appointment",
       {
         access_token: accessToken,
@@ -348,7 +469,7 @@ export const createAppointment = async (appointment: AgentAppointment) => {
         Notes: appointment.notes
           ? `Booked via YurrAI. \n --- \n Agent Notes: ${appointment.notes}`
           : "Booked via YurrAI",
-        // CreateIncompleteAppointment: true,
+        CreateIncompleteAppointment: sendSMS,
         ResourceTypeID: 1,
         Customer: customer
           ? customer.Customer
@@ -389,6 +510,27 @@ export const createAppointment = async (appointment: AgentAppointment) => {
       }
     );
 
+    if (sendSMS) {
+      const appointmentObj = response.data?.Appointment;
+      const customerId = appointmentObj?.Customer?.ID;
+      if (typeof customerId === "number") {
+        const widgetUrl = generateCCWidgetURL(customerId);
+        const message = `Dear ${appointment.firstName}, your appointment for ${appointment.treatmentName} on ${appointment.appointmentDate} at ${appointment.startTime} has been created but requires payment. Please complete your booking by providing your payment details, using the following link: ${widgetUrl}.`;
+        // Send SMS via Twilio
+        sendMessage(appointment.phone.toString(), message).catch((error) => {
+          console.error("Error sending SMS via Twilio:", error);
+        });
+      } else {
+        // Missing appointment or customer ID - log and skip generating URL
+        console.warn(
+          "createAppointment: unable to generate CC widget URL, missing appointment/customer ID",
+          {
+            appointmentData: response.data,
+          }
+        );
+      }
+    }
+
     return response.data;
   } catch (error) {
     console.error("Error creating appointment:", error);
@@ -400,12 +542,21 @@ export const getCustomerCreditCardInfo = async (
   cusId: number
 ): Promise<CreditCardRecord | null> => {
   try {
-    const accessToken = await generateAccessToken();
-    const response = await axios.post("v4.1/merchant/customer/creditcards", {
-      access_token: accessToken,
-      CustomerID: cusId,
-      SpaID: locationID,
-    });
+    const accessToken = await getAccessToken();
+    const response = await axios.post(
+      "v4.1/merchant/customer/creditcards",
+      {
+        access_token: accessToken,
+
+        CustomerID: cusId,
+        SpaID: locationID,
+      },
+      {
+        headers: {
+          "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
+        },
+      }
+    );
 
     const ccResponse: CreditCardResponse = response.data;
 
@@ -421,13 +572,34 @@ export const getCustomerCreditCardInfo = async (
   }
 };
 
-export const getAppointment = async () => {};
+export const generateCCWidgetURL = (customerId: number): string => {
+  const baseUrl = process.env.CC_BASE_URL || "http://localhost:3000";
+  return `${baseUrl}/cc-widget?customerId=${customerId}`;
+};
 
-export const cancelAppointment = async (appointment: CancelAppointment) => {
+export const getWidgetAuthToken = async (): Promise<string> => {
   try {
-    const accessToken = await generateAccessToken();
-    const response = await axios.put();
+    const accessToken = await getAccessToken();
+    const response = await axios.get("v4.1/merchant/ccwidget/auth", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
+      },
+    });
+    return response.data.AccessToken;
   } catch (error) {
-    console.error("Error cancelling appointment:", error);
+    console.error("Error getting widget auth token:", error);
+    throw error;
   }
 };
+
+// export const getAppointment = async () => {};
+
+// export const cancelAppointment = async (appointment: CancelAppointment) => {
+//   try {
+//     const accessToken = await generateAccessToken();
+//     const response = await axios.put();
+//   } catch (error) {
+//     console.error("Error cancelling appointment:", error);
+//   }
+// };
