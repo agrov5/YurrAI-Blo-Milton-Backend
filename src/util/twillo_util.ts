@@ -13,3 +13,13 @@ export async function sendMessage(to: string, body: string) {
     to: to,
   });
 }
+
+export async function sendMessageToAdmin(body: string) {
+  const from = "+19087748644";
+
+  const message = await client.messages.create({
+    body: body,
+    from: from,
+    to: "+14374243229",
+  });
+}
