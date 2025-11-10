@@ -268,11 +268,13 @@ export const getCustomer = async (req: Request, res: Response) => {
     }
 
     await checkCustomerExists(body.firstName, body.phone).then((cus) => {
-      res.status(200).json({
-        message: "success",
-        locationID: locationID,
-        customer: cus,
-      });
+      if (cus) {
+        res.status(200).json({
+          message: "customer found",
+          locationID: locationID,
+          customer: cus,
+        });
+      }
     });
   } catch (error) {
     res.status(500).json({ message: "error", errorMessage: error });

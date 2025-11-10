@@ -573,22 +573,39 @@ export const getCustomerCreditCardInfo = async (
 };
 
 export const generateCCWidgetURL = (customerId: number): string => {
-  const baseUrl = process.env.CC_BASE_URL || "http://localhost:3000";
+  const baseUrl = process.env.PRODUCTION_URL || "http://localhost:3000";
   return `${baseUrl}/cc-widget?customerId=${customerId}`;
 };
 
 export const getWidgetAuthToken = async (): Promise<string> => {
   try {
     const accessToken = await getAccessToken();
+    console.log("Attempting to get widget auth token...");
     const response = await axios.get("v4.1/merchant/ccwidget/auth", {
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
       },
     });
-    return response.data.AccessToken;
-  } catch (error) {
-    console.error("Error getting widget auth token:", error);
+    // console.log("Widget auth response:", response.data);
+    const token =
+      response.data.token ||
+      response.data.access_token ||
+      response.data.AccessToken;
+
+    if (!token) {
+      console.error("No token found in response:", response.data);
+      throw new Error("Widget token not found in response");
+    }
+
+    return token;
+  } catch (error: any) {
+    console.error("Error getting widget auth token:", {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data,
+      url: error.config?.url,
+    });
     throw error;
   }
 };
