@@ -2,6 +2,74 @@
 import { ArgumentErrors, Treatment } from "./Treatment";
 import { Room } from "./Room";
 import { Employee } from "./Employee";
+import {
+  LookupOption,
+  Money,
+  Address,
+  ACH,
+  ArgumentError,
+  BankTransfer,
+  Cash,
+  Check,
+  GiftCertificate,
+  Groupon,
+  PayPal,
+  RewardsPoints,
+  PostToRoom,
+  PartnerPayment,
+  ExternalCreditCardPayment,
+  MembershipBenefitItem,
+  MembershipBenefitSubstituteItem,
+  MembershipBenefitSubstitute,
+  MembershipBenefit,
+  SharedMembership,
+  CustomerMembershipBenefit,
+  CustomerMembershipLevel,
+  CustomerNote,
+  RepeatableValueInfo,
+  RepeatableFieldValues,
+  CustomerFieldValues,
+  Photo,
+  Child,
+  CustomerLoyaltyRewards,
+  CustomerStats,
+  DepositOptions,
+} from './Interfaces';
+
+// Re-export common interfaces for convenience
+export {
+  LookupOption,
+  Money,
+  Address,
+  ACH,
+  ArgumentError,
+  BankTransfer,
+  Cash,
+  Check,
+  GiftCertificate,
+  Groupon,
+  PayPal,
+  RewardsPoints,
+  PostToRoom,
+  PartnerPayment,
+  ExternalCreditCardPayment,
+  MembershipBenefitItem,
+  MembershipBenefitSubstituteItem,
+  MembershipBenefitSubstitute,
+  MembershipBenefit,
+  SharedMembership,
+  CustomerMembershipBenefit,
+  CustomerMembershipLevel,
+  CustomerNote,
+  RepeatableValueInfo,
+  RepeatableFieldValues,
+  CustomerFieldValues,
+  Photo,
+  Child,
+  CustomerLoyaltyRewards,
+  CustomerStats,
+  DepositOptions,
+};
 
 export interface CancelAppointment {
   customerName: string;
@@ -22,43 +90,7 @@ export interface AgentAppointment {
   notes?: string;
 }
 
-// Base interfaces
-export interface LookupOption {
-  ID: number;
-  Name: string;
-}
-
-export interface Money {
-  Amount: number;
-  CurrencyCode: string;
-}
-
-export interface Address {
-  Street1?: string;
-  Street2?: string;
-  City?: string;
-  State?: string;
-  Zip?: string;
-  Country?: LookupOption;
-}
-
-// Payment related interfaces
-export interface ACH {
-  BankRoutingNumber?: string;
-  BankName?: string;
-  CheckingAccountNumber?: string;
-}
-
-export interface BankTransfer {
-  BankingDetails?: string;
-}
-
-export interface Cash {}
-
-export interface Check {
-  CheckNumber?: string;
-}
-
+// Credit Card interface (different from CreditCard.ts - has optional fields)
 export interface CreditCard {
   Type?: LookupOption;
   Number?: string;
@@ -72,150 +104,7 @@ export interface CreditCard {
   IsObfuscated?: boolean;
 }
 
-export interface GiftCertificate {
-  Type?: LookupOption;
-  Number?: string;
-  IsGiftCard?: boolean;
-  ExpirationDate?: string;
-  RemainingBalance?: Money;
-  ExpirationDateOffset?: string;
-}
-
-export interface Groupon {
-  GrouponVoucher?: string;
-}
-
-export interface PayPal {
-  PayPalEmail?: string;
-}
-
-export interface RewardsPoints {
-  Points?: number;
-}
-
-export interface PostToRoom {
-  RoomNumber?: string;
-  RoomGuestName?: string;
-}
-
-export interface PartnerPayment {
-  Logo?: string;
-  PaymentReference?: string;
-  PaymentBranding?: string;
-}
-
-export interface ExternalCreditCardPayment {
-  CloverPaymentItemID?: string;
-  CloverTransactionNo?: string;
-  CardLast4?: string;
-  CardType?: string;
-  AuthCode?: string;
-  Type?: string;
-  CloverOrderID?: string;
-  Result?: string;
-  CloverEmployeeID?: string;
-  EntryType?: string;
-  TerminalID?: string;
-  CvmResult?: string;
-  AID?: string;
-  PaymentIntentId?: string;
-  PaymentIntentClientToken?: string;
-  User?: any;
-  MindbodyPaymentsChargeId?: string;
-  CloverPaymentID?: string;
-}
-
-export interface MembershipBenefitItem {
-  TreatmentCategoryId?: number;
-  TreatmentSubCategoryId?: number;
-  ProductCategoryId?: number;
-  ProductSubCategoryId?: number;
-  ClassCategoryId?: number;
-  ProductId?: number;
-  TreatmentId?: number;
-  ApplicableToAllTreatments?: boolean;
-}
-
-export interface MembershipBenefitSubstituteItem {
-  ID?: number;
-  TreatmentCategoryId?: number;
-  TreatmentSubCategoryId?: number;
-  ProductCategoryId?: number;
-  ProductSubCategoryId?: number;
-  ClassCategoryId?: number;
-  ProductId?: number;
-  TreatmentId?: number;
-  ApplicableToAllTreatments?: boolean;
-  Price?: Money;
-  TagPrice?: Money;
-}
-
-export interface MembershipBenefitSubstitute {
-  Name?: string;
-  ID?: number;
-  Description?: string;
-  Status?: LookupOption;
-  MembershipBenefitID?: number;
-  MembershipBenefitSubstituteItems?: MembershipBenefitSubstituteItem[];
-}
-
-export interface MembershipBenefit {
-  Name?: string;
-  Description?: string;
-  Status?: LookupOption;
-  MembershipLevelID?: number;
-  FreeItemQuantity?: number;
-  IsUnlimited?: boolean;
-  DaysTillExpiration?: number;
-  ExpirationTypeID?: number;
-  ID?: number;
-  MembershipBenefitItems?: MembershipBenefitItem[];
-  MembershipBenefitSubstitute?: MembershipBenefitSubstitute[];
-}
-
-export interface SharedMembership {
-  CustomerID?: number;
-  CustomerName?: string;
-}
-
-export interface CustomerMembershipBenefit {
-  CustomerID?: number;
-  TotalEarnedQuantity?: number;
-  UsedQuantity?: number;
-  ExpiredQuantity?: number;
-  AvailableQuantity?: number;
-  IsUnlimited?: boolean;
-  IsExpired?: boolean;
-  MembershipBenefit?: MembershipBenefit;
-  ID?: number;
-  MembershipExpirationDate?: string;
-  MembershipName?: string;
-  CustomerMembershipID?: number;
-  LevelName?: string;
-  OnlineDescription?: string;
-  MembershipCardNumber?: string;
-  CustomerCreditCardID?: number;
-  PaymentFrequencyType?: LookupOption;
-  NextChargeDate?: string;
-  NumberOfPaymentsMade?: number;
-  HasAutopay?: boolean;
-  ProratedFee?: number;
-  SignupFee?: number;
-  StartDate?: string;
-  Status?: LookupOption;
-  SuspendDate?: string;
-  TotalFee?: number;
-  LastChargeDate?: string;
-  TotalCharged?: number;
-  SharedMemberships?: SharedMembership[];
-  IsPurchasedOnline?: boolean;
-  MembershipExpirationDateOffset?: string;
-  NextChargeDateOffset?: string;
-  StartDateOffset?: string;
-  SuspendDateOffset?: string;
-  LastChargeDateOffset?: string;
-}
-
+// Credit Account interface
 export interface CreditAccount {
   CreditAccountID?: number;
   Type?: LookupOption;
@@ -320,63 +209,8 @@ export interface AppointmentPayment {
   CouponCode?: string;
 }
 
-// Customer related interfaces
-export interface CustomerNote {
-  ID?: number;
-  DateCreated?: string;
-  Text?: string;
-  CreatedByUser?: string;
-  DateCreatedOffset?: string;
-}
-
-export interface RepeatableValueInfo {
-  FieldSetValueID?: number;
-  Action?: LookupOption;
-  FieldValues?: any[];
-}
-
-export interface RepeatableFieldValues {
-  FieldSetID?: number;
-  FieldSetValues?: RepeatableValueInfo[];
-}
-
-export interface CustomerFieldValues {
-  ID?: number;
-  CustomerTypeID?: number;
-  FieldValues?: any[];
-  RepeatableFieldValues?: RepeatableFieldValues[];
-}
-
-export interface Photo {
-  DateUploaded?: string;
-  Title?: string;
-  Notes?: string;
-  IsDefault?: boolean;
-  FileName?: string;
-  ID?: number;
-  DateUploadedOffset?: string;
-}
-
-export interface Child {
-  ID?: number;
-  Name?: string;
-  CustomerTypeID?: number;
-  FieldValues?: any[];
-  RepeatableFieldValues?: RepeatableFieldValues[];
-  LocationID?: number;
-  ParentIDs?: number[];
-  LocationName?: string;
-  DateCreated?: string;
-  DateLastModified?: string;
-  BookingAlert?: string;
-  CheckInAlert?: string;
-  CheckOutAlert?: string;
-  Photos?: Photo[];
-  IsActive?: boolean;
-  CustomerType?: LookupOption;
-  DateCreatedOffset?: string;
-  DateLastModifiedOffset?: string;
-}
+// Customer related interfaces (simplified - already imported from Interfaces.ts)
+// Keeping only Appointment-specific customer interfaces
 
 export interface AppointmentCustomer {
   Notes?: CustomerNote[];
@@ -517,14 +351,6 @@ export interface AddOnItem {
   Notes?: AddOnNote[];
 }
 
-export interface DepositOptions {
-  HasAmountType?: boolean;
-  AmountType?: string;
-  Amount?: number;
-  Percentage?: number;
-  Enabled?: boolean;
-}
-
 export interface DynamicPrice {
   OriginalPrice?: Money;
   Discount?: Money;
@@ -561,24 +387,6 @@ export interface Guest {
   MobilePhoneCarrierID?: number;
 }
 
-export interface CustomerLoyaltyRewards {
-  AvailablePoints?: number;
-  AvailableAmount?: Money;
-  ExpirationDate?: string;
-  ExpirationDateOffset?: string;
-}
-
-export interface CustomerStats {
-  DateOfFirstVisit?: string;
-  DateOfLastVisit?: string;
-  TotalServiceSales?: number;
-  TotalRetailSales?: number;
-  TotalTips?: number;
-  TotalSales?: number;
-  DateOfFirstVisitOffset?: string;
-  DateOfLastVisitOffset?: string;
-}
-
 export interface CustomerCreditCard {
   ID?: number;
   CustomerID?: number;
@@ -589,19 +397,6 @@ export interface CustomerCreditCard {
   LastUsedDate?: string;
   BPS_PaymentOnFileId?: string;
   CreditCard?: CreditCard;
-}
-
-export interface CustomerMembershipLevel {
-  ID?: number;
-  LevelName?: string;
-  Description?: string;
-  HasBenefits?: boolean;
-  IsExternallyManaged?: boolean;
-  Status?: LookupOption;
-  SoldBySpaId?: number;
-  IsLastTransactionFailed?: boolean;
-  PastDueDate?: string;
-  IsSharedMembership?: boolean;
 }
 
 export interface SharedCustomer {
@@ -836,11 +631,6 @@ export interface Appointment {
   Customer: Customer;
   AppointmentTreatmentDTOs: AppointmentTreatmentDTO[];
   AppointmentDateOffset: string; // ISO datetime string
-}
-
-export interface ArgumentError {
-  ArgumentName?: string;
-  ErrorMessage?: string;
 }
 
 export interface CreateAppointmentResponse {

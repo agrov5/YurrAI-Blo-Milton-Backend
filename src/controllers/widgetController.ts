@@ -10,16 +10,21 @@ export const getWidgetToken = async (req: Request, res: Response) => {
     const locationId = req.query.locationId as string;
 
     if (!customerId || !locationId) {
-      return res
-        .status(400)
-        .json({ error: "Missing customerId or locationId parameter" });
+      return res.status(400).json({
+        success: false,
+        message: "Both customerId and locationId are required",
+      });
     }
 
     // Check cache first
     const cacheKey = `${customerId}_${locationId}`;
     const cached = tokenCache.get(cacheKey);
     if (cached && cached.expires > Date.now()) {
-      return res.json({ AccessToken: cached.token });
+      return res.json({
+        success: true,
+        message: "Widget token retrieved from cache",
+        AccessToken: cached.token,
+      });
     }
 
     // Get fresh token with all required parameters
@@ -31,10 +36,18 @@ export const getWidgetToken = async (req: Request, res: Response) => {
       expires: Date.now() + 5 * 60 * 1000,
     });
 
-    res.json({ AccessToken: token });
+    res.json({
+      success: true,
+      message: "Widget token retrieved successfully",
+      AccessToken: token,
+    });
   } catch (error) {
     console.error("Failed to get widget token:", error);
-    res.status(500).json({ error: "Failed to retrieve token" });
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve widget authentication token",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
   }
 };
 
@@ -44,7 +57,16 @@ export const renderCCWidget = async (req: Request, res: Response) => {
     const locale = (req.query.locale as string) || "en-US";
 
     if (!customerId) {
-      return res.status(400).send("Missing customerId parameter");
+      return res.status(400).send(`
+        <!DOCTYPE html>
+        <html>
+        <head><title>Error</title></head>
+        <body>
+          <h1>Missing Customer ID</h1>
+          <p>Please use the link provided in your confirmation message.</p>
+        </body>
+        </html>
+      `);
     }
 
     // Render HTML WITHOUT the token

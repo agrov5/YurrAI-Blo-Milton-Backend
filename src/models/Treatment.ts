@@ -1,4 +1,13 @@
 import mongoose, { Schema, Document } from "mongoose";
+import {
+  LookupOption,
+  Money,
+  DepositOptions,
+  ArgumentErrors,
+} from "./Interfaces";
+
+// Re-export common interfaces
+export { LookupOption, Money, DepositOptions, ArgumentErrors };
 
 interface ITreatment extends Document {
   AllowCustomersToBookOnline?: boolean;
@@ -128,12 +137,6 @@ export interface FindTreatmentsResponse {
   TotalResultsCount?: number;
 }
 
-/** Argument Errors */
-export interface ArgumentErrors {
-  ArgumentName?: string;
-  ErrorMessage?: string;
-}
-
 /** Treatment */
 export interface Treatment {
   AllowCustomersToBookOnline?: boolean;
@@ -199,25 +202,4 @@ export interface EmployeeTreatment {
   RequestedPrice?: number;
   FinishTimeDuration?: number;
   ProcessingTimeDuration?: number;
-}
-
-/** LookupOption (used across many properties) */
-export interface LookupOption {
-  ID?: number | null;
-  Name?: string | null;
-}
-
-/** Money (for Price) */
-export interface Money {
-  Amount?: number;
-  CurrencyCode?: string;
-}
-
-/** DepositOptions */
-export interface DepositOptions {
-  HasAmountType?: boolean;
-  AmountType?: string;
-  Amount?: number;
-  Percentage?: number;
-  Enabled?: boolean;
 }

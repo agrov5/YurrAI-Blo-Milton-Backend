@@ -1,24 +1,18 @@
 // TypeScript interfaces for Credit Card API response
 
-export interface Country {
-  ID: number;
-  Name: string;
-}
+import { Country, Address, ArgumentError, LookupOption } from "./Interfaces";
 
-export interface Address {
-  Street1: string;
-  Street2: string;
-  City: string;
-  State: string;
-  Zip: string;
-  Country: Country;
-}
+// Re-export common interfaces for convenience
+export { Country, Address, ArgumentError };
 
-export interface CreditCardType {
-  ID: number;
-  Name: string;
-}
+/**
+ * Credit card type lookup
+ */
+export interface CreditCardType extends LookupOption {}
 
+/**
+ * Credit card information
+ */
 export interface CreditCard {
   Type: CreditCardType;
   Number: string;
@@ -35,6 +29,9 @@ export interface CreditCard {
   ObfuscationDate: string;
 }
 
+/**
+ * Customer credit card record
+ */
 export interface CreditCardRecord {
   ID: number;
   CustomerID: number;
@@ -47,11 +44,9 @@ export interface CreditCardRecord {
   CreditCard: CreditCard;
 }
 
-export interface ArgumentError {
-  ArgumentName: string;
-  ErrorMessage: string;
-}
-
+/**
+ * API Response for credit card operations
+ */
 export interface CreditCardResponse {
   CreditCards: CreditCardRecord[];
   IsSuccess: boolean;

@@ -8,7 +8,6 @@ import {
   determineEndTime,
   convert24toISO,
 } from "./db_util";
-import { saveAsJson, saveAsJsonAsync } from "../middlewares/loggerMiddleware";
 import {
   AgentAppointment,
   CancelAppointment,
@@ -18,6 +17,7 @@ import {
 import { Employee } from "../models/Employee";
 import { CreditCardResponse, CreditCardRecord } from "../models/CreditCard";
 import { sendMessage } from "./twillo_util";
+import { Customer } from "../models/Customer";
 
 // const generateAccessToken = async () => {
 //   try {
@@ -396,7 +396,8 @@ export const createAppointment = async (
   };
 
   const determineEmployeeId = async (
-    treatmentId: number
+    treatmentId: number,
+    customer: Customer | null
   ): Promise<number | null> => {
     try {
       const treatment = await TreatmentModel.findOne({ ID: treatmentId });
@@ -405,8 +406,24 @@ export const createAppointment = async (
         treatment.EmployeeIDs &&
         treatment.EmployeeIDs.length > 0
       ) {
+        // Get preferred staff gender from customer if exists
+        const preferredGenderId = customer?.PreferredStaffGender?.ID;
+
         // Check each employee for availability
         for (const empId of treatment.EmployeeIDs) {
+          // If customer has a preferred gender, filter employees by gender first
+          if (preferredGenderId) {
+            const employeeDetails = await findEmployees();
+            const employee = employeeDetails?.Results?.find(
+              (emp: any) => emp.ID === empId
+            );
+
+            // Skip this employee if their gender doesn't match the customer's preference
+            if (employee && employee.Gender?.ID !== preferredGenderId) {
+              continue;
+            }
+          }
+
           const availability = await findAvailableTimes({
             date: appointment.appointmentDate,
             time: appointment.startTime,
@@ -488,7 +505,7 @@ export const createAppointment = async (
             TreatmentID: treatmentID,
             EmployeeID: appointment.employeeName
               ? await getEmployeeId(appointment.employeeName)
-              : await determineEmployeeId(treatmentID || 0),
+              : await determineEmployeeId(treatmentID ?? 0, customer),
             RoomID: roomID,
             EmployeeWasRequested: appointment.employeeName ? true : false,
             StartTimeOffset: convert24toISO(

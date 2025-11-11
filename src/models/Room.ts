@@ -1,4 +1,9 @@
 import { Treatment } from "./Treatment";
+import { ArgumentErrors } from "./Interfaces";
+import mongoose, { Schema, Document } from "mongoose";
+
+// Re-export common interfaces
+export { ArgumentErrors };
 
 // ---------- Interfaces ----------
 
@@ -9,11 +14,6 @@ export interface FindRoomsResponse {
   IsSuccess?: boolean;
   Results?: Room[];
   TotalResultsCount?: number;
-}
-
-interface ArgumentErrors {
-  ArgumentName?: string;
-  ErrorMessage?: string;
 }
 
 export interface Room {
@@ -31,8 +31,6 @@ export interface Room {
 }
 
 // ---------- Mongoose Schema ----------
-
-import mongoose, { Schema, Document } from "mongoose";
 
 interface IRoom extends Document {
   Type?: string;

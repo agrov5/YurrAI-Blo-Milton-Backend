@@ -1,4 +1,15 @@
 import mongoose, { Schema, Document } from "mongoose";
+import {
+  Gender,
+  PreferredPhoneType,
+  Address,
+  Country,
+  Status,
+  ArgumentErrors,
+} from "./Interfaces";
+
+// Re-export common interfaces
+export { Gender, PreferredPhoneType, Address, Country, Status, ArgumentErrors };
 
 export interface IEmployee extends Document {
   DisplayName: string;
@@ -67,11 +78,6 @@ export interface FindEmployeesResponse {
   TotalResultsCount?: number;
 }
 
-interface ArgumentErrors {
-  ArgumentName?: string;
-  ErrorMessage?: string;
-}
-
 export interface Employee extends User {}
 
 export interface User {
@@ -98,33 +104,4 @@ export interface User {
   Address: Address;
   Status: Status;
   DateCreatedOffset: string; // ISO datetime string
-}
-
-export interface Gender {
-  ID: number;
-  Name: string;
-}
-
-export interface PreferredPhoneType {
-  ID: number;
-  Name: string;
-}
-
-export interface Address {
-  City: string;
-  Country: Country;
-  State: string;
-  Street1: string;
-  Street2: string;
-  Zip: string;
-}
-
-export interface Country {
-  ID: number;
-  Name: string;
-}
-
-export interface Status {
-  ID: number;
-  Name: string;
 }
