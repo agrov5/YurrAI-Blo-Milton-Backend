@@ -295,7 +295,7 @@ export const findAvailableTimes = async (options: {
   }
 };
 
-export const checkCustomerExists = async (firstName: string, phone: string) => {
+export const checkCustomerExists = async (phone: string) => {
   try {
     const accessToken = await getAccessToken();
     const response = await axios.post(
@@ -304,7 +304,6 @@ export const checkCustomerExists = async (firstName: string, phone: string) => {
         access_token: accessToken,
         LocationID: locationID,
         Phone: phone,
-        FirstNameStart: firstName,
       },
       {
         headers: {
@@ -462,10 +461,7 @@ export const createAppointment = async (
     }
   };
 
-  const customer = await checkCustomerExists(
-    appointment.firstName,
-    appointment.phone.toString()
-  );
+  const customer = await checkCustomerExists(appointment.phone.toString());
 
   let sendSMS = true;
 
@@ -486,7 +482,7 @@ export const createAppointment = async (
         Notes: appointment.notes
           ? `Booked via YurrAI. \n --- \n Agent Notes: ${appointment.notes}`
           : "Booked via YurrAI",
-        CreateIncompleteAppointment: sendSMS,
+        // CreateIncompleteAppointment: sendSMS,
         ResourceTypeID: 1,
         Customer: customer
           ? customer.Customer
@@ -532,7 +528,7 @@ export const createAppointment = async (
       const customerId = appointmentObj?.Customer?.ID;
       if (typeof customerId === "number") {
         const widgetUrl = generateCCWidgetURL(customerId);
-        const message = `Dear ${appointment.firstName}, your appointment for ${appointment.treatmentName} on ${appointment.appointmentDate} at ${appointment.startTime} has been created but requires payment. Please complete your booking by providing your payment details, using the following link: ${widgetUrl}.`;
+        const message = `Dear ${appointment.firstName}, your appointment for ${appointment.treatmentName} on ${appointment.appointmentDate} at ${appointment.startTime} has been created but requires a credit card on file. Please complete your booking by providing your payment details, using the following link: ${widgetUrl}.`;
         // Send SMS via Twilio
         sendMessage(appointment.phone.toString(), message).catch((error) => {
           console.error("Error sending SMS via Twilio:", error);
