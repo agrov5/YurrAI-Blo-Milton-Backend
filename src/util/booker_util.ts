@@ -295,7 +295,7 @@ export const findAvailableTimes = async (options: {
   }
 };
 
-export const checkCustomerExists = async (phone: string) => {
+export const checkCustomerExists = async (firstName: string, phone: string) => {
   try {
     const accessToken = await getAccessToken();
     const response = await axios.post(
@@ -304,6 +304,7 @@ export const checkCustomerExists = async (phone: string) => {
         access_token: accessToken,
         LocationID: locationID,
         Phone: phone,
+        FirstNameStart: firstName,
       },
       {
         headers: {
@@ -461,7 +462,10 @@ export const createAppointment = async (
     }
   };
 
-  const customer = await checkCustomerExists(appointment.phone.toString());
+  const customer = await checkCustomerExists(
+    appointment.firstName,
+    appointment.phone.toString()
+  );
 
   let sendSMS = true;
 
