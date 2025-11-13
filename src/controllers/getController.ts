@@ -9,7 +9,9 @@ import {
   locationID,
   checkCustomerExists,
   getWidgetAuthToken,
+  getCustomerAppointments,
 } from "../util/booker_util";
+import { FullAppointmentObject } from "../models/Appointment";
 
 export const getTreatments = async (req: Request, res: Response) => {
   try {
@@ -400,6 +402,102 @@ export const getWidgetAuth = async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       message: "Failed to retrieve widget authentication token",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+export const getAppointments = async (req: Request, res: Response) => {
+  const body: {
+    customerId: number;
+    treatmentName?: string;
+    date?: string;
+    time?: string;
+    onlyActive?: boolean;
+    fromStartDate?: string;
+    returnSingle?: boolean;
+  } = req.body;
+
+  try {
+    if (!body.customerId) {
+      return res.status(400).json({
+        success: false,
+        message: "Customer ID is required",
+      });
+    }
+
+    const result = await getCustomerAppointments({
+      customerId: body.customerId,
+      treatmentName: body.treatmentName,
+      date: body.date,
+      time: body.time,
+      onlyActive: body.onlyActive,
+      fromStartDate: body.fromStartDate,
+      returnSingle: body.returnSingle,
+    });
+
+    // Helper function to clean appointment data
+    const cleanAppointment = (appointment: any) => ({
+      id: appointment.ID,
+      status: appointment.Status?.Name,
+      startDateTime: appointment.StartDateTimeOffset,
+      endDateTime: appointment.EndDateTimeOffset,
+      customer: {
+        id: appointment.CustomerID,
+        firstName: appointment.CustomerFirstName,
+        lastName: appointment.CustomerLastName,
+        email: appointment.CustomerEmail,
+        phone: appointment.CustomerMobilePhone || appointment.CustomerHomePhone,
+      },
+      treatment: appointment.TreatmentName,
+      employee: appointment.Employee
+        ? `${appointment.Employee.FirstName} ${appointment.Employee.LastName}`
+        : null,
+      finalTotal: appointment.FinalTotal?.Amount,
+    });
+
+    // Handle single appointment return
+    if (body.returnSingle) {
+      if (!result) {
+        return res.status(404).json({
+          success: false,
+          message: "No appointment found matching the criteria",
+        });
+      }
+
+      const cleanedAppointment = cleanAppointment(result);
+
+      return res.status(200).json({
+        success: true,
+        message: "Appointment retrieved successfully",
+        locationID: locationID,
+        appointment: cleanedAppointment,
+      });
+    }
+
+    // Handle multiple appointments return
+    const appointments = result as any[];
+
+    if (!appointments || appointments.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No appointments found for this customer",
+      });
+    }
+
+    const cleanedAppointments = appointments.map(cleanAppointment);
+
+    res.status(200).json({
+      success: true,
+      message: "Appointments retrieved successfully",
+      locationID: locationID,
+      count: cleanedAppointments.length,
+      appointments: cleanedAppointments,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve appointments",
       error: error instanceof Error ? error.message : "Unknown error",
     });
   }

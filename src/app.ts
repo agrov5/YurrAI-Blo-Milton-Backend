@@ -44,11 +44,12 @@ app.use(express.static(path.join(__dirname, "public")));
 // Routes
 app.use(loggerMiddleware);
 
-// Dashboard routes (public)
+// Public routes (no authentication required)
+// Dashboard routes
 app.use("/admin", dashboardRoutes);
 
-// Widget route (public - accessed by customers via SMS link)
-app.use("/", widgetRouter);
+// Widget routes (accessed by customers via SMS link)
+app.use("/widget", widgetRouter);
 
 // API routes with authentication
 app.use("/api", authMiddleware);
