@@ -627,7 +627,100 @@ export const getWidgetAuthToken = async (): Promise<string> => {
   }
 };
 
-// export const getAppointment = async () => {};
+export const getCustomerAppointments = async (options: {
+  customerId: number;
+  treatmentName?: string;
+  date?: string;
+  time?: string;
+  onlyActive?: boolean;
+  fromStartDate?: string;
+  returnSingle?: boolean;
+}): Promise<FullAppointmentObject | FullAppointmentObject[] | null> => {
+  try {
+    const accessToken = await getAccessToken();
+    const onlyActive =
+      options.onlyActive !== undefined ? options.onlyActive : true;
+
+    // Build query parameters
+    const params = new URLSearchParams();
+    params.append("access_token", accessToken);
+    params.append("only_active", onlyActive.toString());
+
+    // If fromStartDate is provided, use it; otherwise use date if provided
+    if (options.fromStartDate) {
+      params.append(
+        "fromStartDate",
+        convert24toISO("00:00", options.fromStartDate)
+      );
+    } else if (options.date) {
+      params.append("fromStartDate", convert24toISO("00:00", options.date));
+    }
+
+    const response = await axios.get(
+      `/v4.1/merchant/customer/${options.customerId}/appointments?${params.toString()}`,
+      {
+        headers: {
+          "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
+        },
+      }
+    );
+
+    if (
+      !response.data.IsSuccess ||
+      !response.data.Appointments ||
+      response.data.Appointments.length === 0
+    ) {
+      return options.returnSingle ? null : [];
+    }
+
+    // Filter appointments based on provided criteria
+    const appointments: FullAppointmentObject[] = response.data.Appointments;
+
+    const filteredAppointments = appointments.filter((appointment) => {
+      // If treatmentName is provided, check if treatment name matches
+      if (options.treatmentName) {
+        const treatmentMatch =
+          appointment.TreatmentName?.toLowerCase().includes(
+            options.treatmentName.toLowerCase()
+          );
+        if (!treatmentMatch) return false;
+      }
+
+      // If date is provided, check if appointment date matches
+      if (options.date && appointment.StartDateTimeOffset) {
+        // StartDateTimeOffset is already in ISO format (e.g., "2025-11-15T14:00:00-04:00")
+        const appointmentDate = appointment.StartDateTimeOffset.split("T")[0];
+        const searchDate = options.date;
+        if (appointmentDate !== searchDate) return false;
+      }
+
+      // If time is provided, check if appointment time matches
+      if (options.time && options.date && appointment.StartDateTimeOffset) {
+        // Convert input 24hr time to ISO format for comparison
+        const searchTimeISO = convert24toISO(options.time, options.date);
+        // Compare the datetime portion (without timezone)
+        const appointmentDateTime = appointment.StartDateTimeOffset.substring(
+          0,
+          16
+        ); // "2025-11-15T14:00"
+        const searchDateTime = searchTimeISO.substring(0, 16);
+        if (!appointmentDateTime.startsWith(searchDateTime)) return false;
+      }
+
+      return true;
+    });
+
+    // Return based on returnSingle flag
+    if (options.returnSingle) {
+      return filteredAppointments.length > 0 ? filteredAppointments[0] : null;
+    }
+
+    return filteredAppointments;
+  } catch (error) {
+    console.error("Error getting customer appointments:", error);
+    throw error;
+  }
+};
 
 // export const cancelAppointment = async (appointment: CancelAppointment) => {
 //   try {

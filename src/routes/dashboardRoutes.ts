@@ -21,13 +21,4 @@ router.get("/dashboard", (req: Request, res: Response) => {
   res.sendFile(path.join(__dirname, "../public/dashboard.html"));
 });
 
-/**
- * @route   GET /
- * @desc    Redirect root to login
- * @access  Public
- */
-router.get("/", (req: Request, res: Response) => {
-  res.redirect("/login");
-});
-
 export default router;

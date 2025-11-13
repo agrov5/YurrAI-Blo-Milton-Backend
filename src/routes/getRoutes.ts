@@ -14,6 +14,7 @@ import {
   getCustomerCCInfo,
   getCustomer,
   getWidgetAuth,
+  getAppointments,
 } from "../controllers/getController";
 import {
   twilioController,
@@ -41,6 +42,8 @@ getRouter.get("/avaliable-times", getAvaliableTimes);
 getRouter.get("/cc-info", getCustomerCCInfo);
 getRouter.get("/customer", getCustomer);
 getRouter.get("/widget/auth", getWidgetAuth);
+
+getRouter.get("/appointments", getAppointments);
 
 /**
  * @route   GET /health
