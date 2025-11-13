@@ -356,16 +356,16 @@ export const getCustomerCCInfo = async (req: Request, res: Response) => {
 };
 
 export const getCustomer = async (req: Request, res: Response) => {
-  const body: { firstName: string; phone: string } = req.body;
+  const body: { phone: string } = req.body;
   try {
-    if (!body.firstName || !body.phone) {
+    if (!body.phone) {
       return res.status(400).json({
         success: false,
-        message: "First name and phone number are required",
+        message: "Phone number is required",
       });
     }
 
-    const customer = await checkCustomerExists(body.firstName, body.phone);
+    const customer = await checkCustomerExists(body.phone);
     if (customer) {
       res.status(200).json({
         success: true,
@@ -376,7 +376,7 @@ export const getCustomer = async (req: Request, res: Response) => {
     } else {
       res.status(404).json({
         success: false,
-        message: `Customer '${body.firstName}' with phone ${body.phone} not found`,
+        message: `Customer with phone ${body.phone} not found`,
       });
     }
   } catch (error) {
