@@ -34,7 +34,7 @@ import {
   CustomerLoyaltyRewards,
   CustomerStats,
   DepositOptions,
-} from './Interfaces';
+} from "./Interfaces";
 
 // Re-export common interfaces for convenience
 export {
@@ -72,9 +72,8 @@ export {
 };
 
 export interface CancelAppointment {
-  customerName: string;
-  customerPhone: string;
-  appointmentStartTime: string;
+  appointmentId: number;
+  appointmentDate: string;
 }
 
 export interface AgentAppointment {
