@@ -7,6 +7,7 @@ import {
   employeeLookupByName,
   determineEndTime,
   convert24toISO,
+  isoToDate,
 } from "./db_util";
 import {
   AgentAppointment,
@@ -722,11 +723,25 @@ export const getCustomerAppointments = async (options: {
   }
 };
 
-// export const cancelAppointment = async (appointment: CancelAppointment) => {
-//   try {
-//     const accessToken = await generateAccessToken();
-//     const response = await axios.put();
-//   } catch (error) {
-//     console.error("Error cancelling appointment:", error);
-//   }
-// };
+export const cancelAppointment = async (appointment: CancelAppointment) => {
+  try {
+    const accessToken = await generateAccessToken();
+    const response = await axios.put(
+      "v4.1/merchant/appointment/cancel",
+      {
+        access_token: accessToken,
+        ID: appointment.appointmentId,
+        ChargeNow: false,
+      },
+      {
+        headers: {
+          "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error cancelling appointment:", error);
+  }
+};
