@@ -592,7 +592,7 @@ export const getCustomerCreditCardInfo = async (
 
 export const generateCCWidgetURL = (customerId: number): string => {
   const baseUrl = process.env.PRODUCTION_URL || "http://localhost:3000";
-  return `${baseUrl}/cc-widget?customerId=${customerId}`;
+  return `${baseUrl}/widget/cc-widget?customerId=${customerId}`;
 };
 
 export const getWidgetAuthToken = async (): Promise<string> => {
@@ -731,7 +731,7 @@ export const cancelAppointment = async (appointment: CancelAppointment) => {
       {
         access_token: accessToken,
         ID: appointment.appointmentId,
-        ChargeNow: false,
+        // ChargeNow: false,
       },
       {
         headers: {
