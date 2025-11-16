@@ -195,7 +195,7 @@
               sessionStorage.setItem("authCredentials", credentials);
               console.log("Login successful, credentials stored:", credentials);
               // Redirect to dashboard
-              window.location.href = "/dashboard";
+              window.location.href = "/admin/dashboard";
             } else {
               console.log("Login failed, response status:", response.status);
               throw new Error("Invalid credentials");
@@ -221,7 +221,7 @@
             headers: { Authorization: credentials },
           }).then((response) => {
             if (response.ok) {
-              window.location.href = "/dashboard";
+              window.location.href = "/admin/dashboard";
             }
           });
         }
