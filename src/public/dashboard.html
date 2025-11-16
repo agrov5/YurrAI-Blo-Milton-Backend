@@ -323,7 +323,7 @@
       window.addEventListener("load", function () {
         authCredentials = sessionStorage.getItem("authCredentials");
         if (!authCredentials) {
-          window.location.href = "/login";
+          window.location.href = "/admin/login";
           return;
         }
 
@@ -352,7 +352,7 @@
 
       function logout() {
         sessionStorage.removeItem("authCredentials");
-        window.location.href = "/login";
+        window.location.href = "/admin/login";
       }
 
       async function loadEmployeeRankings() {
