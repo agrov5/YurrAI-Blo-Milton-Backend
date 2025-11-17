@@ -159,7 +159,7 @@ export const findEmployees = async () => {
   try {
     const accessToken = await getAccessToken();
     const response = await axios.post(
-      "/v4.1/merchant/employees",
+      "/v4.1/customer/employees",
       {
         access_token: accessToken,
         LocationID: locationID,
@@ -182,7 +182,7 @@ export const findTreatments = async () => {
   try {
     const accessToken = await getAccessToken();
     const response = await axios.post(
-      "/v4.1/merchant/treatments",
+      "/v4.1/customer/treatments",
       {
         access_token: accessToken,
         LocationID: locationID,
@@ -204,7 +204,7 @@ export const findRooms = async () => {
   try {
     const accessToken = await getAccessToken();
     const response = await axios.post(
-      "/v4.1/merchant/rooms",
+      "/v4.1/customer/rooms",
       {
         access_token: accessToken,
         LocationID: locationID,
@@ -323,7 +323,7 @@ export const checkCustomerExists = async (firstName: string, phone: string) => {
 };
 
 // NOTE: fix this, very prone to errors
-export const createAppointment = async (
+export const createAppointment = async ( // change to customer endpoint, make sure to change models as well. 
   appointment: AgentAppointment
 ): Promise<CreateAppointmentResponse> => {
   const treatmentID = await treatmentLookupByName(
