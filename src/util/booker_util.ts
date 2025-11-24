@@ -10,6 +10,7 @@ import {
   isoToDate,
 } from "./db_util";
 import {
+  AddAppointmentNotes,
   AgentAppointment,
   CancelAppointment,
   CreateAppointmentResponse,
@@ -745,3 +746,12 @@ export const cancelAppointment = async (appointment: CancelAppointment) => {
     console.error("Error cancelling appointment:", error);
   }
 };
+
+export const addNotesToAppointment = async (appointment: AddAppointmentNotes) => {
+  try {
+    const accessToken = await generateAccessToken();
+    const response = await axios.put()
+  } catch (err) {
+    console.error("Error adding notes to appointment:", err)
+  }
+}
