@@ -4,6 +4,7 @@ import {
   postCreateAppointment,
   getCustomer,
   getAppointments,
+  postAddNotesToAppointment,
 } from "../controllers/postController";
 import {
   sendMessageToAdminController,
@@ -17,10 +18,12 @@ postRouter.post("/sms", twilioController);
 postRouter.post("/sms/admin", sendMessageToAdminController);
 postRouter.post("/sms/:to/:body", twilioControllerFromParams);
 
+postRouter.post("/appointments", getAppointments);
 postRouter.post("/appointment", postCreateAppointment);
 postRouter.post("/appointment/cancel", postCancelAppointment);
+postRouter.post("/appointment/notes", postAddNotesToAppointment);
 
 postRouter.post("/customer", getCustomer);
-postRouter.post("/appointments", getAppointments);
+
 
 export default postRouter;
