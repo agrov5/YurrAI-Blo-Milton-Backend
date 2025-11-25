@@ -76,6 +76,11 @@ export interface CancelAppointment {
   appointmentDate: string;
 }
 
+export interface AddAppointmentNotes {
+  appointmentId: number;
+  notes: string;
+}
+
 export interface AgentAppointment {
   email: string;
   phone: number;
