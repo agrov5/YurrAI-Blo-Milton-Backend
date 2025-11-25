@@ -5,6 +5,7 @@ import {
   locationID,
   cancelAppointment,
   getCustomerAppointments,
+  addNotesToAppointment,
 } from "../util/booker_util";
 import {
   AgentAppointment,
@@ -225,6 +226,40 @@ export const getAppointments = async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       message: "Failed to retrieve appointments",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+export const postAddNotesToAppointment = async (req: Request, res: Response) => {
+  try {
+    const body: { appointmentId: number; notes: string } = req.body;
+    if (!body.appointmentId || !body.notes) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields. Please provide appointmentId and notes",
+      });
+    }
+
+    const result = await addNotesToAppointment({appointmentId: body.appointmentId, notes: body.notes});
+    if (result.IsSuccess) {
+      res.status(200).json({
+        success: true,
+        message: "Notes added to appointment successfully",
+        locationID: locationID,
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: "Failed to add notes to appointment",
+        locationID: locationID,
+        errors: result.ErrorMessage || "Unknown error",
+      });
+    }  
+  } catch (error) {
+    res.status(500).json({
+      success: false, 
+      message: "Failed to add notes to appointment",
       error: error instanceof Error ? error.message : "Unknown error",
     });
   }
