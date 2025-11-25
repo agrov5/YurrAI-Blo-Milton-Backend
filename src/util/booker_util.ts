@@ -747,10 +747,21 @@ export const cancelAppointment = async (appointment: CancelAppointment) => {
   }
 };
 
+
 export const addNotesToAppointment = async (appointment: AddAppointmentNotes) => {
   try {
     const accessToken = await generateAccessToken();
-    const response = await axios.put()
+
+    const response = await axios.put(`v4.1/merchant/appointment/${appointment.appointmentId}/notes`, {
+      access_token: accessToken,
+      notes: appointment.notes,
+    },
+    {
+      headers: {
+        "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
+      },
+    });
+    return response.data;
   } catch (err) {
     console.error("Error adding notes to appointment:", err)
   }
