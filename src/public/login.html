@@ -165,14 +165,21 @@
         .addEventListener("submit", async function (e) {
           e.preventDefault();
 
-          const username = document.getElementById("username").value;
-          const password = document.getElementById("password").value;
+          const username = document.getElementById("username").value.trim();
+          const password = document.getElementById("password").value.trim();
           const errorDiv = document.getElementById("error-message");
           const loginBtn = document.getElementById("login-btn");
           const loading = document.getElementById("loading");
 
           // Clear previous errors
           errorDiv.style.display = "none";
+
+          // Validate inputs
+          if (!username || !password) {
+            errorDiv.textContent = "Please enter both username and password.";
+            errorDiv.style.display = "block";
+            return;
+          }
 
           // Show loading state
           loginBtn.disabled = true;
@@ -193,14 +200,15 @@
             if (response.ok) {
               // Store credentials in sessionStorage for the dashboard
               sessionStorage.setItem("authCredentials", credentials);
-              console.log("Login successful, credentials stored:", credentials);
+              console.log("Login successful");
               // Redirect to dashboard
               window.location.href = "/admin/dashboard";
             } else {
-              console.log("Login failed, response status:", response.status);
+              console.log("Login failed");
               throw new Error("Invalid credentials");
             }
           } catch (error) {
+            console.error("Login error:", error);
             errorDiv.textContent =
               "Invalid username or password. Please try again.";
             errorDiv.style.display = "block";

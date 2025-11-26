@@ -82,7 +82,8 @@ getRouter.get("/config", (req, res) => {
     trillet: {
       apiKey: process.env.TRILLET_API_KEY,
       workspaceId: process.env.TRILLET_WORKSPACE_ID,
-      apiUrl: "https://api.trillet.ai/v1/api/call"
+      apiUrl: "https://api.trillet.ai/v1/api/call",
+      callHistoryUrl: "https://api.trillet.ai/v2/api/call-history",
     },
     timestamp: new Date().toISOString(),
   });
