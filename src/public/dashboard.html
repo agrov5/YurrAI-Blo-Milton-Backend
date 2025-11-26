@@ -53,9 +53,15 @@
 
       .dashboard-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr 1fr 1fr;
         gap: 2rem;
         margin-bottom: 2rem;
+      }
+
+      @media (max-width: 1024px) {
+        .dashboard-grid {
+          grid-template-columns: 1fr 1fr;
+        }
       }
 
       @media (max-width: 768px) {
@@ -235,6 +241,109 @@
         color: #666;
         font-size: 0.9rem;
       }
+
+      .form-group {
+        margin-bottom: 1rem;
+        text-align: left;
+      }
+
+      .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #333;
+      }
+
+      .form-input,
+      .form-select,
+      .form-textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e1e5e9;
+        border-radius: 5px;
+        font-size: 1rem;
+        transition: border-color 0.3s;
+      }
+
+      .form-input:focus,
+      .form-select:focus,
+      .form-textarea:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .form-textarea {
+        resize: vertical;
+        min-height: 100px;
+      }
+
+      .call-btn {
+        background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        font-size: 1.1rem;
+        border-radius: 8px;
+        cursor: pointer;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+        margin: 1rem 0;
+        width: 100%;
+      }
+
+      .call-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+      }
+
+      .call-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+      }
+
+      @media (max-width: 768px) {
+        .form-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .call-response {
+        margin-top: 1rem;
+        padding: 1rem;
+        border-radius: 5px;
+        background: #f8f9fa;
+        border: 1px solid #e1e5e9;
+        display: none;
+      }
+
+      .call-response.success {
+        background: #d4edda;
+        border-color: #c3e6cb;
+        color: #155724;
+      }
+
+      .call-response.error {
+        background: #f8d7da;
+        border-color: #f5c6cb;
+        color: #721c24;
+      }
+
+      .call-id {
+        font-family: monospace;
+        background: rgba(0, 0, 0, 0.1);
+        padding: 0.25rem 0.5rem;
+        border-radius: 3px;
+        font-size: 0.9rem;
+      }
     </style>
   </head>
   <body>
@@ -293,6 +402,50 @@
             </div>
           </div>
         </div>
+
+        <!-- Outbound Call Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Outbound Call</h2>
+            <p class="card-subtitle">Initiate AI-driven phone calls</p>
+          </div>
+
+          <form id="call-form" onsubmit="initiateCall(event)">
+            <div class="form-group">
+              <label class="form-label" for="phone-number"
+                >Phone Number *</label
+              >
+              <input
+                type="tel"
+                id="phone-number"
+                name="phone-number"
+                class="form-input"
+                placeholder="+1234567890"
+                required
+              />
+            </div>
+
+            <!-- <div class="form-group">
+              <label class="form-label" for="agent-id">Call Agent ID *</label>
+              <input
+                type="text"
+                id="agent-id"
+                name="agent-id"
+                class="form-input"
+                placeholder="agent_12345"
+                required
+              />
+            </div> -->
+
+            <button type="submit" class="call-btn" id="call-btn">
+              Initiate Call
+            </button>
+
+            <div id="call-response" class="call-response">
+              <!-- Call response will be displayed here -->
+            </div>
+          </form>
+        </div>
       </div>
 
       <!-- Employee Rankings Card -->
@@ -318,6 +471,7 @@
 
     <script>
       let authCredentials = "";
+      let trilletConfig = null;
 
       // Check authentication on page load
       window.addEventListener("load", function () {
@@ -342,7 +496,9 @@
               logout();
             } else {
               console.log("Dashboard: Auth successful, loading dashboard");
-              loadEmployeeRankings();
+              loadConfiguration().then(() => {
+                loadEmployeeRankings();
+              });
             }
           })
           .catch(() => {
@@ -353,6 +509,23 @@
       function logout() {
         sessionStorage.removeItem("authCredentials");
         window.location.href = "/admin/login";
+      }
+
+      async function loadConfiguration() {
+        try {
+          const response = await fetch("/api/get/config", {
+            headers: { Authorization: authCredentials },
+          });
+
+          if (response.ok) {
+            trilletConfig = await response.json();
+            console.log("Configuration loaded successfully");
+          } else {
+            console.error("Failed to load configuration");
+          }
+        } catch (error) {
+          console.error("Error loading configuration:", error);
+        }
       }
 
       async function loadEmployeeRankings() {
@@ -455,6 +628,103 @@
           // Reset button
           btn.disabled = false;
           btn.textContent = "Repopulate Local Data";
+        }
+      }
+
+      async function initiateCall(event) {
+        event.preventDefault();
+
+        const btn = document.getElementById("call-btn");
+        const responseDiv = document.getElementById("call-response");
+
+        // Get form values
+        const phoneNumber = document.getElementById("phone-number").value;
+        const agentId = "692661cc096447abdaeccd53";
+
+        // Hide previous response
+        responseDiv.style.display = "none";
+        responseDiv.className = "call-response";
+
+        // Validate configuration is loaded
+        if (!trilletConfig || !trilletConfig.trillet) {
+          showCallResponse(
+            "Configuration not loaded. Please refresh the page.",
+            "error"
+          );
+          btn.disabled = false;
+          btn.textContent = "Initiate Call";
+          return;
+        }
+
+        // Validate required fields
+        if (!phoneNumber) {
+          showCallResponse("Phone number is required.", "error");
+          return;
+        }
+
+        // Disable button and show loading
+        btn.disabled = true;
+        btn.innerHTML = '<div class="spinner"></div> Initiating Call...';
+
+        // Prepare request body
+        const requestBody = {
+          to: phoneNumber,
+          call_agent_id: agentId,
+        };
+
+        try {
+          const response = await fetch(trilletConfig.trillet.apiUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-api-key": trilletConfig.trillet.apiKey,
+              "x-workspace-id": trilletConfig.trillet.workspaceId,
+            },
+            body: JSON.stringify(requestBody),
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            const successMessage = `
+              <strong>Call initiated successfully!</strong><br>
+              <strong>Call ID:</strong> <span class="call-id">${result.call_id || "N/A"}</span><br>
+              <strong>Status:</strong> ${result.status || "Unknown"}<br>
+              <strong>Message:</strong> ${result.message || "Call initiated"}
+            `;
+            showCallResponse(successMessage, "success");
+
+            // Clear the form on success
+            document.getElementById("call-form").reset();
+          } else {
+            const errorMessage = `
+              <strong>Failed to initiate call</strong><br>
+              <strong>Status:</strong> ${result.status || "Error"}<br>
+              <strong>Message:</strong> ${result.message || response.statusText}
+            `;
+            showCallResponse(errorMessage, "error");
+          }
+        } catch (error) {
+          console.error("Error initiating call:", error);
+          showCallResponse(`Network error: ${error.message}`, "error");
+        } finally {
+          // Reset button
+          btn.disabled = false;
+          btn.textContent = "Initiate Call";
+        }
+      }
+
+      function showCallResponse(message, type) {
+        const responseDiv = document.getElementById("call-response");
+        responseDiv.innerHTML = message;
+        responseDiv.className = `call-response ${type}`;
+        responseDiv.style.display = "block";
+
+        // Auto-hide success messages after 10 seconds
+        if (type === "success") {
+          setTimeout(() => {
+            responseDiv.style.display = "none";
+          }, 10000);
         }
       }
     </script>
