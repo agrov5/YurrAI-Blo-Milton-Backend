@@ -486,7 +486,7 @@ export const createAppointment = async (
         access_token: accessToken,
         LocationID: locationID,
         Notes: appointment.notes
-          ? `Booked via YurrAI. \n --- \n Agent Notes: ${appointment.notes}`
+          ? `Booked via YurrAI. Agent Notes: ${appointment.notes}`
           : "Booked via YurrAI",
         // CreateIncompleteAppointment: sendSMS,
         ResourceTypeID: 1,
@@ -747,22 +747,26 @@ export const cancelAppointment = async (appointment: CancelAppointment) => {
   }
 };
 
-
-export const addNotesToAppointment = async (appointment: AddAppointmentNotes) => {
+export const addNotesToAppointment = async (
+  appointment: AddAppointmentNotes
+) => {
   try {
     const accessToken = await generateAccessToken();
 
-    const response = await axios.put(`v4.1/merchant/appointment/${appointment.appointmentId}/notes`, {
-      access_token: accessToken,
-      notes: appointment.notes,
-    },
-    {
-      headers: {
-        "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
+    const response = await axios.put(
+      `v4.1/merchant/appointment/${appointment.appointmentId}/notes`,
+      {
+        access_token: accessToken,
+        notes: appointment.notes,
       },
-    });
+      {
+        headers: {
+          "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
+        },
+      }
+    );
     return response.data;
   } catch (err) {
-    console.error("Error adding notes to appointment:", err)
+    console.error("Error adding notes to appointment:", err);
   }
-}
+};

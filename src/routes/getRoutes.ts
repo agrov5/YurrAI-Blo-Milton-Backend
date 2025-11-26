@@ -72,4 +72,20 @@ getRouter.get("/auth-test", (req, res) => {
   });
 });
 
+/**
+ * @route   GET /config
+ * @desc    Get frontend configuration including API credentials
+ * @access  Private (requires auth)
+ */
+getRouter.get("/config", (req, res) => {
+  res.status(200).json({
+    trillet: {
+      apiKey: process.env.TRILLET_API_KEY,
+      workspaceId: process.env.TRILLET_WORKSPACE_ID,
+      apiUrl: "https://api.trillet.ai/v1/api/call"
+    },
+    timestamp: new Date().toISOString(),
+  });
+});
+
 export default getRouter;
