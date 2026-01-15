@@ -40,12 +40,12 @@ export const loggerMiddleware = (
       `Time: ${duration}ms | IP: ${req.ip}`;
 
     // Add query parameters if present
-    if (Object.keys(req.query).length > 0) {
+    if (req.query && Object.keys(req.query).length > 0) {
       logMessage += ` | Query: ${JSON.stringify(req.query)}`;
     }
 
     // Add route parameters if present
-    if (Object.keys(req.params).length > 0) {
+    if (req.params && Object.keys(req.params).length > 0) {
       logMessage += ` | Params: ${JSON.stringify(req.params)}`;
     }
 
