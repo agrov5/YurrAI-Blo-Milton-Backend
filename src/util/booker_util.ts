@@ -327,6 +327,17 @@ export const checkCustomerExists = async (firstName: string, phone: string) => {
 export const createAppointment = async (
   appointment: AgentAppointment
 ): Promise<CreateAppointmentResponse> => {
+  const cleanPhone = (input: string): string | null => {
+    const digits = input.replace(/\D/g, ""); // remove non-digits
+
+    // If it includes country code, keep last 10 digits
+    if (digits.length >= 10) {
+      return digits.slice(-10);
+    }
+
+    return null; // invalid phone number
+  };
+
   const treatmentID = await treatmentLookupByName(
     appointment.treatmentName
   ).then((treatment: Treatment | null) => {
@@ -466,7 +477,7 @@ export const createAppointment = async (
 
   const customer = await checkCustomerExists(
     appointment.firstName,
-    appointment.phone.toString()
+    cleanPhone(appointment.phone.toString()) || ""
   );
 
   let sendSMS = true;
@@ -480,48 +491,61 @@ export const createAppointment = async (
 
   try {
     const accessToken = await getAccessToken();
+
+    // Determine employee ID
+    const employeeID = appointment.employeeName
+      ? await getEmployeeId(appointment.employeeName)
+      : await determineEmployeeId(treatmentID ?? 0, customer);
+
+    // Build the appointment request payload
+    const appointmentPayload = {
+      access_token: accessToken,
+      LocationID: locationID,
+      Notes: appointment.notes
+        ? `Booked via YurrAI. Agent Notes: ${appointment.notes}`
+        : "Booked via YurrAI",
+      // CreateIncompleteAppointment: sendSMS,
+      ResourceTypeID: 1,
+      Customer: customer
+        ? customer.Customer
+        : {
+            Email: appointment.email,
+            MobilePhone: cleanPhone(appointment.phone.toString()),
+            FirstName: appointment.firstName,
+            LastName: appointment.lastName,
+          },
+      AppointmentDateOffset: convert24toISO(
+        "00:00",
+        appointment.appointmentDate
+      ),
+      AppointmentTreatmentDTOs: [
+        {
+          TreatmentID: treatmentID,
+          EmployeeID: employeeID,
+          RoomID: roomID,
+          EmployeeWasRequested: appointment.employeeName ? true : false,
+          StartTimeOffset: convert24toISO(
+            appointment.startTime,
+            appointment.appointmentDate
+          ),
+          EndTimeOffset: await determineEndTime(
+            appointment.startTime,
+            treatmentID || 0,
+            appointment.appointmentDate
+          ),
+        },
+      ],
+    };
+
+    // Log the payload for debugging
+    console.log(
+      "Creating appointment with payload:",
+      JSON.stringify(appointmentPayload, null, 2)
+    );
+
     const response = await axios.post<CreateAppointmentResponse>(
       "/v4.1/merchant/appointment",
-      {
-        access_token: accessToken,
-        LocationID: locationID,
-        Notes: appointment.notes
-          ? `Booked via YurrAI. Agent Notes: ${appointment.notes}`
-          : "Booked via YurrAI",
-        // CreateIncompleteAppointment: sendSMS,
-        ResourceTypeID: 1,
-        Customer: customer
-          ? customer.Customer
-          : {
-              Email: appointment.email,
-              MobilePhone: appointment.phone,
-              FirstName: appointment.firstName,
-              LastName: appointment.lastName,
-            },
-        AppointmentDateOffset: convert24toISO(
-          "00:00",
-          appointment.appointmentDate
-        ),
-        AppointmentTreatmentDTOs: [
-          {
-            TreatmentID: treatmentID,
-            EmployeeID: appointment.employeeName
-              ? await getEmployeeId(appointment.employeeName)
-              : await determineEmployeeId(treatmentID ?? 0, customer),
-            RoomID: roomID,
-            EmployeeWasRequested: appointment.employeeName ? true : false,
-            StartTimeOffset: convert24toISO(
-              appointment.startTime,
-              appointment.appointmentDate
-            ),
-            EndTimeOffset: await determineEndTime(
-              appointment.startTime,
-              treatmentID || 0,
-              appointment.appointmentDate
-            ),
-          },
-        ],
-      },
+      appointmentPayload,
       {
         headers: {
           "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
@@ -551,8 +575,24 @@ export const createAppointment = async (
     }
 
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error creating appointment:", error);
+
+    // Log detailed validation errors if available
+    if (error.response?.data?.ArgumentErrors) {
+      console.error(
+        "Validation Errors:",
+        JSON.stringify(error.response.data.ArgumentErrors, null, 2)
+      );
+    }
+
+    if (error.response?.data) {
+      console.error(
+        "Full error response:",
+        JSON.stringify(error.response.data, null, 2)
+      );
+    }
+
     throw error;
   }
 };
