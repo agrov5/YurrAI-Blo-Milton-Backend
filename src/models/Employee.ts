@@ -35,6 +35,7 @@ export interface IEmployee extends Document {
   Address: any;
   Status: any;
   DateCreatedOffset: string;
+  AliasNames?: string[];
 }
 
 const EmployeeSchema = new Schema(
@@ -46,6 +47,7 @@ const EmployeeSchema = new Schema(
     FirstName: { type: String, required: true },
     LastName: { type: String, required: false },
     Gender: { type: String, required: true },
+    AliasNames: { type: [String], required: false, default: [] },
     //   LocationID: { type: Number, required: true },
     //   Photo: { type: String, required: false },
     //   ProfileDescription: { type: String, required: true },

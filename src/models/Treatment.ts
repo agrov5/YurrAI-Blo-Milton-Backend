@@ -10,6 +10,7 @@ import {
 export { LookupOption, Money, DepositOptions, ArgumentErrors };
 
 interface ITreatment extends Document {
+  TreatmentName?: string;
   AllowCustomersToBookOnline?: boolean;
   BillableItemID?: number;
   Category?: any;
@@ -62,6 +63,7 @@ interface ITreatment extends Document {
   FinishTimeAppliedToRoom?: boolean;
   EmployeeTreatments?: any[] | null;
   BrandTreatmentID?: number | null;
+  AliasNames?: string[];
 }
 
 const TreatmentSchema = new Schema(
@@ -109,6 +111,7 @@ const TreatmentSchema = new Schema(
     //   IsVerifiedVisibleInOnlineBooking: { type: Boolean, required: false },
     EmployeeIDs: { type: [Number], required: false },
     RoomIDs: { type: [Number], required: false },
+    AliasNames: { type: [String], required: false, default: [] },
     //   EmployeeRecoveryDuration: { type: Number, required: false },
     //   RoomRecoveryDuration: { type: Number, required: false },
     //   RequiresProcessingTime: { type: Boolean, required: false },
