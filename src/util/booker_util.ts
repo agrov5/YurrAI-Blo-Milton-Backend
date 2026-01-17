@@ -797,7 +797,6 @@ export const addNotesToAppointment = async (
       `v4.1/merchant/appointment/${appointment.appointmentId}/notes`,
       {
         access_token: accessToken,
-        ID: appointment.appointmentId,
         Notes: appointment.notes,
       },
       {
