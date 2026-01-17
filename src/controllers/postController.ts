@@ -182,6 +182,7 @@ export const getAppointments = async (req: Request, res: Response) => {
         ? `${appointment.Employee.FirstName} ${appointment.Employee.LastName}`
         : null,
       finalTotal: appointment.FinalTotal?.Amount,
+      notes: appointment.Notes
     });
 
     // Handle single appointment return
