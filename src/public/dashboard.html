@@ -52,22 +52,9 @@
       }
 
       .dashboard-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-        gap: 2rem;
+        display: flex;
+        justify-content: center;
         margin-bottom: 2rem;
-      }
-
-      @media (max-width: 1024px) {
-        .dashboard-grid {
-          grid-template-columns: 1fr 1fr;
-        }
-      }
-
-      @media (max-width: 768px) {
-        .dashboard-grid {
-          grid-template-columns: 1fr;
-        }
       }
 
       .card {
@@ -76,6 +63,8 @@
         padding: 1.5rem;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         transition: transform 0.2s;
+        max-width: 500px;
+        width: 100%;
       }
 
       .card:hover {
@@ -637,115 +626,11 @@
             </p>
           </div>
         </div>
-
-        <!-- Outbound Call Card -->
-        <div class="card">
-          <div class="card-header">
-            <h2 class="card-title">Outbound Call</h2>
-            <p class="card-subtitle">Initiate AI-driven phone calls</p>
-          </div>
-
-          <form id="call-form" onsubmit="initiateCall(event)">
-            <div class="form-group">
-              <label class="form-label" for="phone-number"
-                >Phone Number *</label
-              >
-              <input
-                type="tel"
-                id="phone-number"
-                name="phone-number"
-                class="form-input"
-                placeholder="+1234567890"
-                required
-              />
-            </div>
-
-            <button type="submit" class="call-btn" id="call-btn">
-              Initiate Call
-            </button>
-
-            <div id="call-response" class="call-response">
-              <!-- Call response will be displayed here -->
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- <div class="card">
-        <div class="card-header">
-          <h2 class="card-title">Employee Rankings</h2>
-          <p class="card-subtitle">
-            Current order positions from MongoDB Order Model
-          </p>
-        </div>
-
-        <div id="employee-loading" class="loading">
-          <div class="spinner"></div>
-          Loading employee rankings...
-        </div>
-
-        <div class="employee-list" id="employee-list" style="display: none">
-          Employee items will be loaded here
-        </div>
-      </div> -->
-
-      <div class="card call-history-section">
-        <div class="card-header">
-          <div class="call-history-header">
-            <div>
-              <h2 class="card-title">Call History</h2>
-            </div>
-            <button
-              class="refresh-calls-btn"
-              onclick="loadCallHistory()"
-              id="refresh-calls-btn"
-            >
-              Refresh Calls
-            </button>
-          </div>
-        </div>
-
-        <div
-          id="call-history-loading"
-          class="call-history-loading"
-          style="display: none"
-        >
-          <div class="spinner"></div>
-          Loading call history...
-        </div>
-
-        <div id="call-history-content">
-          <!-- Call history will be loaded here -->
-          <div class="no-calls-message">
-            <p>Click "Refresh Calls" to load recent call history</p>
-          </div>
-        </div>
-
-        <div
-          id="call-history-pagination"
-          class="pagination"
-          style="display: none"
-        >
-          <!-- Pagination will be added here -->
-        </div>
       </div>
     </div>
 
     <script>
       let authCredentials = "";
-      let trilletConfig = null;
-
-      // Security: HTML escape function to prevent XSS
-      function escapeHtml(unsafe) {
-        if (!unsafe) return "";
-        return unsafe
-          .toString()
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#039;");
-      }
 
       // Check authentication on page load
       window.addEventListener("load", function () {
@@ -763,16 +648,13 @@
           .then((response) => {
             console.log(
               "Dashboard: Auth verification response status:",
-              response.status
+              response.status,
             );
             if (!response.ok) {
               console.log("Dashboard: Auth failed, redirecting to login");
               logout();
             } else {
               console.log("Dashboard: Auth successful, loading dashboard");
-              loadConfiguration().then(() => {
-                loadEmployeeRankings();
-              });
             }
           })
           .catch(() => {
@@ -783,40 +665,6 @@
       function logout() {
         sessionStorage.removeItem("authCredentials");
         window.location.href = "/admin/login";
-      }
-
-      async function loadConfiguration() {
-        try {
-          const response = await fetch("/api/get/config", {
-            headers: { Authorization: authCredentials },
-          });
-
-          if (response.ok) {
-            trilletConfig = await response.json();
-            console.log("Configuration loaded successfully");
-
-            // Fetch default agent ID from backend (security: not hardcoded)
-            try {
-              const agentResponse = await fetch("/api/get/default-agent", {
-                headers: { Authorization: authCredentials },
-              });
-              if (agentResponse.ok) {
-                const agentData = await agentResponse.json();
-                trilletConfig.defaultAgentId = agentData.agentId;
-              } else {
-                // Fallback to default if endpoint doesn't exist yet
-                trilletConfig.defaultAgentId = "692661cc096447abdaeccd53";
-              }
-            } catch (err) {
-              // Fallback to default if endpoint doesn't exist yet
-              trilletConfig.defaultAgentId = "692661cc096447abdaeccd53";
-            }
-          } else {
-            console.error("Failed to load configuration");
-          }
-        } catch (error) {
-          console.error("Error loading configuration:", error);
-        }
       }
 
       async function repopulateData() {
@@ -845,8 +693,6 @@
 
           successMsg.textContent = "Data repopulation completed successfully!";
           successMsg.style.display = "block";
-          // Reload employee stats after repopulation
-          loadEmployeeRankings();
         } catch (error) {
           console.error("Repopulate error:", error);
           errorMsg.textContent =
@@ -857,347 +703,6 @@
           btn.disabled = false;
           btn.textContent = "Repopulate Local Data";
         }
-      }
-
-      async function initiateCall(event) {
-        event.preventDefault();
-
-        const btn = document.getElementById("call-btn");
-        const responseDiv = document.getElementById("call-response");
-
-        // Get form values
-        const phoneNumber = document
-          .getElementById("phone-number")
-          .value.trim();
-        const agentId =
-          trilletConfig?.defaultAgentId || "692661cc096447abdaeccd53";
-
-        // Hide previous response
-        responseDiv.style.display = "none";
-        responseDiv.className = "call-response";
-
-        // Validate configuration is loaded
-        if (!trilletConfig || !trilletConfig.trillet) {
-          showCallResponse(
-            "Configuration not loaded. Please refresh the page.",
-            "error"
-          );
-          btn.disabled = false;
-          btn.textContent = "Initiate Call";
-          return;
-        }
-
-        // Validate required fields
-        if (!phoneNumber) {
-          showCallResponse("Phone number is required.", "error");
-          return;
-        }
-
-        // Validate phone number format (E.164 format)
-        const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-        if (!phoneRegex.test(phoneNumber)) {
-          showCallResponse(
-            "Please enter a valid phone number in international format (e.g., +1234567890)",
-            "error"
-          );
-          return;
-        }
-
-        // Disable button and show loading
-        btn.disabled = true;
-        btn.innerHTML = '<div class="spinner"></div> Initiating Call...';
-
-        // Prepare request body
-        const requestBody = {
-          to: phoneNumber,
-          call_agent_id: agentId,
-        };
-
-        try {
-          const response = await fetch(trilletConfig.trillet.apiUrl, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-api-key": trilletConfig.trillet.apiKey,
-              "x-workspace-id": trilletConfig.trillet.workspaceId,
-            },
-            body: JSON.stringify(requestBody),
-          });
-
-          const result = await response.json();
-
-          if (response.ok) {
-            const successMessage = `
-              <strong>Call initiated successfully!</strong><br>
-              <strong>Call ID:</strong> <span class="call-id">${escapeHtml(result.call_id || "N/A")}</span><br>
-              <strong>Status:</strong> ${escapeHtml(result.status || "Unknown")}<br>
-              <strong>Message:</strong> ${escapeHtml(result.message || "Call initiated")}
-            `;
-            showCallResponse(successMessage, "success");
-
-            // Clear the form on success
-            document.getElementById("call-form").reset();
-          } else {
-            console.error("Call initiation failed:", result);
-            const errorMessage = `
-              <strong>Failed to initiate call</strong><br>
-              <strong>Message:</strong> Unable to initiate call. Please try again later.
-            `;
-            showCallResponse(errorMessage, "error");
-          }
-        } catch (error) {
-          console.error("Error initiating call:", error);
-          showCallResponse(
-            "Unable to initiate call. Please check your connection and try again.",
-            "error"
-          );
-        } finally {
-          // Reset button
-          btn.disabled = false;
-          btn.textContent = "Initiate Call";
-        }
-      }
-
-      function showCallResponse(message, type) {
-        const responseDiv = document.getElementById("call-response");
-        responseDiv.innerHTML = message;
-        responseDiv.className = `call-response ${type}`;
-        responseDiv.style.display = "block";
-
-        // Auto-hide success messages after 10 seconds
-        if (type === "success") {
-          setTimeout(() => {
-            responseDiv.style.display = "none";
-          }, 10000);
-        }
-      }
-
-      // Call History Functions
-      let currentCallPage = 1;
-      const callsPerPage = 10;
-
-      async function loadCallHistory(page = 1) {
-        if (!trilletConfig || !trilletConfig.trillet) {
-          console.error("Configuration not loaded");
-          return;
-        }
-
-        const loadingDiv = document.getElementById("call-history-loading");
-        const contentDiv = document.getElementById("call-history-content");
-        const refreshBtn = document.getElementById("refresh-calls-btn");
-
-        // Show loading
-        loadingDiv.style.display = "block";
-        refreshBtn.disabled = true;
-        refreshBtn.textContent = "Loading...";
-
-        try {
-          // Construct API URL for call history
-          const apiUrl = `${trilletConfig.trillet.callHistoryUrl}?page=${page}&limit=${callsPerPage}`;
-
-          const response = await fetch(apiUrl, {
-            method: "GET",
-            headers: {
-              "x-api-key": trilletConfig.trillet.apiKey,
-              "x-workspace-id": trilletConfig.trillet.workspaceId,
-            },
-          });
-
-          if (!response.ok) {
-            console.error("Failed to fetch call history:", response.statusText);
-            throw new Error("Failed to fetch call history");
-          }
-
-          const result = await response.json();
-
-          if (result.data && Array.isArray(result.data)) {
-            displayCallHistory(result.data);
-            updatePagination(result.pagination);
-            currentCallPage = page;
-          } else {
-            throw new Error("Invalid response format");
-          }
-        } catch (error) {
-          console.error("Error loading call history:", error);
-          contentDiv.innerHTML = `
-            <div class="no-calls-message">
-              <p>Failed to load call history. Please try again later.</p>
-              <button class="refresh-calls-btn" onclick="loadCallHistory()">Try Again</button>
-            </div>
-          `;
-        } finally {
-          loadingDiv.style.display = "none";
-          refreshBtn.disabled = false;
-          refreshBtn.textContent = "Refresh Calls";
-        }
-      }
-
-      function displayCallHistory(calls) {
-        const contentDiv = document.getElementById("call-history-content");
-
-        if (!calls || calls.length === 0) {
-          contentDiv.innerHTML = `
-            <div class="no-calls-message">
-              <p>No call history found</p>
-            </div>
-          `;
-          return;
-        }
-
-        const callsHTML = calls
-          .map((call) => createCallItemHTML(call))
-          .join("");
-        contentDiv.innerHTML = callsHTML;
-      }
-
-      function createCallItemHTML(call) {
-        // Security: Escape all user-generated content to prevent XSS
-        const fromPhone = escapeHtml(call.fromPhoneNumber || "Unknown");
-        const toPhone = escapeHtml(call.toPhoneNumber || "Unknown");
-        const duration = formatDuration(call.duration);
-        const cost = call.cost ? `$${call.cost.toFixed(3)}` : "N/A";
-        const timestamp = formatTimestamp(call.timestamp);
-        const summary = escapeHtml(call.summary || "No summary available");
-        const recordingUrl = escapeHtml(
-          call.publicRecordingUrl || call.recordingUrl || ""
-        );
-        const transcript = call.transcript || [];
-        const agent = escapeHtml(call.agent || "Unknown");
-        const status = escapeHtml(call.status || "Unknown");
-
-        return `
-          <div class="call-item">
-            <div class="call-header" onclick="toggleCallDetails('${call._id}')">
-              <div class="call-basic-info">
-                <div class="call-info-item">
-                  <div class="call-info-label">From</div>
-                  <div class="call-info-value">${fromPhone}</div>
-                </div>
-                <div class="call-info-item">
-                  <div class="call-info-label">To</div>
-                  <div class="call-info-value">${toPhone}</div>
-                </div>
-                <div class="call-info-item">
-                  <div class="call-info-label">Duration</div>
-                  <div class="call-info-value">${duration}</div>
-                </div>
-                <div class="call-info-item">
-                  <div class="call-info-label">Cost</div>
-                  <div class="call-info-value">${cost}</div>
-                </div>
-                <div class="call-info-item">
-                  <div class="call-info-label">Time</div>
-                  <div class="call-info-value">${timestamp}</div>
-                </div>
-              </div>
-              <div class="call-expand-icon" id="expand-${call._id}">▼</div>
-            </div>
-            
-            <div class="call-details" id="details-${call._id}">
-              <div class="call-summary">
-                <h4>Call Summary</h4>
-                <p>${summary}</p>
-              </div>
-
-              <div class="call-actions">
-                ${recordingUrl ? `<a href="${recordingUrl}" target="_blank" class="recording-btn">🎵 Play Recording</a>` : ""}
-                <span style="color: #666; font-size: 0.9rem;">Agent: ${agent} | Status: ${status}</span>
-              </div>
-
-              ${transcript.length > 0 ? createTranscriptHTML(transcript) : '<p style="color: #666;">No transcript available</p>'}
-            </div>
-          </div>
-        `;
-      }
-
-      function createTranscriptHTML(transcript) {
-        const transcriptItems = transcript
-          .map((item) => {
-            // Security: Escape transcript content to prevent XSS
-            const role = escapeHtml(item.role || "unknown");
-            const content = escapeHtml(item.content || "");
-            const timestamp = new Date(item.timestamp).toLocaleTimeString();
-            return `
-            <div class="transcript-item">
-              <div class="transcript-role ${role}">${role}</div>
-              <div>
-                <div class="transcript-text">${content}</div>
-                <div class="transcript-timestamp">${escapeHtml(timestamp)}</div>
-              </div>
-            </div>
-          `;
-          })
-          .join("");
-
-        return `
-          <div class="transcript-section">
-            <div class="transcript-header">
-              📝 Call Transcript (${transcript.length} messages)
-            </div>
-            <div class="transcript-content">
-              ${transcriptItems}
-            </div>
-          </div>
-        `;
-      }
-
-      function toggleCallDetails(callId) {
-        const detailsDiv = document.getElementById(`details-${callId}`);
-        const expandIcon = document.getElementById(`expand-${callId}`);
-
-        if (detailsDiv.classList.contains("expanded")) {
-          detailsDiv.classList.remove("expanded");
-          expandIcon.classList.remove("expanded");
-        } else {
-          detailsDiv.classList.add("expanded");
-          expandIcon.classList.add("expanded");
-        }
-      }
-
-      function updatePagination(pagination) {
-        const paginationDiv = document.getElementById(
-          "call-history-pagination"
-        );
-
-        if (!pagination || pagination.totalPages <= 1) {
-          paginationDiv.style.display = "none";
-          return;
-        }
-
-        const { page, totalPages, totalCount } = pagination;
-
-        paginationDiv.innerHTML = `
-          <button class="pagination-btn" onclick="loadCallHistory(${page - 1})" ${page <= 1 ? "disabled" : ""}>
-            ← Previous
-          </button>
-          <div class="pagination-info">
-            Page ${page} of ${totalPages} (${totalCount} total calls)
-          </div>
-          <button class="pagination-btn" onclick="loadCallHistory(${page + 1})" ${page >= totalPages ? "disabled" : ""}>
-            Next →
-          </button>
-        `;
-
-        paginationDiv.style.display = "flex";
-      }
-
-      function formatDuration(seconds) {
-        if (!seconds || seconds === 0) return "0s";
-
-        const minutes = Math.floor(seconds / 60);
-        const remainingSeconds = seconds % 60;
-
-        if (minutes > 0) {
-          return `${minutes}m ${remainingSeconds}s`;
-        }
-        return `${remainingSeconds}s`;
-      }
-
-      function formatTimestamp(timestamp) {
-        if (!timestamp) return "Unknown";
-
-        const date = new Date(timestamp * 1000); // Convert Unix timestamp
-        return date.toLocaleString();
       }
     </script>
   </body>
