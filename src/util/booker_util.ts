@@ -18,7 +18,7 @@ import {
 } from "../models/Appointment";
 import { Employee } from "../models/Employee";
 import { CreditCardResponse, CreditCardRecord } from "../models/CreditCard";
-import { sendMessage } from "./twillo_util";
+import { sendMessage } from "./phone_util";
 import { Customer } from "../models/Customer";
 
 // const generateAccessToken = async () => {
@@ -74,7 +74,7 @@ const SLIDING_WINDOW_MS =
 // Refresh buffer is relative to sliding window but capped (safety margin).
 const TOKEN_REFRESH_BUFFER_MS = Math.min(
   60 * 1000,
-  Math.floor(SLIDING_WINDOW_MS * 0.2)
+  Math.floor(SLIDING_WINDOW_MS * 0.2),
 );
 
 const generateAccessToken = async (): Promise<string> => {
@@ -109,7 +109,7 @@ const generateAccessToken = async (): Promise<string> => {
             "Content-Type": "application/x-www-form-urlencoded",
             "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
           },
-        }
+        },
       );
 
       const token = response.data.access_token;
@@ -169,7 +169,7 @@ export const findEmployees = async () => {
         headers: {
           "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
         },
-      }
+      },
     );
     // console.log("Employees fetched:", response.data);
     return response.data;
@@ -192,7 +192,7 @@ export const findTreatments = async () => {
         headers: {
           "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
         },
-      }
+      },
     );
     return response.data;
   } catch (error) {
@@ -214,7 +214,7 @@ export const findRooms = async () => {
         headers: {
           "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
         },
-      }
+      },
     );
     return response.data;
   } catch (error) {
@@ -253,7 +253,7 @@ export const findAvailableDates = async (options: {
           Authorization: `Bearer ${accessToken}`,
           "Ocp-Apim-Subscription-Key": process.env.BOOKER_AVAILABILITY_KEY,
         },
-      }
+      },
     );
     return response.data;
   } catch (error) {
@@ -288,7 +288,7 @@ export const findAvailableTimes = async (options: {
           Authorization: `Bearer ${accessToken}`,
           "Ocp-Apim-Subscription-Key": process.env.BOOKER_AVAILABILITY_KEY,
         },
-      }
+      },
     );
     return response.data;
   } catch (error) {
@@ -312,7 +312,7 @@ export const checkCustomerExists = async (firstName: string, phone: string) => {
         headers: {
           "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
         },
-      }
+      },
     );
     return response.data.Customers && response.data.Customers.length > 0
       ? response.data.Customers[0]
@@ -325,7 +325,7 @@ export const checkCustomerExists = async (firstName: string, phone: string) => {
 
 // NOTE: fix this, very prone to errors
 export const createAppointment = async (
-  appointment: AgentAppointment
+  appointment: AgentAppointment,
 ): Promise<CreateAppointmentResponse> => {
   const cleanPhone = (input: string): string | null => {
     const digits = input.replace(/\D/g, ""); // remove non-digits
@@ -339,7 +339,7 @@ export const createAppointment = async (
   };
 
   const treatmentID = await treatmentLookupByName(
-    appointment.treatmentName
+    appointment.treatmentName,
   ).then((treatment: Treatment | null) => {
     if (treatment) {
       return treatment.ID;
@@ -353,7 +353,7 @@ export const createAppointment = async (
       if (treatment && treatment.RoomIDs && treatment.RoomIDs.length > 0) {
         return treatment.RoomIDs[0];
       }
-    }
+    },
   );
 
   const getEmployeeId = async (name: string): Promise<number | null> => {
@@ -364,12 +364,12 @@ export const createAppointment = async (
   const checkTimeSlotAvailability = (
     availabilityData: any[],
     requestedTime: string,
-    requestedDate: string
+    requestedDate: string,
   ): boolean => {
     try {
       // Convert requested time to ISO format for comparison
       const requestedDateTime = new Date(
-        convert24toISO(requestedTime, requestedDate)
+        convert24toISO(requestedTime, requestedDate),
       );
 
       for (const location of availabilityData) {
@@ -410,7 +410,7 @@ export const createAppointment = async (
 
   const determineEmployeeId = async (
     treatmentId: number,
-    customer: Customer | null
+    customer: Customer | null,
   ): Promise<number | null> => {
     try {
       const treatment = await TreatmentModel.findOne({ ID: treatmentId });
@@ -428,7 +428,7 @@ export const createAppointment = async (
           if (preferredGenderId) {
             const employeeDetails = await findEmployees();
             const employee = employeeDetails?.Results?.find(
-              (emp: any) => emp.ID === empId
+              (emp: any) => emp.ID === empId,
             );
 
             // Skip this employee if their gender doesn't match the customer's preference
@@ -449,7 +449,7 @@ export const createAppointment = async (
             const hasTimeSlot = checkTimeSlotAvailability(
               availability,
               appointment.startTime,
-              appointment.appointmentDate
+              appointment.appointmentDate,
             );
             if (hasTimeSlot) {
               // Also check if the employee is listed in the availability block
@@ -477,7 +477,7 @@ export const createAppointment = async (
 
   const customer = await checkCustomerExists(
     appointment.firstName,
-    cleanPhone(appointment.phone.toString()) || ""
+    cleanPhone(appointment.phone.toString()) || "",
   );
 
   let sendSMS = true;
@@ -516,7 +516,7 @@ export const createAppointment = async (
           },
       AppointmentDateOffset: convert24toISO(
         "00:00",
-        appointment.appointmentDate
+        appointment.appointmentDate,
       ),
       AppointmentTreatmentDTOs: [
         {
@@ -526,12 +526,12 @@ export const createAppointment = async (
           EmployeeWasRequested: appointment.employeeName ? true : false,
           StartTimeOffset: convert24toISO(
             appointment.startTime,
-            appointment.appointmentDate
+            appointment.appointmentDate,
           ),
           EndTimeOffset: await determineEndTime(
             appointment.startTime,
             treatmentID || 0,
-            appointment.appointmentDate
+            appointment.appointmentDate,
           ),
         },
       ],
@@ -540,7 +540,7 @@ export const createAppointment = async (
     // Log the payload for debugging
     console.log(
       "Creating appointment with payload:",
-      JSON.stringify(appointmentPayload, null, 2)
+      JSON.stringify(appointmentPayload, null, 2),
     );
 
     const response = await axios.post<CreateAppointmentResponse>(
@@ -550,7 +550,7 @@ export const createAppointment = async (
         headers: {
           "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
         },
-      }
+      },
     );
 
     if (sendSMS) {
@@ -559,9 +559,9 @@ export const createAppointment = async (
       if (typeof customerId === "number") {
         const widgetUrl = generateCCWidgetURL(customerId);
         const message = `Dear ${appointment.firstName}, your appointment for ${appointment.treatmentName} on ${appointment.appointmentDate} at ${appointment.startTime} has been created but requires a credit card on file. Please complete your booking by providing your payment details, using the following link: ${widgetUrl}.`;
-        // Send SMS via Twilio
+        // Send SMS via phone
         sendMessage(appointment.phone.toString(), message).catch((error) => {
-          console.error("Error sending SMS via Twilio:", error);
+          console.error("Error sending SMS via phone:", error);
         });
       } else {
         // Missing appointment or customer ID - log and skip generating URL
@@ -569,7 +569,7 @@ export const createAppointment = async (
           "createAppointment: unable to generate CC widget URL, missing appointment/customer ID",
           {
             appointmentData: response.data,
-          }
+          },
         );
       }
     }
@@ -582,14 +582,14 @@ export const createAppointment = async (
     if (error.response?.data?.ArgumentErrors) {
       console.error(
         "Validation Errors:",
-        JSON.stringify(error.response.data.ArgumentErrors, null, 2)
+        JSON.stringify(error.response.data.ArgumentErrors, null, 2),
       );
     }
 
     if (error.response?.data) {
       console.error(
         "Full error response:",
-        JSON.stringify(error.response.data, null, 2)
+        JSON.stringify(error.response.data, null, 2),
       );
     }
 
@@ -598,7 +598,7 @@ export const createAppointment = async (
 };
 
 export const getCustomerCreditCardInfo = async (
-  cusId: number
+  cusId: number,
 ): Promise<CreditCardRecord | null> => {
   try {
     const accessToken = await getAccessToken();
@@ -614,7 +614,7 @@ export const getCustomerCreditCardInfo = async (
         headers: {
           "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
         },
-      }
+      },
     );
 
     const ccResponse: CreditCardResponse = response.data;
@@ -692,7 +692,7 @@ export const getCustomerAppointments = async (options: {
     if (options.fromStartDate) {
       params.append(
         "fromStartDate",
-        convert24toISO("00:00", options.fromStartDate)
+        convert24toISO("00:00", options.fromStartDate),
       );
     } else if (options.date) {
       params.append("fromStartDate", convert24toISO("00:00", options.date));
@@ -704,7 +704,7 @@ export const getCustomerAppointments = async (options: {
         headers: {
           "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
         },
-      }
+      },
     );
 
     if (
@@ -723,7 +723,7 @@ export const getCustomerAppointments = async (options: {
       if (options.treatmentName) {
         const treatmentMatch =
           appointment.TreatmentName?.toLowerCase().includes(
-            options.treatmentName.toLowerCase()
+            options.treatmentName.toLowerCase(),
           );
         if (!treatmentMatch) return false;
       }
@@ -743,7 +743,7 @@ export const getCustomerAppointments = async (options: {
         // Compare the datetime portion (without timezone)
         const appointmentDateTime = appointment.StartDateTimeOffset.substring(
           0,
-          16
+          16,
         ); // "2025-11-15T14:00"
         const searchDateTime = searchTimeISO.substring(0, 16);
         if (!appointmentDateTime.startsWith(searchDateTime)) return false;
@@ -778,7 +778,7 @@ export const cancelAppointment = async (appointment: CancelAppointment) => {
         headers: {
           "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
         },
-      }
+      },
     );
 
     return response.data;
@@ -788,7 +788,7 @@ export const cancelAppointment = async (appointment: CancelAppointment) => {
 };
 
 export const addNotesToAppointment = async (
-  appointment: AddAppointmentNotes
+  appointment: AddAppointmentNotes,
 ) => {
   try {
     const accessToken = await generateAccessToken();
@@ -803,7 +803,7 @@ export const addNotesToAppointment = async (
         headers: {
           "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
         },
-      }
+      },
     );
     return response.data;
   } catch (err) {

@@ -8,15 +8,15 @@ import {
 } from "../controllers/postController";
 import {
   sendMessageToAdminController,
-  twilioController,
-  twilioControllerFromParams,
-} from "../controllers/twillioController";
+  phoneController,
+  phoneControllerFromParams,
+} from "../controllers/phoneController";
 
 const postRouter = Router();
 
-postRouter.post("/sms", twilioController);
+postRouter.post("/sms", phoneController);
 postRouter.post("/sms/admin", sendMessageToAdminController);
-postRouter.post("/sms/:to/:body", twilioControllerFromParams);
+postRouter.post("/sms/:to/:body", phoneControllerFromParams);
 
 postRouter.post("/appointments", getAppointments);
 postRouter.post("/appointment", postCreateAppointment);
@@ -24,6 +24,5 @@ postRouter.post("/appointment/cancel", postCancelAppointment);
 postRouter.post("/appointment/notes", postAddNotesToAppointment);
 
 postRouter.post("/customer", getCustomer);
-
 
 export default postRouter;
