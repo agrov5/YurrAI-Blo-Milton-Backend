@@ -11,7 +11,7 @@ export async function sendMessage(to: string, body: string) {
       params: {
         api_username: API_USER,
         api_password: API_PASSWORD,
-        method: "sendSMS",
+        method: "sendMMS",
         dst: to,
         message: body,
         did: DID,
@@ -29,7 +29,7 @@ export async function sendMessageToAdmin(body: string) {
       params: {
         api_username: API_USER,
         api_password: API_PASSWORD,
-        method: "sendSMS",
+        method: "sendMMS",
         dst: "+14374243229",
         message: body,
         did: DID,
