@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { sendMessage, sendMessageToAdmin } from "../util/twillo_util";
+import { sendMessage, sendMessageToAdmin } from "../util/phone_util";
 
-export const twilioController = async (req: Request, res: Response) => {
+export const phoneController = async (req: Request, res: Response) => {
   try {
     const { to, body } = req.body;
     if (!to || !body) {
@@ -31,7 +31,7 @@ export const twilioController = async (req: Request, res: Response) => {
 
 export const sendMessageToAdminController = async (
   req: Request,
-  res: Response
+  res: Response,
 ) => {
   try {
     const { body } = req.body;
@@ -56,9 +56,9 @@ export const sendMessageToAdminController = async (
     });
   }
 };
-export const twilioControllerFromParams = async (
+export const phoneControllerFromParams = async (
   req: Request,
-  res: Response
+  res: Response,
 ) => {
   try {
     const { to, body } = req.params;

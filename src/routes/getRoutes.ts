@@ -17,9 +17,9 @@ import {
   getAppointments,
 } from "../controllers/getController";
 import {
-  twilioController,
-  twilioControllerFromParams,
-} from "../controllers/twillioController";
+  phoneController,
+  phoneControllerFromParams,
+} from "../controllers/phoneController";
 import { get } from "http";
 
 const getRouter = Router();
