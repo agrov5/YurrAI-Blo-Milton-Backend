@@ -572,6 +572,12 @@ export const createAppointment = async (
           },
         );
       }
+    } else {
+      const message = `Dear ${appointment.firstName}, your appointment for ${appointment.treatmentName} on ${appointment.appointmentDate} at ${appointment.startTime} has been confirmed. We look forward to seeing you then!`;
+      // Send SMS via phone
+      sendMessage(appointment.phone.toString(), message).catch((error) => {
+        console.error("Error sending SMS via phone:", error);
+      });
     }
 
     return response.data;
