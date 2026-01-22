@@ -12,14 +12,12 @@ const VALID_PASSWORD = process.env.AUTH_PASSWORD?.toString().trim();
 export const authMiddleware = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<any | void> => {
   const authHeader = req.headers["authorization"];
 
   if (!authHeader) {
-    return res
-      .status(401)
-      .json({ message: "Missing or invalid Authorization header" });
+    return res.status(401).json({ message: "Not Authorized (401)" });
   }
 
   // Parse credentials from header
