@@ -20,6 +20,7 @@ import { Employee } from "../models/Employee";
 import { CreditCardResponse, CreditCardRecord } from "../models/CreditCard";
 import { sendMessage } from "./phone_util";
 import { Customer } from "../models/Customer";
+import { getTreatmentById } from "../controllers/getController";
 
 // const generateAccessToken = async () => {
 //   try {
@@ -226,7 +227,7 @@ export const findRooms = async () => {
 export const findAvailableDates = async (options: {
   fromDate: string;
   toDate: string;
-  serviceId?: number;
+  treatmentName?: string;
   employeeId?: number;
 }) => {
   try {
@@ -242,8 +243,11 @@ export const findAvailableDates = async (options: {
       params.append("employeeId", options.employeeId.toString());
     }
 
-    if (options.serviceId) {
-      params.append("serviceId", options.serviceId.toString());
+    if (options.treatmentName) {
+      const treatment = await treatmentLookupByName(options.treatmentName);
+      if (treatment && treatment.ID) {
+        params.append("serviceId", treatment.ID.toString());
+      }
     }
 
     const response = await axios.get(
@@ -265,7 +269,7 @@ export const findAvailableDates = async (options: {
 export const findAvailableTimes = async (options: {
   date: string;
   time: string;
-  serviceId: number;
+  treatmentName: string;
   employeeId?: number;
 }) => {
   try {
@@ -275,7 +279,12 @@ export const findAvailableTimes = async (options: {
     const params = new URLSearchParams();
     params.append("LocationId", locationID?.toString() || "");
     params.append("fromDateTime", convert24toISO(options.time, options.date));
-    params.append("serviceId[]", options.serviceId.toString());
+
+    const treatment = await treatmentLookupByName(options.treatmentName);
+    if (treatment && treatment.ID) {
+      params.append("serviceId[]", treatment.ID.toString());
+    }
+
     params.append("IncludeEmployees", "true");
     if (options.employeeId) {
       params.append("employeeId", options.employeeId.toString());
@@ -440,7 +449,7 @@ export const createAppointment = async (
           const availability = await findAvailableTimes({
             date: appointment.appointmentDate,
             time: appointment.startTime,
-            serviceId: treatmentId,
+            treatmentName: appointment.treatmentName,
             employeeId: empId,
           });
 
