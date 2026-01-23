@@ -260,7 +260,7 @@ export const getAvaliableDates = async (req: Request, res: Response) => {
     fromDate: string;
     toDate: string;
     employeeId?: number;
-    serviceId?: number;
+    treatmentName?: string;
   } = req.body;
 
   try {
@@ -292,15 +292,15 @@ export const getAvaliableTimes = async (req: Request, res: Response) => {
   const body: {
     date: string;
     time: string;
-    serviceId: number;
+    treatmentName: string;
     employeeId?: number;
   } = req.body;
 
   try {
-    if (!body.date || !body.serviceId || !body.time) {
+    if (!body.date || !body.treatmentName || !body.time) {
       return res.status(400).json({
         success: false,
-        message: "Date, time, and serviceId are required",
+        message: "Date, time, and treatmentName are required",
       });
     }
 
@@ -310,7 +310,7 @@ export const getAvaliableTimes = async (req: Request, res: Response) => {
       message: "Available times retrieved successfully",
       locationID: locationID,
       date: body.date,
-      serviceId: body.serviceId,
+      treatment: body.treatmentName,
       times: availableTimes,
     });
   } catch (error) {
