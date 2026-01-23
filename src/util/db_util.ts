@@ -85,7 +85,7 @@ export const isoToDate = (isoStr: string): string => {
 export const determineEndTime = async (
   startTime: string,
   treatmentId: number,
-  appointmentDate: string
+  appointmentDate: string,
 ) => {
   const endTimeISO = await TreatmentModel.findOne({ ID: treatmentId }).then(
     (treatment) => {
@@ -122,7 +122,7 @@ export const determineEndTime = async (
         "-04:00";
 
       return isoString;
-    }
+    },
   );
 
   return endTimeISO;
@@ -151,4 +151,23 @@ export const convert24toISO = (time24: string, appointmentDate: string) => {
     "-04:00";
 
   return isoString;
+};
+
+export const convertISOtoFriendly = (isoStr: string) => {
+  const date = new Date(isoStr);
+
+  const options: Intl.DateTimeFormatOptions = {
+    weekday: "long", // Full name of the weekday (e.g., "Friday")
+    year: "numeric",
+    month: "long", // Full name of the month (e.g., "January")
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true, // Use 12-hour clock (e.g., 4 PM)
+    // Optional: add a specific timezone if you don't want the user's local time
+    // timeZone: 'America/New_York'
+  };
+
+  const friendlyDate = date.toLocaleString("en-US", options);
+  return friendlyDate;
 };
