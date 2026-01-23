@@ -21,6 +21,7 @@ import {
   phoneControllerFromParams,
 } from "../controllers/phoneController";
 import { get } from "http";
+import { convertISOtoFriendly } from "../util/db_util";
 
 const getRouter = Router();
 
@@ -53,7 +54,7 @@ getRouter.get("/appointments", getAppointments);
 getRouter.get("/health", (req, res) => {
   res.status(200).json({
     status: "OK",
-    timestamp: new Date().toISOString(),
+    timestamp: convertISOtoFriendly(new Date().toISOString()),
     service: "Blo Milton Backend API",
     locationID: process.env.LOCATION_ID,
   });
@@ -67,7 +68,7 @@ getRouter.get("/health", (req, res) => {
 getRouter.get("/auth-test", (req, res) => {
   res.status(200).json({
     status: "Authenticated",
-    timestamp: new Date().toISOString(),
+    timestamp: convertISOtoFriendly(new Date().toISOString()),
     message: "Authentication successful",
   });
 });
