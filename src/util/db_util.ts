@@ -163,9 +163,8 @@ export const convertISOtoFriendly = (isoStr: string) => {
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
-    hour12: true, // Use 12-hour clock (e.g., 4 PM)
-    // Optional: add a specific timezone if you don't want the user's local time
-    // timeZone: 'America/New_York'
+    hour12: false, // Use 12-hour clock (e.g., 4 PM)
+    timeZone: "America/New_York",
   };
 
   const friendlyDate = date.toLocaleString("en-US", options);
