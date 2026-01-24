@@ -255,7 +255,7 @@ export const getRooms = async (req: Request, res: Response) => {
   }
 };
 
-export const getAvaliableDates = async (req: Request, res: Response) => {
+export const getAvailableDates = async (req: Request, res: Response) => {
   const body: {
     fromDate: string;
     toDate: string;
@@ -288,7 +288,7 @@ export const getAvaliableDates = async (req: Request, res: Response) => {
   }
 };
 
-export const getAvaliableTimes = async (req: Request, res: Response) => {
+export const getAvailableTimes = async (req: Request, res: Response) => {
   const body: {
     date: string;
     time: string;
