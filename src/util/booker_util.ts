@@ -374,37 +374,48 @@ export const createAppointment = async (
     availabilityData: any[],
     requestedTime: string,
     requestedDate: string,
+    serviceDuration: number,
+    employeeId?: number,
   ): boolean => {
     try {
-      // Convert requested time to ISO format for comparison
-      const requestedDateTime = new Date(
+      const requestedStart = new Date(
         convert24toISO(requestedTime, requestedDate),
+      );
+      const requestedEnd = new Date(
+        requestedStart.getTime() + serviceDuration * 60 * 1000,
       );
 
       for (const location of availabilityData) {
-        const startTimeInterval = location.startTimeInterval || 15;
+        const interval = location.startTimeInterval ?? 15;
 
-        for (const category of location.serviceCategories || []) {
-          for (const service of category.services || []) {
-            for (const availabilityBlock of service.availability || []) {
-              const blockStart = new Date(availabilityBlock.startDateTime);
-              const blockEnd = new Date(availabilityBlock.endDateTime);
+        for (const category of location.serviceCategories ?? []) {
+          for (const service of category.services ?? []) {
+            for (const block of service.availability ?? []) {
+              const blockStart = new Date(block.startDateTime);
+              const blockEnd = new Date(block.endDateTime);
 
-              // Check if requested time falls within this availability block
+              // Rule 1: requested start must be inside block
+              if (requestedStart < blockStart) continue;
+
+              // Rule 2: full service must fit inside block
+              if (requestedEnd > blockEnd) continue;
+
+              // Rule 3: start time must align to interval
+              const minutesFromBlockStart =
+                (requestedStart.getTime() - blockStart.getTime()) / (1000 * 60);
+
+              if (minutesFromBlockStart % interval !== 0) continue;
+
+              // Rule 4: employee must be valid for this block
               if (
-                requestedDateTime >= blockStart &&
-                requestedDateTime <= blockEnd
+                employeeId &&
+                (!block.employees || !block.employees.includes(employeeId))
               ) {
-                // Check if the time aligns with the location's start time interval
-                const minutesSinceBlockStart =
-                  (requestedDateTime.getTime() - blockStart.getTime()) /
-                  (1000 * 60);
-
-                // Verify the time slot aligns with the interval (e.g., 15, 30, 60 minutes)
-                if (minutesSinceBlockStart % startTimeInterval === 0) {
-                  return true;
-                }
+                continue;
               }
+
+              // ✅ Valid discrete timeslot
+              return true;
             }
           }
         }
@@ -419,65 +430,35 @@ export const createAppointment = async (
 
   const determineEmployeeId = async (
     treatmentId: number,
-    customer: Customer | null,
   ): Promise<number | null> => {
     try {
       const treatment = await TreatmentModel.findOne({ ID: treatmentId });
-      if (
-        treatment &&
-        treatment.EmployeeIDs &&
-        treatment.EmployeeIDs.length > 0
-      ) {
-        // Get preferred staff gender from customer if exists
-        const preferredGenderId = customer?.PreferredStaffGender?.ID;
+      if (!treatment?.EmployeeIDs?.length) return null;
 
-        // Check each employee for availability
-        for (const empId of treatment.EmployeeIDs) {
-          // If customer has a preferred gender, filter employees by gender first
-          if (preferredGenderId) {
-            const employeeDetails = await findEmployees();
-            const employee = employeeDetails?.Results?.find(
-              (emp: any) => emp.ID === empId,
-            );
+      for (const empId of treatment.EmployeeIDs) {
+        const availability = await findAvailableTimes({
+          date: appointment.appointmentDate,
+          time: appointment.startTime,
+          treatmentName: appointment.treatmentName,
+          employeeId: empId,
+        });
 
-            // Skip this employee if their gender doesn't match the customer's preference
-            if (employee && employee.Gender?.ID !== preferredGenderId) {
-              continue;
-            }
-          }
+        if (!availability || !Array.isArray(availability)) continue;
 
-          const availability = await findAvailableTimes({
-            date: appointment.appointmentDate,
-            time: appointment.startTime,
-            treatmentName: appointment.treatmentName,
-            employeeId: empId,
-          });
+        const isAvailable = checkTimeSlotAvailability(
+          availability,
+          appointment.startTime,
+          appointment.appointmentDate,
+          treatment.TotalDuration || 40, // ← REQUIRED
+          empId,
+        );
 
-          // Check if this employee has availability for the requested time
-          if (availability && availability.length > 0) {
-            const hasTimeSlot = checkTimeSlotAvailability(
-              availability,
-              appointment.startTime,
-              appointment.appointmentDate,
-            );
-            if (hasTimeSlot) {
-              // Also check if the employee is listed in the availability block
-              for (const location of availability) {
-                for (const category of location.serviceCategories || []) {
-                  for (const service of category.services || []) {
-                    for (const block of service.availability || []) {
-                      if (block.employees && block.employees.includes(empId)) {
-                        return empId;
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
+        if (isAvailable) {
+          return empId;
         }
       }
-      return null; // No available employees found
+
+      return null;
     } catch (error) {
       console.error("Error determining employee ID:", error);
       return null;
@@ -504,7 +485,17 @@ export const createAppointment = async (
     // Determine employee ID
     const employeeID = appointment.employeeName
       ? await getEmployeeId(appointment.employeeName)
-      : await determineEmployeeId(treatmentID ?? 0, customer);
+      : await determineEmployeeId(treatmentID ?? 0);
+
+    // Check if availability was found
+    if (employeeID === null) {
+      const errorResponse: CreateAppointmentResponse = {
+        IsSuccess: false,
+        ErrorMessage: `The requested time slot on ${appointment.appointmentDate} at ${appointment.startTime} is not available. Please choose a different time or date.`,
+        Appointment: undefined,
+      };
+      return errorResponse;
+    }
 
     // Build the appointment request payload
     const appointmentPayload = {
