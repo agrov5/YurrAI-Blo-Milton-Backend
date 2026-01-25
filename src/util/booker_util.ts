@@ -347,28 +347,101 @@ export const createAppointment = async (
     return null; // invalid phone number
   };
 
-  const treatmentID = await treatmentLookupByName(
-    appointment.treatmentName,
-  ).then((treatment: Treatment | null) => {
-    if (treatment) {
-      return treatment.ID;
-    } else {
-      return 0;
-    }
-  });
+  // Validate date format (YYYY-MM-DD)
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(appointment.appointmentDate)) {
+    return {
+      IsSuccess: false,
+      ErrorMessage: `Invalid date format '${appointment.appointmentDate}'. Please use YYYY-MM-DD format (e.g., 2026-01-25).`,
+      Appointment: undefined,
+    };
+  }
 
-  const roomID = await TreatmentModel.findOne({ ID: treatmentID }).then(
-    (treatment) => {
-      if (treatment && treatment.RoomIDs && treatment.RoomIDs.length > 0) {
-        return treatment.RoomIDs[0];
-      }
-    },
-  );
+  // Validate the date is actually valid
+  const appointmentDate = new Date(appointment.appointmentDate);
+  if (isNaN(appointmentDate.getTime())) {
+    return {
+      IsSuccess: false,
+      ErrorMessage: `Invalid date '${appointment.appointmentDate}'. Please provide a valid calendar date.`,
+      Appointment: undefined,
+    };
+  }
+
+  // Check if date is in the past
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  appointmentDate.setHours(0, 0, 0, 0);
+  if (appointmentDate < today) {
+    return {
+      IsSuccess: false,
+      ErrorMessage: `Cannot book appointment in the past. Date '${appointment.appointmentDate}' has already passed.`,
+      Appointment: undefined,
+    };
+  }
+
+  // Validate time format (HH:MM in 24-hour format)
+  const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+  if (!timeRegex.test(appointment.startTime)) {
+    return {
+      IsSuccess: false,
+      ErrorMessage: `Invalid time format '${appointment.startTime}'. Please use 24-hour format HH:MM (e.g., 14:30 for 2:30 PM).`,
+      Appointment: undefined,
+    };
+  }
+
+  // Validate phone number
+  const cleanedPhone = cleanPhone(appointment.phone.toString());
+  if (!cleanedPhone) {
+    return {
+      IsSuccess: false,
+      ErrorMessage: `Invalid phone number '${appointment.phone}'. Please provide a valid 10-digit phone number.`,
+      Appointment: undefined,
+    };
+  }
+
+  // Lookup treatment and validate it exists
+  const treatment = await treatmentLookupByName(appointment.treatmentName);
+  if (!treatment || !treatment.ID) {
+    return {
+      IsSuccess: false,
+      ErrorMessage: `Treatment '${appointment.treatmentName}' not found in our system. Please check the treatment name and try again.`,
+      Appointment: undefined,
+    };
+  }
+
+  const treatmentID = treatment.ID;
+
+  // Get room for treatment
+  const treatmentDoc = await TreatmentModel.findOne({ ID: treatmentID });
+  if (
+    !treatmentDoc ||
+    !treatmentDoc.RoomIDs ||
+    treatmentDoc.RoomIDs.length === 0
+  ) {
+    return {
+      IsSuccess: false,
+      ErrorMessage: `No rooms configured for treatment '${appointment.treatmentName}'. Please contact support.`,
+      Appointment: undefined,
+    };
+  }
+  const roomID = treatmentDoc.RoomIDs[0];
 
   const getEmployeeId = async (name: string): Promise<number | null> => {
     const employee = await employeeLookupByName(name);
     return employee ? employee.ID : null;
   };
+
+  // If employee name is provided, validate it exists
+  if (appointment.employeeName) {
+    const employeeExists = await getEmployeeId(appointment.employeeName);
+    if (!employeeExists) {
+      return {
+        IsSuccess: false,
+        ErrorMessage: `Employee '${appointment.employeeName}' not found in our system. Please check the employee name and try again.`,
+        Appointment: undefined,
+      };
+    }
+  }
 
   const checkTimeSlotAvailability = (
     availabilityData: any[],
@@ -449,7 +522,7 @@ export const createAppointment = async (
           availability,
           appointment.startTime,
           appointment.appointmentDate,
-          treatment.TotalDuration || 40, // ← REQUIRED
+          treatment.TotalDuration || 40,
           empId,
         );
 
@@ -465,9 +538,31 @@ export const createAppointment = async (
     }
   };
 
+  // Check if the date has any available times for this treatment
+  try {
+    const availableDates = await findAvailableDates({
+      fromDate: appointment.appointmentDate,
+      toDate: appointment.appointmentDate,
+      treatmentName: appointment.treatmentName,
+      employeeId: appointment.employeeName
+        ? (await getEmployeeId(appointment.employeeName)) || undefined
+        : undefined,
+    });
+
+    if (!availableDates || availableDates.length === 0) {
+      return {
+        IsSuccess: false,
+        ErrorMessage: `No availability found for '${appointment.treatmentName}' on ${appointment.appointmentDate}. The business may be closed or fully booked on this date. Please choose a different date.`,
+        Appointment: undefined,
+      };
+    }
+  } catch (error) {
+    console.error("Error checking available dates:", error);
+  }
+
   const customer = await checkCustomerExists(
     appointment.firstName,
-    cleanPhone(appointment.phone.toString()) || "",
+    cleanedPhone,
   );
 
   let sendSMS = true;
@@ -491,7 +586,9 @@ export const createAppointment = async (
     if (employeeID === null) {
       const errorResponse: CreateAppointmentResponse = {
         IsSuccess: false,
-        ErrorMessage: `The requested time slot on ${appointment.appointmentDate} at ${appointment.startTime} is not available. Please choose a different time or date.`,
+        ErrorMessage: appointment.employeeName
+          ? `Employee '${appointment.employeeName}' is not available for '${appointment.treatmentName}' on ${appointment.appointmentDate} at ${appointment.startTime}. Please choose a different time or employee.`
+          : `The requested time slot on ${appointment.appointmentDate} at ${appointment.startTime} is not available for '${appointment.treatmentName}'. No employees are available at this time. Please choose a different time or date.`,
         Appointment: undefined,
       };
       return errorResponse;
@@ -584,12 +681,55 @@ export const createAppointment = async (
   } catch (error: any) {
     console.error("Error creating appointment:", error);
 
-    // Log detailed validation errors if available
+    // Build a detailed error message based on the error type
+    let errorMessage = "Failed to create appointment. ";
+
+    // Check for Booker API validation errors
     if (error.response?.data?.ArgumentErrors) {
+      const argumentErrors = error.response.data.ArgumentErrors;
       console.error(
         "Validation Errors:",
-        JSON.stringify(error.response.data.ArgumentErrors, null, 2),
+        JSON.stringify(argumentErrors, null, 2),
       );
+
+      // Parse specific validation errors
+      const errorDetails: string[] = [];
+      for (const [field, messages] of Object.entries(argumentErrors)) {
+        if (Array.isArray(messages)) {
+          errorDetails.push(`${field}: ${messages.join(", ")}`);
+        } else {
+          errorDetails.push(`${field}: ${messages}`);
+        }
+      }
+
+      if (errorDetails.length > 0) {
+        errorMessage += `Validation errors: ${errorDetails.join("; ")}`;
+      }
+    }
+    // Check for specific Booker API error messages
+    else if (error.response?.data?.ErrorMessage) {
+      errorMessage += error.response.data.ErrorMessage;
+    }
+    // Check for error code and message
+    else if (error.response?.data?.ErrorCode) {
+      errorMessage += `Error code ${error.response.data.ErrorCode}`;
+      if (error.response.data.Message) {
+        errorMessage += `: ${error.response.data.Message}`;
+      }
+    }
+    // Network or other errors
+    else if (error.message) {
+      if (error.code === "ECONNREFUSED") {
+        errorMessage +=
+          "Unable to connect to booking service. Please try again later.";
+      } else if (error.code === "ETIMEDOUT") {
+        errorMessage += "Request timed out. Please try again.";
+      } else {
+        errorMessage += error.message;
+      }
+    } else {
+      errorMessage +=
+        "An unknown error occurred. Please check the details and try again.";
     }
 
     if (error.response?.data) {
@@ -599,7 +739,14 @@ export const createAppointment = async (
       );
     }
 
-    throw error;
+    // Return structured error response
+    const errorResponse: CreateAppointmentResponse = {
+      IsSuccess: false,
+      ErrorMessage: errorMessage,
+      Appointment: undefined,
+    };
+
+    return errorResponse;
   }
 };
 

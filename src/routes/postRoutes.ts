@@ -5,6 +5,8 @@ import {
   getCustomer,
   getAppointments,
   postAddNotesToAppointment,
+  postAvailableDates,
+  postAvailableTimes,
 } from "../controllers/postController";
 import {
   sendMessageToAdminController,
@@ -22,6 +24,9 @@ postRouter.post("/appointments", getAppointments);
 postRouter.post("/appointment", postCreateAppointment);
 postRouter.post("/appointment/cancel", postCancelAppointment);
 postRouter.post("/appointment/notes", postAddNotesToAppointment);
+
+postRouter.post("/available-dates", postAvailableDates);
+postRouter.post("/available-times", postAvailableTimes);
 
 postRouter.post("/customer", getCustomer);
 

@@ -21,7 +21,7 @@ axios.interceptors.request.use(
   }
 );
 
-export const loggerMiddleware = (
+export   const loggerMiddleware = (
   req: Request,
   res: Response,
   next: NextFunction
