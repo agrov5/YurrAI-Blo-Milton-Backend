@@ -6,6 +6,8 @@ import {
   cancelAppointment,
   getCustomerAppointments,
   addNotesToAppointment,
+  findAvailableDates,
+  findAvailableTimes,
 } from "../util/booker_util";
 import {
   AgentAppointment,
@@ -60,7 +62,72 @@ export const postCreateAppointment = async (req: Request, res: Response) => {
     });
   }
 };
+export const postAvailableDates = async (req: Request, res: Response) => {
+  const body: {
+    fromDate: string;
+    toDate: string;
+    employeeId?: number;
+    treatmentName?: string;
+  } = req.body;
 
+  try {
+    if (!body.fromDate || !body.toDate) {
+      return res.status(400).json({
+        success: false,
+        message: "Both fromDate and toDate are required",
+      });
+    }
+    const availableDates = await findAvailableDates(body);
+    res.status(200).json({
+      success: true,
+      message: "Available dates retrieved successfully",
+      locationID: locationID,
+      fromDate: body.fromDate,
+      toDate: body.toDate,
+      dates: availableDates,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve available dates",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+export const postAvailableTimes = async (req: Request, res: Response) => {
+  const body: {
+    date: string;
+    time: string;
+    treatmentName: string;
+    employeeId?: number;
+  } = req.body;
+
+  try {
+    if (!body.date || !body.treatmentName || !body.time) {
+      return res.status(400).json({
+        success: false,
+        message: "Date, time, and treatmentName are required",
+      });
+    }
+
+    const availableTimes = await findAvailableTimes(body);
+    res.status(200).json({
+      success: true,
+      message: "Available times retrieved successfully",
+      locationID: locationID,
+      date: body.date,
+      treatment: body.treatmentName,
+      times: availableTimes,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve available times",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
 export const postCancelAppointment = async (req: Request, res: Response) => {
   try {
     const appointment: CancelAppointment = req.body;
@@ -182,7 +249,7 @@ export const getAppointments = async (req: Request, res: Response) => {
         ? `${appointment.Employee.FirstName} ${appointment.Employee.LastName}`
         : null,
       finalTotal: appointment.FinalTotal?.Amount,
-      notes: appointment.Notes
+      notes: appointment.Notes,
     });
 
     // Handle single appointment return
@@ -232,17 +299,24 @@ export const getAppointments = async (req: Request, res: Response) => {
   }
 };
 
-export const postAddNotesToAppointment = async (req: Request, res: Response) => {
+export const postAddNotesToAppointment = async (
+  req: Request,
+  res: Response,
+) => {
   try {
     const body: { appointmentId: number; notes: string } = req.body;
     if (!body.appointmentId || !body.notes) {
       return res.status(400).json({
         success: false,
-        message: "Missing required fields. Please provide appointmentId and notes",
+        message:
+          "Missing required fields. Please provide appointmentId and notes",
       });
     }
 
-    const result = await addNotesToAppointment({appointmentId: body.appointmentId, notes: body.notes});
+    const result = await addNotesToAppointment({
+      appointmentId: body.appointmentId,
+      notes: body.notes,
+    });
     if (result.IsSuccess) {
       res.status(200).json({
         success: true,
@@ -256,10 +330,10 @@ export const postAddNotesToAppointment = async (req: Request, res: Response) => 
         locationID: locationID,
         errors: result.ErrorMessage || "Unknown error",
       });
-    }  
+    }
   } catch (error) {
     res.status(500).json({
-      success: false, 
+      success: false,
       message: "Failed to add notes to appointment",
       error: error instanceof Error ? error.message : "Unknown error",
     });

@@ -3,8 +3,6 @@ import {
   getTreatments,
   getEmployees,
   getRooms,
-  getAvailableDates,
-  getAvailableTimes,
   getTreatmentById,
   getTreatmentByName,
   getEmployeeById,
@@ -36,9 +34,6 @@ getRouter.get("/employees/name", getEmployeeByName);
 getRouter.get("/employees/agent", getEmployeesSimplified);
 
 getRouter.get("/rooms", getRooms);
-
-getRouter.get("/available-dates", getAvailableDates);
-getRouter.get("/available-times", getAvailableTimes);
 
 getRouter.get("/cc-info", getCustomerCCInfo);
 getRouter.get("/customer", getCustomer);
