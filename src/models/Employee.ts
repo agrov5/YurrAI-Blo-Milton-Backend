@@ -65,7 +65,7 @@ const EmployeeSchema = new Schema(
     //   Status: { type: Object, required: true },
     //   DateCreatedOffset: { type: String, required: true },
   },
-  { versionKey: false, strict: true }
+  { versionKey: false, strict: true },
 );
 
 const EmployeeModel = mongoose.model<IEmployee>("Employee", EmployeeSchema);
@@ -93,7 +93,7 @@ export interface User {
   Photo: string | null;
   ProfileDescription: string;
   Rank: number | null;
-  Type: string;
+  Type: string | number;
   Email: string;
   HomePhone: string;
   MobilePhone: string;
