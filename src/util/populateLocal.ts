@@ -28,7 +28,7 @@ async function runPopulateFunctions() {
     if (employees) {
       for (const employee of employees.Results || []) {
         // Only process Scheduled employees
-        if (employee.Type === "Scheduled") continue;
+        if (employee.Type !== "Scheduled") continue;
 
         if (useFindAndUpdate) {
           await EmployeeModel.findOneAndUpdate(
