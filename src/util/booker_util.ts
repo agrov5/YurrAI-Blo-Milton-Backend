@@ -475,9 +475,9 @@ export const createAppointment = async (
               // Rule 2: full service must fit inside block
               if (requestedEnd > blockEnd) continue;
 
-              // Rule 3: start time must align to interval
-              const minutesFromBlockStart = Math.round((requestedStart.getTime() - blockStart.getTime()) / (1000 * 60));
-              if (minutesFromBlockStart % interval !== 0) continue;
+              // // Rule 3: start time must align to interval
+              // const minutesFromBlockStart = Math.round((requestedStart.getTime() - blockStart.getTime()) / (1000 * 60));
+              // if (minutesFromBlockStart % interval !== 0) continue;
 
 
               // Rule 4: employee must be valid for this block
