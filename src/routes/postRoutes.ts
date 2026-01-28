@@ -11,14 +11,12 @@ import {
 import {
   sendMessageToAdminController,
   phoneController,
-  phoneControllerFromParams,
 } from "../controllers/phoneController";
 
 const postRouter = Router();
 
 postRouter.post("/sms", phoneController);
 postRouter.post("/sms/admin", sendMessageToAdminController);
-postRouter.post("/sms/:to/:body", phoneControllerFromParams);
 
 postRouter.post("/appointments", getAppointments);
 postRouter.post("/appointment", postCreateAppointment);

@@ -14,10 +14,7 @@ import {
   getWidgetAuth,
   getAppointments,
 } from "../controllers/getController";
-import {
-  phoneController,
-  phoneControllerFromParams,
-} from "../controllers/phoneController";
+import { phoneController } from "../controllers/phoneController";
 import { get } from "http";
 import { convertISOtoFriendly } from "../util/db_util";
 
