@@ -467,6 +467,8 @@ export const createAppointment = async (
               const blockStart = new Date(block.startDateTime);
               const blockEnd = new Date(block.endDateTime);
 
+              if (blockStart >= blockEnd) continue;
+
               // Rule 1: requested start must be inside block
               if (requestedStart < blockStart) continue;
 
@@ -474,10 +476,9 @@ export const createAppointment = async (
               if (requestedEnd > blockEnd) continue;
 
               // Rule 3: start time must align to interval
-              const minutesFromBlockStart =
-                (requestedStart.getTime() - blockStart.getTime()) / (1000 * 60);
-
+              const minutesFromBlockStart = Math.round((requestedStart.getTime() - blockStart.getTime()) / (1000 * 60));
               if (minutesFromBlockStart % interval !== 0) continue;
+
 
               // Rule 4: employee must be valid for this block
               if (
