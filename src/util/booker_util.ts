@@ -482,7 +482,7 @@ export const createAppointment = async (
                 `  Block: ${blockStart.toISOString()} to ${blockEnd.toISOString()}, employees: ${block.employees?.join(",") || "none"}`,
               );
 
-              // Rule 1: requested start must be inside block
+              // Rule 1: requested start must be at or after block start
               if (requestedStart < blockStart) {
                 console.log(
                   `    ❌ Rule 1 failed: requested start is before block start`,
@@ -490,10 +490,11 @@ export const createAppointment = async (
                 continue;
               }
 
-              // Rule 2: full service must fit inside block
-              if (requestedEnd > blockEnd) {
+              // Rule 2: requested start must be before block end (service can extend beyond if needed)
+              // We only need to ensure the appointment STARTS within the available window
+              if (requestedStart >= blockEnd) {
                 console.log(
-                  `    ❌ Rule 2 failed: requested end is after block end`,
+                  `    ❌ Rule 2 failed: requested start is at or after block end`,
                 );
                 continue;
               }
