@@ -135,7 +135,7 @@ export const convert24toISO = (time24: string, appointmentDate: string) => {
   const [year, month, day] = appointmentDate.split("-").map(Number);
   const date = new Date(year, month - 1, day, hours, minutes, 0, 0);
 
-  // Format to ISO string with fixed timezone offset (-04:00)
+  // Format to ISO string with fixed timezone offset (-05:00 for EST)
   const isoString =
     date.getFullYear() +
     "-" +
@@ -148,7 +148,7 @@ export const convert24toISO = (time24: string, appointmentDate: string) => {
     String(date.getMinutes()).padStart(2, "0") +
     ":" +
     String(date.getSeconds()).padStart(2, "0") +
-    "-04:00";
+    "-05:00";
 
   return isoString;
 };
