@@ -27,6 +27,9 @@ async function runPopulateFunctions() {
 
     if (employees) {
       for (const employee of employees.Results || []) {
+        // Only process Scheduled employees
+        if (employee.Type !== "Scheduled") continue;
+
         if (useFindAndUpdate) {
           await EmployeeModel.findOneAndUpdate(
             { ID: employee.ID },
@@ -39,7 +42,7 @@ async function runPopulateFunctions() {
               LastName: employee.LastName,
               Gender: employee.Gender.Name,
             },
-            { upsert: true, new: true }
+            { upsert: true, new: true },
           );
         } else {
           await EmployeeModel.create({
@@ -67,7 +70,7 @@ async function runPopulateFunctions() {
               Name: room.Name,
               TreatmentIDs: room.Treatments,
             },
-            { upsert: true, new: true }
+            { upsert: true, new: true },
           );
         } else {
           await RoomModel.create({
@@ -97,7 +100,7 @@ async function runPopulateFunctions() {
                 EmployeeIDs: treatment.EmployeeIDs,
                 RoomIDs: treatment.RoomIDs,
               },
-              { upsert: true, new: true }
+              { upsert: true, new: true },
             );
           } else {
             await TreatmentModel.create({
