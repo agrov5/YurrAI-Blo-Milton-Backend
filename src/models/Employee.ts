@@ -93,7 +93,7 @@ export interface User {
   Photo: string | null;
   ProfileDescription: string;
   Rank: number | null;
-  Type: number;
+  Type: string;
   Email: string;
   HomePhone: string;
   MobilePhone: string;
