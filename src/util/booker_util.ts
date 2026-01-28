@@ -458,42 +458,79 @@ export const createAppointment = async (
         requestedStart.getTime() + serviceDuration * 60 * 1000,
       );
 
+      console.log(
+        `Checking time slot for ${requestedTime} on ${requestedDate}, duration: ${serviceDuration} min, employeeId: ${employeeId}`,
+      );
+      console.log(
+        `Requested start: ${requestedStart.toISOString()}, Requested end: ${requestedEnd.toISOString()}`,
+      );
+
       for (const location of availabilityData) {
         const interval = location.startTimeInterval ?? 15;
+        console.log(`Location interval: ${interval}`);
 
         for (const category of location.serviceCategories ?? []) {
           for (const service of category.services ?? []) {
+            console.log(
+              `Checking service, availability blocks: ${service.availability?.length || 0}`,
+            );
             for (const block of service.availability ?? []) {
               const blockStart = new Date(block.startDateTime);
               const blockEnd = new Date(block.endDateTime);
 
-              // Rule 1: requested start must be inside block
-              if (requestedStart < blockStart) continue;
+              console.log(
+                `  Block: ${blockStart.toISOString()} to ${blockEnd.toISOString()}, employees: ${block.employees?.join(",") || "none"}`,
+              );
 
-              // Rule 2: full service must fit inside block
-              if (requestedEnd > blockEnd) continue;
+              // Rule 1: requested start must be at or after block start
+              if (requestedStart < blockStart) {
+                console.log(
+                  `    ❌ Rule 1 failed: requested start is before block start`,
+                );
+                continue;
+              }
+
+              // Rule 2: requested start must be before block end (service can extend beyond if needed)
+              // We only need to ensure the appointment STARTS within the available window
+              if (requestedStart >= blockEnd) {
+                console.log(
+                  `    ❌ Rule 2 failed: requested start is at or after block end`,
+                );
+                continue;
+              }
 
               // Rule 3: start time must align to interval
-              const minutesFromBlockStart =
-                (requestedStart.getTime() - blockStart.getTime()) / (1000 * 60);
+              const minutesFromBlockStart = Math.round(
+                (requestedStart.getTime() - blockStart.getTime()) / (1000 * 60),
+              );
 
-              if (minutesFromBlockStart % interval !== 0) continue;
+              if (minutesFromBlockStart % interval !== 0) {
+                console.log(
+                  `    ❌ Rule 3 failed: start time not aligned to ${interval} min interval (offset: ${minutesFromBlockStart} min)`,
+                );
+                continue;
+              }
 
               // Rule 4: employee must be valid for this block
               if (
                 employeeId &&
                 (!block.employees || !block.employees.includes(employeeId))
               ) {
+                console.log(
+                  `    ❌ Rule 4 failed: employee ${employeeId} not in block employees`,
+                );
                 continue;
               }
 
               // ✅ Valid discrete timeslot
+              console.log(`    ✅ Valid timeslot found!`);
               return true;
             }
           }
         }
       }
 
+      console.log(`❌ No valid timeslot found`);
       return false;
     } catch (error) {
       console.error("Error checking time slot availability:", error);
@@ -508,7 +545,12 @@ export const createAppointment = async (
       const treatment = await TreatmentModel.findOne({ ID: treatmentId });
       if (!treatment?.EmployeeIDs?.length) return null;
 
+      console.log(
+        `Checking availability for ${treatment.EmployeeIDs.length} employees for treatment ID ${treatmentId}`,
+      );
+
       for (const empId of treatment.EmployeeIDs) {
+        console.log(`Checking employee ID: ${empId}`);
         const availability = await findAvailableTimes({
           date: appointment.appointmentDate,
           time: appointment.startTime,
@@ -516,7 +558,15 @@ export const createAppointment = async (
           employeeId: empId,
         });
 
-        if (!availability || !Array.isArray(availability)) continue;
+        console.log(
+          `Availability data for employee ${empId}:`,
+          JSON.stringify(availability, null, 2),
+        );
+
+        if (!availability || !Array.isArray(availability)) {
+          console.log(`No valid availability data for employee ${empId}`);
+          continue;
+        }
 
         const isAvailable = checkTimeSlotAvailability(
           availability,
@@ -524,6 +574,10 @@ export const createAppointment = async (
           appointment.appointmentDate,
           treatment.TotalDuration || 40,
           empId,
+        );
+
+        console.log(
+          `Employee ${empId} availability check result: ${isAvailable}`,
         );
 
         if (isAvailable) {
