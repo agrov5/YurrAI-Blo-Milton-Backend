@@ -1,4 +1,5 @@
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import {
   renderCCWidget,
   getWidgetToken,
@@ -6,12 +7,25 @@ import {
 
 const widgetRouter = Router();
 
-// This route does NOT require authentication since it's accessed by customers via SMS
-// Mounted at /widget/cc-widget (via app.ts: /widget)
-widgetRouter.get("/cc-widget", renderCCWidget);
+// Rate limiter: 10 requests per 15 minutes per IP
+// Prevents brute-force customer ID enumeration and token exhaustion
+const widgetLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: "Too many requests. Please try again later.",
+  },
+});
 
-// Token endpoint - also public but validates customerId
+// Widget page — requires a signed JWT token in the ?token query param
+// Mounted at /widget/cc-widget (via app.ts: /widget)
+widgetRouter.get("/cc-widget", widgetLimiter, renderCCWidget);
+
+// Token endpoint — requires a signed JWT link token (validated in controller)
 // Mounted at /widget/token
-widgetRouter.get("/token", getWidgetToken);
+widgetRouter.get("/token", widgetLimiter, getWidgetToken);
 
 export default widgetRouter;

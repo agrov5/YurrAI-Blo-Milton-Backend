@@ -1,5 +1,6 @@
 import axios from "axios";
 import { Treatment, TreatmentModel } from "../models/Treatment";
+import { generateWidgetToken } from "./widget_token_util";
 import {
   getTreatmentIds,
   dateToISO,
@@ -664,6 +665,7 @@ export const createAppointment = async (
             MobilePhone: cleanPhone(appointment.phone.toString()),
             FirstName: appointment.firstName,
             LastName: appointment.lastName,
+            AllowReceiveSMS: true,
           },
       AppointmentDateOffset: convert24toISO(
         "00:00",
@@ -673,12 +675,6 @@ export const createAppointment = async (
         {
           TreatmentID: treatmentID,
           EmployeeID: employeeID,
-
-
-
-
-
-          
           RoomID: roomID,
           EmployeeWasRequested: appointment.employeeName ? true : false,
           StartTimeOffset: convert24toISO(
@@ -846,7 +842,8 @@ export const getCustomerCreditCardInfo = async (
 
 export const generateCCWidgetURL = (customerId: number): string => {
   const baseUrl = process.env.PRODUCTION_URL || "http://localhost:3000";
-  return `${baseUrl}/widget/cc-widget?customerId=${customerId}`;
+  const token = generateWidgetToken(customerId, locationID || "0");
+  return `${baseUrl}/widget/cc-widget?token=${encodeURIComponent(token)}`;
 };
 
 export const getWidgetAuthToken = async (): Promise<string> => {

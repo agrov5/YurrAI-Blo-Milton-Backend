@@ -1,20 +1,54 @@
 import { Request, Response } from "express";
+import jwt from "jsonwebtoken";
 import { getWidgetAuthToken, locationID } from "../util/booker_util";
+import { verifyWidgetToken } from "../util/widget_token_util";
 
 // Store tokens temporarily with customer ID as key
+const MAX_CACHE_SIZE = 1000;
 const tokenCache = new Map<string, { token: string; expires: number }>();
+
+/** Evict the oldest cache entry when the cache exceeds its size limit. */
+function evictOldestCacheEntry(): void {
+  if (tokenCache.size >= MAX_CACHE_SIZE) {
+    const oldestKey = tokenCache.keys().next().value;
+    if (oldestKey) tokenCache.delete(oldestKey);
+  }
+}
+
+/** Set security headers required for PCI DSS compliance on payment pages. */
+function setSecurityHeaders(res: Response): void {
+  res.setHeader(
+    "Content-Security-Policy",
+    "default-src 'none'; " +
+      "script-src 'self' https://ccwidget.secure-booker.com 'unsafe-inline'; " +
+      "connect-src 'self' https://*.secure-booker.com; " +
+      "style-src 'self' 'unsafe-inline'; " +
+      "frame-src https://ccwidget.secure-booker.com; " +
+      "img-src 'self' data:",
+  );
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Referrer-Policy", "no-referrer");
+  res.setHeader(
+    "Strict-Transport-Security",
+    "max-age=31536000; includeSubDomains",
+  );
+}
 
 export const getWidgetToken = async (req: Request, res: Response) => {
   try {
-    const customerId = req.query.customerId as string;
-    const locationId = req.query.locationId as string;
-
-    if (!customerId || !locationId) {
-      return res.status(400).json({
+    // Verify the signed link token (prevents IDOR – caller must possess a valid JWT)
+    const linkToken = req.query.linkToken as string;
+    const verified = verifyWidgetToken(linkToken);
+    if (!verified) {
+      return res.status(403).json({
         success: false,
-        message: "Both customerId and locationId are required",
+        message: "Invalid or expired link token",
       });
     }
+
+    const customerId = String(verified.customerId);
+    const locationId = String(verified.locationId);
 
     // Check cache first
     const cacheKey = `${customerId}_${locationId}`;
@@ -29,6 +63,9 @@ export const getWidgetToken = async (req: Request, res: Response) => {
 
     // Get fresh token with all required parameters
     const token = await getWidgetAuthToken();
+
+    // Enforce cache size limit to prevent memory exhaustion
+    evictOldestCacheEntry();
 
     // Cache for 5 minutes
     tokenCache.set(cacheKey, {
@@ -53,21 +90,39 @@ export const getWidgetToken = async (req: Request, res: Response) => {
 
 export const renderCCWidget = async (req: Request, res: Response) => {
   try {
-    const customerId = req.query.customerId as string;
-    const locale = (req.query.locale as string) || "en-US";
+    // Verify the signed JWT link token instead of trusting raw query params
+    const linkToken = req.query.token as string;
+    const verified = verifyWidgetToken(linkToken);
 
-    if (!customerId) {
-      return res.status(400).send(`
+    if (!verified) {
+      return res.status(403).send(`
         <!DOCTYPE html>
         <html>
         <head><title>Error</title></head>
         <body>
-          <h1>Missing Customer ID</h1>
-          <p>Please use the link provided in your confirmation message.</p>
+          <h1>Invalid or Expired Link</h1>
+          <p>Please use the link provided in your confirmation message. Links expire after 24 hours.</p>
         </body>
         </html>
       `);
     }
+
+    // Use verified values from the JWT – not from query params (prevents IDOR)
+    const customerId = String(verified.customerId);
+    const verifiedLocationId = String(verified.locationId);
+
+    // Sanitize locale to only allow safe BCP-47-like characters (prevents XSS)
+    const rawLocale = (req.query.locale as string) || "en-US";
+    const locale = rawLocale.replace(/[^a-zA-Z0-9\-]/g, "");
+
+    // Validate customerId is a valid number
+    const safeCustomerId = parseInt(customerId, 10);
+    if (isNaN(safeCustomerId)) {
+      return res.status(400).send("Invalid customer ID");
+    }
+
+    const safeLocationId =
+      parseInt(verifiedLocationId, 10) || parseInt(locationID || "0", 10);
 
     // Render HTML WITHOUT the token
     const html = `
@@ -186,14 +241,17 @@ export const renderCCWidget = async (req: Request, res: Response) => {
     <script>
       (function() {
         const widgetConfig = {
-          customerId: ${parseInt(customerId)},
-          spaId: ${parseInt(locationID || "0")},
+          customerId: ${safeCustomerId},
+          spaId: ${safeLocationId},
           locale: "${locale}"
         };
 
+        // The signed link token is forwarded to the token endpoint for server-side verification
+        const linkToken = ${JSON.stringify(linkToken)};
+
         async function getPartnerToken() {
           try {
-            const response = await fetch('/widget/token?customerId=' + widgetConfig.customerId + '&locationId=' + widgetConfig.spaId);
+            const response = await fetch('/widget/token?linkToken=' + encodeURIComponent(linkToken));
             const data = await response.json();
             return data.AccessToken;
           } catch (error) {
@@ -269,6 +327,7 @@ export const renderCCWidget = async (req: Request, res: Response) => {
 </html>
     `;
 
+    setSecurityHeaders(res);
     res.setHeader("Content-Type", "text/html");
     res.send(html);
   } catch (error) {
