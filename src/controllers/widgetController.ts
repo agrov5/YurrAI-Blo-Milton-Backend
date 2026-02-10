@@ -225,6 +225,47 @@ export const renderCCWidget = async (req: Request, res: Response) => {
       .loading-container.hidden {
         display: none;
       }
+
+      /* Result overlay (success / error) */
+      .result-container {
+        display: none;
+        text-align: center;
+        padding: 2.5rem 1.5rem;
+        width: 100%;
+        max-width: 600px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      }
+
+      .result-container.visible {
+        display: block;
+      }
+
+      .result-icon {
+        font-size: 3.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .result-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+      }
+
+      .result-message {
+        font-size: 1rem;
+        margin-bottom: 0.25rem;
+      }
+
+      /* Success state */
+      .result-container.success .result-icon { color: #22c55e; }
+      .result-container.success .result-title { color: #16a34a; }
+
+      /* Error state */
+      .result-container.error .result-icon { color: #ef4444; }
+      .result-container.error .result-title { color: #dc2626; }
+      .result-container.error .result-message { color: #555; }
     </style>
   </head>
   <body>
@@ -233,6 +274,13 @@ export const renderCCWidget = async (req: Request, res: Response) => {
       <div class="loading-text">Loading payment form...</div>
     </div>
     <div id="booker-cc-widget-container"></div>
+
+    <!-- Result overlay shown after widget submission -->
+    <div class="result-container" id="result-container">
+      <div class="result-icon" id="result-icon"></div>
+      <div class="result-title" id="result-title"></div>
+      <div id="result-messages"></div>
+    </div>
 
     <script
       type="text/javascript"
@@ -260,12 +308,65 @@ export const renderCCWidget = async (req: Request, res: Response) => {
           }
         }
 
+        // Track whether we've already shown a result to avoid duplicates
+        var resultShown = false;
+
         function onEvent(data) {
-          console.log("Widget event:", data);
+          console.log("Widget event:", JSON.stringify(data, null, 2));
           
           // Hide loading spinner when widget is ready
-          if (data.type === 'ready' || data.event === 'ready') {
+          if (data.type === 'ready' || data.event === 'ready' || data.action === 'reactAppReady') {
             hideLoadingSpinner();
+            return;
+          }
+
+          // Booker widget sends: { action: "event", type: "Error"|"Success"|..., data: "message string" }
+          if (data.action === 'event' && data.type) {
+            var eventType = data.type.toLowerCase();
+
+            if (eventType === 'error') {
+              showResult(false, data.data || 'An error occurred. Please try again.');
+              return;
+            }
+
+            if (eventType === 'success' || eventType === 'complete' || eventType === 'cardadded') {
+              showResult(true, null);
+              return;
+            }
+          }
+        }
+
+        function showResult(isSuccess, errorMessage) {
+          if (resultShown) return;
+          resultShown = true;
+
+          var container = document.getElementById('booker-cc-widget-container');
+          var loadingEl = document.getElementById('loading-container');
+          var resultEl = document.getElementById('result-container');
+          var iconEl = document.getElementById('result-icon');
+          var titleEl = document.getElementById('result-title');
+          var msgsEl = document.getElementById('result-messages');
+
+          // Hide the widget form and loading spinner
+          if (container) container.style.display = 'none';
+          if (loadingEl) loadingEl.classList.add('hidden');
+
+          // Clear previous messages
+          msgsEl.innerHTML = '';
+
+          if (isSuccess) {
+            resultEl.className = 'result-container visible success';
+            iconEl.textContent = '\\u2705';
+            titleEl.textContent = 'Your card has been added to your file. Thank you!';
+          } else {
+            resultEl.className = 'result-container visible error';
+            iconEl.textContent = '\\u274C';
+            titleEl.textContent = 'Unable to add your card';
+
+            var msgEl = document.createElement('p');
+            msgEl.className = 'result-message';
+            msgEl.textContent = errorMessage;
+            msgsEl.appendChild(msgEl);
           }
         }
 
