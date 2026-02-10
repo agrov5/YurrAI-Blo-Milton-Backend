@@ -7,6 +7,7 @@ import {
   postAddNotesToAppointment,
   postAvailableDates,
   postAvailableTimes,
+  postGenerateCCLink,
 } from "../controllers/postController";
 import {
   sendMessageToAdminController,
@@ -27,5 +28,7 @@ postRouter.post("/available-dates", postAvailableDates);
 postRouter.post("/available-times", postAvailableTimes);
 
 postRouter.post("/customer", getCustomer);
+
+postRouter.post("/generate-cc-link", postGenerateCCLink);
 
 export default postRouter;

@@ -8,6 +8,7 @@ import {
   addNotesToAppointment,
   findAvailableDates,
   findAvailableTimes,
+  generateCCWidgetURL,
 } from "../util/booker_util";
 import {
   AgentAppointment,
@@ -335,6 +336,36 @@ export const postAddNotesToAppointment = async (
     res.status(500).json({
       success: false,
       message: "Failed to add notes to appointment",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+export const postGenerateCCLink = async (req: Request, res: Response) => {
+  try {
+    const { customerId } = req.body;
+
+    if (!customerId || typeof customerId !== "number") {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Missing or invalid customerId. Provide a numeric customerId in the request body.",
+      });
+    }
+
+    const url = generateCCWidgetURL(customerId);
+
+    res.json({
+      success: true,
+      message: "CC widget link generated successfully",
+      customerId,
+      url,
+    });
+  } catch (error) {
+    console.error("Error generating CC link:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to generate CC widget link",
       error: error instanceof Error ? error.message : "Unknown error",
     });
   }
