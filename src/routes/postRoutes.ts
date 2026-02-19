@@ -8,6 +8,7 @@ import {
   postAvailableDates,
   postAvailableTimes,
   postGenerateCCLink,
+  getCustomerOrders,
 } from "../controllers/postController";
 import {
   sendMessageToAdminController,
@@ -31,4 +32,5 @@ postRouter.post("/customer", getCustomer);
 
 postRouter.post("/generate-cc-link", postGenerateCCLink);
 
+postRouter.post('/get-customer-orders', getCustomerOrders)
 export default postRouter;

@@ -19,9 +19,22 @@ import {
 } from "../models/Appointment";
 import { Employee } from "../models/Employee";
 import { CreditCardResponse, CreditCardRecord } from "../models/CreditCard";
-import { sendMessage } from "./phone_util";
-import { Customer } from "../models/Customer";
+import {
+  sendMessageMMS,
+  sendMessageSMS,
+  sendMessageToAdmin,
+} from "./phone_util";
+import {
+  Customer,
+  ExistingCustomer,
+  FindCustomersResponse,
+} from "../models/Customer";
 import { getTreatmentById } from "../controllers/getController";
+import {
+  AppointmentPayment,
+  PaymentItem,
+  CreditCard,
+} from "../models/Appointment";
 
 // const generateAccessToken = async () => {
 //   try {
@@ -307,7 +320,10 @@ export const findAvailableTimes = async (options: {
   }
 };
 
-export const checkCustomerExists = async (firstName: string, phone: string) => {
+export const checkCustomerExists = async (
+  firstName: string,
+  phone: string,
+): Promise<ExistingCustomer | null> => {
   try {
     const accessToken = await getAccessToken();
     const response = await axios.post(
@@ -330,6 +346,125 @@ export const checkCustomerExists = async (firstName: string, phone: string) => {
   } catch (error) {
     console.error("Error creating appointment:", error);
     throw error;
+  }
+};
+
+export const generateCCWidgetURL = (customerId: number): string => {
+  const baseUrl = process.env.PRODUCTION_URL || "http://localhost:3000";
+  const token = generateWidgetToken(customerId, locationID || "0");
+  return `${baseUrl}/widget/cc-widget?token=${encodeURIComponent(token)}`;
+};
+
+export const getCustomerCreditCardInfo = async (
+  cusId: number,
+): Promise<CreditCardRecord | null> => {
+  try {
+    const accessToken = await getAccessToken();
+    const response = await axios.post(
+      "v4.1/merchant/customer/creditcards",
+      {
+        access_token: accessToken,
+
+        CustomerID: cusId,
+        SpaID: locationID,
+      },
+      {
+        headers: {
+          "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
+        },
+      },
+    );
+
+    const ccResponse: CreditCardResponse = response.data;
+
+    return ccResponse.IsSuccess &&
+      ccResponse.CreditCards &&
+      ccResponse.CreditCards.length > 0
+      ? ccResponse.CreditCards.find((card) => card.IsDefault) ||
+          ccResponse.CreditCards[0]
+      : null;
+  } catch (error) {
+    console.error("Error fetching customer credit cards:", error);
+    throw error;
+  }
+};
+
+export const findCustomerOrders = async (
+  customerId: number,
+  fromDateCreated?: string,
+) => {
+  try {
+    const accessToken = await getAccessToken();
+    const response = await axios.post(
+      "/v4.1/merchant/orders",
+      {
+        access_token: accessToken,
+        LocationID: locationID,
+        CustomerID: customerId,
+        // FromDateCreatedOffset: convert24toISO("00:00", fromDateCreated || new Date().toISOString().split("T")[0]),
+      },
+      {
+        headers: {
+          "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
+        },
+      },
+    );
+
+    if (!response.data.IsSuccess) {
+      console.error(
+        "Error fetching customer orders:",
+        response.data.ErrorMessage,
+      );
+      return null;
+    }
+
+    return response.data.Results ?? [];
+  } catch (err) {
+    console.error("Error fetching customer orders:", err);
+    throw err;
+  }
+};
+
+export const addPaymentToOrder = async (
+  orderId: number,
+  paymentItem: CreditCard | null,
+) => {
+  try {
+    if (paymentItem === null) {
+      console.warn(
+        `No credit card info available, skipping addPaymentToOrder for order ID ${orderId}.`,
+      );
+      return null;
+    }
+
+    const accessToken = await getAccessToken();
+    const response = await axios.post(
+      `/v4.1/merchant/order/${orderId}/add_payment`,
+      {
+        access_token: accessToken,
+        ID: orderId,
+        PaymentItem: { CreditCard: paymentItem },
+      },
+      {
+        headers: {
+          "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
+        },
+      },
+    );
+
+    console.log(response.data);
+
+    if (!response.data.IsSuccess) {
+      console.error(
+        "Error adding payment to order:",
+        response.data.ErrorMessage,
+      );
+    }
+
+    return response.data;
+  } catch (err) {
+    console.error("Error adding payment to order:", err);
+    throw err;
   }
 };
 
@@ -623,7 +758,7 @@ export const createAppointment = async (
   let sendSMS = true;
 
   if (customer) {
-    const ccInfo = await getCustomerCreditCardInfo(customer.Customer.ID);
+    const ccInfo = await getCustomerCreditCardInfo(customer.Customer?.ID || 0);
     if (ccInfo) {
       sendSMS = false;
     }
@@ -656,7 +791,7 @@ export const createAppointment = async (
       Notes: appointment.notes
         ? `Booked via YurrAI. Agent Notes: ${appointment.notes}`
         : "Booked via YurrAI",
-      // CreateIncompleteAppointment: sendSMS,
+      // CreateIncompleteAppointment: sendSMS ? true : false,
       ResourceTypeID: 1,
       Customer: customer
         ? customer.Customer
@@ -713,9 +848,13 @@ export const createAppointment = async (
         const widgetUrl = generateCCWidgetURL(customerId);
         const message = `Dear ${appointment.firstName}, your appointment for ${appointment.treatmentName} on ${appointment.appointmentDate} at ${appointment.startTime} has been created but requires a credit card on file. Please complete your booking by providing your payment details, using the following link: ${widgetUrl}.`;
         // Send SMS via phone
-        sendMessage(appointment.phone.toString(), message).catch((error) => {
+        sendMessageMMS(appointment.phone.toString(), message).catch((error) => {
           console.error("Error sending SMS via phone:", error);
         });
+        // Send SMS to Admin saying payment on appointment missing.
+        sendMessageToAdmin(
+          `${appointment.firstName} ${appointment.lastName[0]}. (${cleanPhone(appointment.phone.toString())}) has booked ${appointment.treatmentName} on ${appointment.appointmentDate} @ ${appointment.startTime} (PayMis) - YurrAI`,
+        );
       } else {
         // Missing appointment or customer ID - log and skip generating URL
         console.warn(
@@ -726,11 +865,26 @@ export const createAppointment = async (
         );
       }
     } else {
-      const message = `Dear ${appointment.firstName}, your appointment for ${appointment.treatmentName} on ${appointment.appointmentDate} at ${appointment.startTime} has been confirmed. We look forward to seeing you then!`;
+      const message = `Dear ${appointment.firstName}, your appointment on ${appointment.appointmentDate} at ${appointment.startTime} has been booked. We look forward to seeing you then!`;
       // Send SMS via phone
-      sendMessage(appointment.phone.toString(), message).catch((error) => {
+      sendMessageSMS(appointment.phone.toString(), message).catch((error) => {
         console.error("Error sending SMS via phone:", error);
       });
+
+      // Add Payment to Order
+      const order = await findCustomerOrders(customer?.CustomerID || 0);
+      if (order && order.length > 0) {
+        await addPaymentToOrder(
+          order[0].ID,
+          await getCustomerCreditCardInfo(customer?.CustomerID || 0).then(
+            (ccInfo) => ccInfo?.CreditCard || null,
+          ),
+        );
+      } else {
+        console.warn(
+          `No order found for customer ID ${customer?.CustomerID}, unable to add payment to order.`,
+        );
+      }
     }
 
     return response.data;
@@ -804,46 +958,6 @@ export const createAppointment = async (
 
     return errorResponse;
   }
-};
-
-export const getCustomerCreditCardInfo = async (
-  cusId: number,
-): Promise<CreditCardRecord | null> => {
-  try {
-    const accessToken = await getAccessToken();
-    const response = await axios.post(
-      "v4.1/merchant/customer/creditcards",
-      {
-        access_token: accessToken,
-
-        CustomerID: cusId,
-        SpaID: locationID,
-      },
-      {
-        headers: {
-          "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
-        },
-      },
-    );
-
-    const ccResponse: CreditCardResponse = response.data;
-
-    return ccResponse.IsSuccess &&
-      ccResponse.CreditCards &&
-      ccResponse.CreditCards.length > 0
-      ? ccResponse.CreditCards.find((card) => card.IsDefault) ||
-          ccResponse.CreditCards[0]
-      : null;
-  } catch (error) {
-    console.error("Error fetching customer credit cards:", error);
-    throw error;
-  }
-};
-
-export const generateCCWidgetURL = (customerId: number): string => {
-  const baseUrl = process.env.PRODUCTION_URL || "http://localhost:3000";
-  const token = generateWidgetToken(customerId, locationID || "0");
-  return `${baseUrl}/widget/cc-widget?token=${encodeURIComponent(token)}`;
 };
 
 export const getWidgetAuthToken = async (): Promise<string> => {

@@ -25,10 +25,16 @@ async function runPopulateFunctions() {
     const treatments: FindTreatmentsResponse = await findTreatments();
     const rooms: FindRoomsResponse = await findRooms();
 
+    // Track valid IDs for filtering
+    const validEmployeeIds = new Set<number>();
+    const validRoomIds = new Set<number>();
+
     if (employees) {
       for (const employee of employees.Results || []) {
         // Only process Scheduled employees
         if (employee.Type !== 1) continue;
+
+        validEmployeeIds.add(employee.ID);
 
         if (useFindAndUpdate) {
           await EmployeeModel.findOneAndUpdate(
@@ -62,6 +68,10 @@ async function runPopulateFunctions() {
 
     if (rooms) {
       for (const room of rooms.Results || []) {
+        if (room.ID !== undefined) {
+          validRoomIds.add(room.ID);
+        }
+
         if (useFindAndUpdate) {
           await RoomModel.findOneAndUpdate(
             { ID: room.ID },
@@ -87,6 +97,14 @@ async function runPopulateFunctions() {
     if (treatments) {
       for (const treatment of treatments.Treatments || []) {
         if (treatment.IsActive && !treatment.IsDeleted) {
+          // Filter to only include valid employee and room IDs
+          const filteredEmployeeIDs = (treatment.EmployeeIDs || []).filter(
+            (id) => validEmployeeIds.has(id),
+          );
+          const filteredRoomIDs = (treatment.RoomIDs || []).filter((id) =>
+            validRoomIds.has(id),
+          );
+
           if (useFindAndUpdate) {
             await TreatmentModel.findOneAndUpdate(
               { ID: treatment.ID },
@@ -97,8 +115,8 @@ async function runPopulateFunctions() {
                 Category: treatment.Category,
                 SubCategory: treatment.SubCategory,
                 TotalDuration: treatment.TotalDuration,
-                EmployeeIDs: treatment.EmployeeIDs,
-                RoomIDs: treatment.RoomIDs,
+                EmployeeIDs: filteredEmployeeIDs,
+                RoomIDs: filteredRoomIDs,
               },
               { upsert: true, new: true },
             );
@@ -110,8 +128,8 @@ async function runPopulateFunctions() {
               Category: treatment.Category,
               SubCategory: treatment.SubCategory,
               TotalDuration: treatment.TotalDuration,
-              EmployeeIDs: treatment.EmployeeIDs,
-              RoomIDs: treatment.RoomIDs,
+              EmployeeIDs: filteredEmployeeIDs,
+              RoomIDs: filteredRoomIDs,
             });
           }
         }

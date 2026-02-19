@@ -9,6 +9,7 @@ import {
   findAvailableDates,
   findAvailableTimes,
   generateCCWidgetURL,
+  findCustomerOrders,
 } from "../util/booker_util";
 import {
   AgentAppointment,
@@ -370,3 +371,31 @@ export const postGenerateCCLink = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const getCustomerOrders = async (req: Request, res: Response) => {
+    try {
+      const { customerId, fromDateCreated } = req.body;
+      if (!customerId || typeof customerId !== "number") {
+        return res.status(400).json({
+          success: false,
+          message: "Missing or invalid customerId. Provide a numeric customerId in the request body.",});
+      }
+
+      const result = await findCustomerOrders(customerId, fromDateCreated);
+
+      res.status(200).json({
+        success: true,
+        message: "Customer orders retrieved successfully",
+        locationID: locationID,
+        orders: result,
+      });
+
+    } catch (error) {
+      console.error("Error retrieving customer orders:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to retrieve customer orders",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+}
