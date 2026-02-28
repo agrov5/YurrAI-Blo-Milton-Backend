@@ -802,16 +802,42 @@ export const createAppointment = async (
     const accessToken = await getAccessToken();
 
     // Determine employee ID
-    const employeeID = appointment.employeeName
-      ? await getEmployeeId(appointment.employeeName)
-      : await determineEmployeeId(treatmentID ?? 0);
+    let employeeID: number | null = null;
+
+    if (appointment.employeeName) {
+      const namedEmployeeId = await getEmployeeId(appointment.employeeName);
+      if (namedEmployeeId !== null) {
+        const treatmentDoc = await TreatmentModel.findOne({ ID: treatmentID });
+        const availability = await findAvailableTimes({
+          date: appointment.appointmentDate,
+          time: appointment.startTime,
+          treatmentName: appointment.treatmentName,
+          employeeId: namedEmployeeId,
+        });
+
+        const isAvailable =
+          availability && Array.isArray(availability)
+            ? checkTimeSlotAvailability(
+                availability,
+                appointment.startTime,
+                appointment.appointmentDate,
+                treatmentDoc?.TotalDuration || 40,
+                namedEmployeeId,
+              )
+            : false;
+
+        employeeID = isAvailable ? namedEmployeeId : null;
+      }
+    } else {
+      employeeID = await determineEmployeeId(treatmentID ?? 0);
+    }
 
     // Check if availability was found
     if (employeeID === null) {
       const errorResponse: CreateAppointmentResponse = {
         IsSuccess: false,
         ErrorMessage: appointment.employeeName
-          ? `Employee '${appointment.employeeName}' is not available for '${appointment.treatmentName}' on ${appointment.appointmentDate} at ${appointment.startTime}. Please choose a different time or employee.`
+          ? `${appointment.employeeName} is not available for '${appointment.treatmentName}' on ${appointment.appointmentDate} at ${appointment.startTime}. Please choose a different time or a different employee.`
           : `The requested time slot on ${appointment.appointmentDate} at ${appointment.startTime} is not available for '${appointment.treatmentName}'. No employees are available at this time. Please choose a different time or date.`,
         Appointment: undefined,
       };
