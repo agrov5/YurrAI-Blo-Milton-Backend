@@ -30,11 +30,13 @@ import {
   FindCustomersResponse,
 } from "../models/Customer";
 import { getTreatmentById } from "../controllers/getController";
+import { ArgumentErrors } from "../models/Interfaces";
 import {
   AppointmentPayment,
   PaymentItem,
   CreditCard,
 } from "../models/Appointment";
+import { Order } from "../models/Order";
 
 // const generateAccessToken = async () => {
 //   try {
@@ -425,6 +427,34 @@ export const findCustomerOrders = async (
   }
 };
 
+export const getOrder = async (orderId: number): Promise<Order | null> => {
+  try {
+    const accessToken = await getAccessToken();
+    const response = await axios.get(
+      `/v4.1/merchant/order/${orderId}?access_token=${accessToken}`,
+      {
+        headers: {
+          "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
+        },
+      },
+    );
+
+    if (!response.data.IsSuccess) {
+      console.error(
+        "Error fetching order details:",
+        response.data.ErrorMessage ||
+          response.data.ArgumentErrors ||
+          "Unknown error",
+      );
+    }
+
+    return response.data.Order || null;
+  } catch (err) {
+    console.error("Error fetching order details:", err);
+    return null;
+  }
+};
+
 export const addPaymentToOrder = async (
   orderId: number,
   paymentItem: CreditCard | null,
@@ -438,12 +468,18 @@ export const addPaymentToOrder = async (
     }
 
     const accessToken = await getAccessToken();
+    const order = await getOrder(orderId);
+    const amount = order?.FinalTotal ?? null;
+
     const response = await axios.post(
       `/v4.1/merchant/order/${orderId}/add_payment`,
       {
         access_token: accessToken,
-        ID: orderId,
-        PaymentItem: { CreditCard: paymentItem },
+        PaymentItem: {
+          CreditCard: paymentItem,
+          Amount: amount,
+          Method: { Name: "Credit Card", ID: 1 },
+        },
       },
       {
         headers: {
@@ -451,8 +487,6 @@ export const addPaymentToOrder = async (
         },
       },
     );
-
-    console.log(response.data);
 
     if (!response.data.IsSuccess) {
       console.error(
