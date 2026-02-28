@@ -32,11 +32,7 @@ getRouter.get("/employees/agent", getEmployeesSimplified);
 
 getRouter.get("/rooms", getRooms);
 
-getRouter.get("/cc-info", getCustomerCCInfo);
-getRouter.get("/customer", getCustomer);
 getRouter.get("/widget/auth", getWidgetAuth);
-
-getRouter.get("/appointments", getAppointments);
 
 /**
  * @route   GET /health
@@ -65,21 +61,22 @@ getRouter.get("/auth-test", (req, res) => {
   });
 });
 
-/**
- * @route   GET /config
- * @desc    Get frontend configuration including API credentials
- * @access  Private (requires auth)
- */
-getRouter.get("/config", (req, res) => {
-  res.status(200).json({
-    trillet: {
-      apiKey: process.env.TRILLET_API_KEY,
-      workspaceId: process.env.TRILLET_WORKSPACE_ID,
-      apiUrl: "https://api.trillet.ai/v1/api/call",
-      callHistoryUrl: "https://api.trillet.ai/v2/api/call-history",
-    },
-    timestamp: new Date().toISOString(),
-  });
-});
+
+// /**
+//  * @route   GET /config
+//  * @desc    Get frontend configuration including API credentials
+//  * @access  Private (requires auth)
+//  */
+// getRouter.get("/config", (req, res) => {
+//   res.status(200).json({
+//     trillet: {
+//       apiKey: process.env.TRILLET_API_KEY,
+//       workspaceId: process.env.TRILLET_WORKSPACE_ID,
+//       apiUrl: "https://api.trillet.ai/v1/api/call",
+//       callHistoryUrl: "https://api.trillet.ai/v2/api/call-history",
+//     },
+//     timestamp: new Date().toISOString(),
+//   });
+// });
 
 export default getRouter;

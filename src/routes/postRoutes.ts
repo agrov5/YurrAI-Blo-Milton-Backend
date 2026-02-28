@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { getCustomerCCInfo } from '../controllers/getController';
 import {
   postCancelAppointment,
   postCreateAppointment,
@@ -29,6 +30,8 @@ postRouter.post("/available-dates", postAvailableDates);
 postRouter.post("/available-times", postAvailableTimes);
 
 postRouter.post("/customer", getCustomer);
+postRouter.post("/cc-info", getCustomerCCInfo);
+
 
 postRouter.post("/generate-cc-link", postGenerateCCLink);
 
