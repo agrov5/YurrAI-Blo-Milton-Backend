@@ -294,7 +294,8 @@ export const findAvailableTimes = async (options: {
     // Build query parameters
     const params = new URLSearchParams();
     params.append("LocationId", locationID?.toString() || "");
-    params.append("fromDateTime", convert24toISO(options.time, options.date));
+    // Query from start of day to get full day availability and catch existing bookings
+    params.append("fromDateTime", convert24toISO("00:00", options.date));
 
     const treatment = await treatmentLookupByName(options.treatmentName);
     if (treatment && treatment.ID) {
