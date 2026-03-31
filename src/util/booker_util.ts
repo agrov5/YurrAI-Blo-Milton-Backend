@@ -791,13 +791,20 @@ export const createAppointment = async (
   );
 
   if (customer?.CustomerID) {
-    const existingAppointment = await getCustomerAppointments({
+    const existingAppointments = await getCustomerAppointments({
       customerId: customer.CustomerID,
       date: appointment.appointmentDate,
       time: appointment.startTime,
     });
 
-    if (existingAppointment) {
+    const isBookedAppointment = Array.isArray(existingAppointments)
+      ? existingAppointments.some(
+          (existingAppointment) =>
+            existingAppointment.Status?.Name?.toLowerCase() === "booked",
+        )
+      : false;
+
+    if (isBookedAppointment) {
       return {
         IsSuccess: false,
         ErrorMessage: `${appointment.firstName} already has an appointment on ${appointment.appointmentDate} at ${appointment.startTime}. Please choose a different time.`,
