@@ -790,6 +790,22 @@ export const createAppointment = async (
     cleanedPhone,
   );
 
+  if (customer?.CustomerID) {
+    const existingAppointment = await getCustomerAppointments({
+      customerId: customer.CustomerID,
+      date: appointment.appointmentDate,
+      time: appointment.startTime,
+    });
+
+    if (existingAppointment) {
+      return {
+        IsSuccess: false,
+        ErrorMessage: `${appointment.firstName} already has an appointment on ${appointment.appointmentDate} at ${appointment.startTime}. Please choose a different time.`,
+        Appointment: undefined,
+      };
+    }
+  }
+
   let sendSMS = true;
 
   if (customer) {
