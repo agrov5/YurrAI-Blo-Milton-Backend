@@ -243,8 +243,8 @@ export const getAppointments = async (req: Request, res: Response) => {
     const cleanAppointment = (appointment: any) => ({
       id: appointment.ID,
       status: appointment.Status?.Name,
-      startDateTime: ISOToFriendlyTime(appointment.StartDateTimeOffset),
-      endDateTime: ISOToFriendlyTime(appointment.EndDateTimeOffset),
+      startDateTime: appointment.StartDateTimeOffset,
+      endDateTime: appointment.EndDateTimeOffset,
       customer: {
         id: appointment.CustomerID,
         firstName: appointment.CustomerFirstName,
