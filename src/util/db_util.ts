@@ -170,3 +170,90 @@ export const convertISOtoFriendly = (isoStr: string) => {
   const friendlyDate = date.toLocaleString("en-US", options);
   return friendlyDate;
 };
+
+const ISO_DATE_TIME_REGEX =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,7})?)?(?:Z|[+-]\d{2}:\d{2})?$/;
+const TIME_FIELD_REGEX = /(time|start|end|from|to)/i;
+
+export const ISOToFriendlyTime = (isoStr: string): string => {
+  if (!isoStr || !ISO_DATE_TIME_REGEX.test(isoStr)) {
+    return isoStr;
+  }
+
+  const date = new Date(isoStr);
+  if (isNaN(date.getTime())) {
+    return isoStr;
+  }
+
+  return date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: "America/New_York",
+  });
+};
+
+export const convertISOTimeFieldsToFriendlyTime = <T>(value: T): T => {
+  const convertValue = (input: unknown, parentKey?: string): unknown => {
+    if (typeof input === "string") {
+      if (!parentKey || !TIME_FIELD_REGEX.test(parentKey)) {
+        return input;
+      }
+      return ISOToFriendlyTime(input);
+    }
+
+    if (Array.isArray(input)) {
+      return input.map((item) => convertValue(item, parentKey));
+    }
+
+    if (input && typeof input === "object") {
+      return Object.entries(input as Record<string, unknown>).reduce(
+        (accumulator, [key, nestedValue]) => {
+          accumulator[key] = convertValue(nestedValue, key);
+          return accumulator;
+        },
+        {} as Record<string, unknown>,
+      );
+    }
+
+    return input;
+  };
+
+  return convertValue(value) as T;
+};
+
+export const convertBookerAvailabilityToFriendlyTime = <T>(
+  availabilityPayload: T,
+): T => {
+  if (!Array.isArray(availabilityPayload)) {
+    return availabilityPayload;
+  }
+
+  return availabilityPayload.map((location: any) => ({
+    ...location,
+    locationHours: Array.isArray(location.locationHours)
+      ? location.locationHours.map((hours: any) => ({
+          ...hours,
+          open: ISOToFriendlyTime(hours.open),
+          close: ISOToFriendlyTime(hours.close),
+        }))
+      : location.locationHours,
+    serviceCategories: Array.isArray(location.serviceCategories)
+      ? location.serviceCategories.map((category: any) => ({
+          ...category,
+          services: Array.isArray(category.services)
+            ? category.services.map((service: any) => ({
+                ...service,
+                availability: Array.isArray(service.availability)
+                  ? service.availability.map((slot: any) => ({
+                      ...slot,
+                      startDateTime: ISOToFriendlyTime(slot.startDateTime),
+                      endDateTime: ISOToFriendlyTime(slot.endDateTime),
+                    }))
+                  : service.availability,
+              }))
+            : category.services,
+        }))
+      : location.serviceCategories,
+  })) as T;
+};

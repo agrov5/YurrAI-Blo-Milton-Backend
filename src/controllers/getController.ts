@@ -12,6 +12,10 @@ import {
   getCustomerAppointments,
 } from "../util/booker_util";
 import { FullAppointmentObject } from "../models/Appointment";
+import {
+  convertBookerAvailabilityToFriendlyTime,
+  ISOToFriendlyTime,
+} from "../util/db_util";
 
 export const getTreatments = async (req: Request, res: Response) => {
   try {
@@ -218,7 +222,7 @@ export const getEmployeesSimplified = async (req: Request, res: Response) => {
   try {
     const employees: IEmployee[] = await EmployeeModel.find(
       {},
-      { ID: 1, FullName: 1, _id: 0 }
+      { ID: 1, FullName: 1, _id: 0 },
     );
     res.status(200).json({
       success: true,
@@ -305,13 +309,15 @@ export const getAvailableTimes = async (req: Request, res: Response) => {
     }
 
     const availableTimes = await findAvailableTimes(body);
+    const friendlyAvailableTimes =
+      convertBookerAvailabilityToFriendlyTime(availableTimes);
     res.status(200).json({
       success: true,
       message: "Available times retrieved successfully",
       locationID: locationID,
       date: body.date,
       treatment: body.treatmentName,
-      times: availableTimes,
+      times: friendlyAvailableTimes,
     });
   } catch (error) {
     res.status(500).json({
@@ -440,8 +446,8 @@ export const getAppointments = async (req: Request, res: Response) => {
     const cleanAppointment = (appointment: any) => ({
       id: appointment.ID,
       status: appointment.Status?.Name,
-      startDateTime: appointment.StartDateTimeOffset,
-      endDateTime: appointment.EndDateTimeOffset,
+      startDateTime: ISOToFriendlyTime(appointment.StartDateTimeOffset),
+      endDateTime: ISOToFriendlyTime(appointment.EndDateTimeOffset),
       customer: {
         id: appointment.CustomerID,
         firstName: appointment.CustomerFirstName,

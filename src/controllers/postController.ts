@@ -16,6 +16,10 @@ import {
   CancelAppointment,
   CreateAppointmentResponse,
 } from "../models/Appointment";
+import {
+  convertBookerAvailabilityToFriendlyTime,
+  ISOToFriendlyTime,
+} from "../util/db_util";
 
 export const postCreateAppointment = async (req: Request, res: Response) => {
   try {
@@ -114,13 +118,15 @@ export const postAvailableTimes = async (req: Request, res: Response) => {
     }
 
     const availableTimes = await findAvailableTimes(body);
+    const friendlyAvailableTimes =
+      convertBookerAvailabilityToFriendlyTime(availableTimes);
     res.status(200).json({
       success: true,
       message: "Available times retrieved successfully",
       locationID: locationID,
       date: body.date,
       treatment: body.treatmentName,
-      times: availableTimes,
+      times: friendlyAvailableTimes,
     });
   } catch (error) {
     res.status(500).json({
@@ -237,8 +243,8 @@ export const getAppointments = async (req: Request, res: Response) => {
     const cleanAppointment = (appointment: any) => ({
       id: appointment.ID,
       status: appointment.Status?.Name,
-      startDateTime: appointment.StartDateTimeOffset,
-      endDateTime: appointment.EndDateTimeOffset,
+      startDateTime: ISOToFriendlyTime(appointment.StartDateTimeOffset),
+      endDateTime: ISOToFriendlyTime(appointment.EndDateTimeOffset),
       customer: {
         id: appointment.CustomerID,
         firstName: appointment.CustomerFirstName,
@@ -373,29 +379,30 @@ export const postGenerateCCLink = async (req: Request, res: Response) => {
 };
 
 export const getCustomerOrders = async (req: Request, res: Response) => {
-    try {
-      const { customerId, fromDateCreated } = req.body;
-      if (!customerId || typeof customerId !== "number") {
-        return res.status(400).json({
-          success: false,
-          message: "Missing or invalid customerId. Provide a numeric customerId in the request body.",});
-      }
-
-      const result = await findCustomerOrders(customerId, fromDateCreated);
-
-      res.status(200).json({
-        success: true,
-        message: "Customer orders retrieved successfully",
-        locationID: locationID,
-        orders: result,
-      });
-
-    } catch (error) {
-      console.error("Error retrieving customer orders:", error);
-      res.status(500).json({
+  try {
+    const { customerId, fromDateCreated } = req.body;
+    if (!customerId || typeof customerId !== "number") {
+      return res.status(400).json({
         success: false,
-        message: "Failed to retrieve customer orders",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message:
+          "Missing or invalid customerId. Provide a numeric customerId in the request body.",
       });
     }
-}
+
+    const result = await findCustomerOrders(customerId, fromDateCreated);
+
+    res.status(200).json({
+      success: true,
+      message: "Customer orders retrieved successfully",
+      locationID: locationID,
+      orders: result,
+    });
+  } catch (error) {
+    console.error("Error retrieving customer orders:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve customer orders",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
