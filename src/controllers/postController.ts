@@ -19,6 +19,8 @@ import {
 import {
   convertBookerAvailabilityToFriendlyTime,
   convertBookerAvailabilityEmployeeIdsToNames,
+  ISOToFriendlyTime,
+  convertISOtoFriendly,
 } from "../util/db_util";
 
 export const postCreateAppointment = async (req: Request, res: Response) => {
@@ -245,9 +247,9 @@ export const getAppointments = async (req: Request, res: Response) => {
     // Helper function to clean appointment data
     const cleanAppointment = (appointment: any) => ({
       appointmentId: appointment.ID,
-      status: appointment.Status?.Name,
-      startDateTime: appointment.StartDateTimeOffset,
-      endDateTime: appointment.EndDateTimeOffset,
+      status: appointment.Status?.Name, 
+      startDateTime: convertISOtoFriendly(appointment.StartDateTimeOffset),
+      endDateTime: convertISOtoFriendly(appointment.EndDateTimeOffset),
       customer: {
         id: appointment.CustomerID,
         firstName: appointment.CustomerFirstName,
