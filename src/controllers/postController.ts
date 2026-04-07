@@ -18,7 +18,7 @@ import {
 } from "../models/Appointment";
 import {
   convertBookerAvailabilityToFriendlyTime,
-  ISOToFriendlyTime,
+  convertBookerAvailabilityEmployeeIdsToNames,
 } from "../util/db_util";
 
 export const postCreateAppointment = async (req: Request, res: Response) => {
@@ -118,15 +118,18 @@ export const postAvailableTimes = async (req: Request, res: Response) => {
     }
 
     const availableTimes = await findAvailableTimes(body);
-    const friendlyAvailableTimes =
-      convertBookerAvailabilityToFriendlyTime(availableTimes);
+    const timesWithEmployeeNames =
+      await convertBookerAvailabilityEmployeeIdsToNames(availableTimes);
+    const times = convertBookerAvailabilityToFriendlyTime(
+      timesWithEmployeeNames,
+    );
     res.status(200).json({
       success: true,
       message: "Available times retrieved successfully",
       locationID: locationID,
       date: body.date,
       treatment: body.treatmentName,
-      times: friendlyAvailableTimes,
+      times: times,
     });
   } catch (error) {
     res.status(500).json({
@@ -241,7 +244,7 @@ export const getAppointments = async (req: Request, res: Response) => {
 
     // Helper function to clean appointment data
     const cleanAppointment = (appointment: any) => ({
-      id: appointment.ID,
+      appointmentId: appointment.ID,
       status: appointment.Status?.Name,
       startDateTime: appointment.StartDateTimeOffset,
       endDateTime: appointment.EndDateTimeOffset,

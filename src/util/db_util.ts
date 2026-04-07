@@ -257,3 +257,92 @@ export const convertBookerAvailabilityToFriendlyTime = <T>(
       : location.serviceCategories,
   })) as T;
 };
+
+export const convertBookerAvailabilityEmployeeIdsToNames = async <T>(
+  availabilityPayload: T,
+): Promise<T> => {
+  if (!Array.isArray(availabilityPayload)) {
+    return availabilityPayload;
+  }
+
+  const employeeIds = new Set<number>();
+
+  for (const location of availabilityPayload as any[]) {
+    if (!Array.isArray(location?.serviceCategories)) {
+      continue;
+    }
+
+    for (const category of location.serviceCategories) {
+      if (!Array.isArray(category?.services)) {
+        continue;
+      }
+
+      for (const service of category.services) {
+        if (!Array.isArray(service?.availability)) {
+          continue;
+        }
+
+        for (const slot of service.availability) {
+          if (!Array.isArray(slot?.employees)) {
+            continue;
+          }
+
+          for (const id of slot.employees) {
+            if (typeof id === "number") {
+              employeeIds.add(id);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  if (employeeIds.size === 0) {
+    return availabilityPayload;
+  }
+
+  const employees = await EmployeeModel.find(
+    { ID: { $in: Array.from(employeeIds) } },
+    { ID: 1, FullName: 1, DisplayName: 1, _id: 0 },
+  )
+    .lean()
+    .exec();
+
+  const employeeNameById = new Map<number, string>();
+  for (const employee of employees as Array<{
+    ID: number;
+    FullName?: string;
+    DisplayName?: string;
+  }>) {
+    const name = employee.FullName || employee.DisplayName;
+    if (typeof employee.ID === "number" && name) {
+      employeeNameById.set(employee.ID, name);
+    }
+  }
+
+  return (availabilityPayload as any[]).map((location) => ({
+    ...location,
+    serviceCategories: Array.isArray(location?.serviceCategories)
+      ? location.serviceCategories.map((category: any) => ({
+          ...category,
+          services: Array.isArray(category?.services)
+            ? category.services.map((service: any) => ({
+                ...service,
+                availability: Array.isArray(service?.availability)
+                  ? service.availability.map((slot: any) => ({
+                      ...slot,
+                      employees: Array.isArray(slot?.employees)
+                        ? slot.employees.map((id: unknown) =>
+                            typeof id === "number"
+                              ? (employeeNameById.get(id) ?? id)
+                              : id,
+                          )
+                        : slot?.employees,
+                    }))
+                  : service?.availability,
+              }))
+            : category?.services,
+        }))
+      : location?.serviceCategories,
+  })) as T;
+};
