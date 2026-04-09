@@ -47,8 +47,8 @@ export async function sendMessageToAdmin(body: string) {
       params: {
         api_username: API_USER,
         api_password: API_PASSWORD,
-        method: "sendSMS",
-        dst: "+16479686854", // Admin's phone number
+        method: "sendMMS",
+        dst: process.env.ADMIN_PHONE, // Admin's phone number
         message: body,
         did: DID,
       },
