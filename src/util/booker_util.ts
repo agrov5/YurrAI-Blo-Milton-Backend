@@ -602,10 +602,11 @@ export const createAppointment = async (
     return employee ? employee.ID : null;
   };
 
+  let namedEmployeeId: number | null = null;
   // If employee name is provided, validate it exists
   if (appointment.employeeName) {
-    const employeeExists = await getEmployeeId(appointment.employeeName);
-    if (!employeeExists) {
+    namedEmployeeId = await getEmployeeId(appointment.employeeName);
+    if (!namedEmployeeId) {
       return {
         IsSuccess: false,
         ErrorMessage: `Employee '${appointment.employeeName}' not found in our system. Please check the employee name and try again.`,
@@ -720,82 +721,85 @@ export const createAppointment = async (
         `Checking availability for ${treatment.EmployeeIDs.length} employees for treatment ID ${treatmentId}`,
       );
 
-      for (const empId of treatment.EmployeeIDs) {
-        console.log(`Checking employee ID: ${empId}`);
-        const availability = await findAvailableTimes({
-          date: appointment.appointmentDate,
-          time: appointment.startTime,
-          treatmentName: appointment.treatmentName,
-          employeeId: empId,
-        });
+      const results = await Promise.all(
+        treatment.EmployeeIDs.map(async (empId) => {
+          console.log(`Checking employee ID: ${empId}`);
+          const availability = await findAvailableTimes({
+            date: appointment.appointmentDate,
+            time: appointment.startTime,
+            treatmentName: appointment.treatmentName,
+            employeeId: empId,
+          });
 
-        console.log(
-          `Availability data for employee ${empId}:`,
-          JSON.stringify(availability, null, 2),
-        );
+          console.log(
+            `Availability data for employee ${empId}:`,
+            JSON.stringify(availability, null, 2),
+          );
 
-        if (!availability || !Array.isArray(availability)) {
-          console.log(`No valid availability data for employee ${empId}`);
-          continue;
-        }
+          if (!availability || !Array.isArray(availability)) {
+            console.log(`No valid availability data for employee ${empId}`);
+            return null;
+          }
 
-        const isAvailable = checkTimeSlotAvailability(
-          availability,
-          appointment.startTime,
-          appointment.appointmentDate,
-          treatment.TotalDuration || 40,
-          empId,
-        );
+          const isAvailable = checkTimeSlotAvailability(
+            availability,
+            appointment.startTime,
+            appointment.appointmentDate,
+            treatment.TotalDuration || 40,
+            empId,
+          );
 
-        console.log(
-          `Employee ${empId} availability check result: ${isAvailable}`,
-        );
+          console.log(
+            `Employee ${empId} availability check result: ${isAvailable}`,
+          );
 
-        if (isAvailable) {
-          return empId;
-        }
-      }
+          return isAvailable ? empId : null;
+        }),
+      );
 
-      return null;
+      return results.find((id) => id !== null) ?? null;
     } catch (error) {
       console.error("Error determining employee ID:", error);
       return null;
     }
   };
 
-  // Check if the date has any available times for this treatment
-  try {
-    const availableDates = await findAvailableDates({
+  // Check availability and customer existence in parallel
+  const [availableDates, customer] = await Promise.all([
+    findAvailableDates({
       fromDate: appointment.appointmentDate,
       toDate: appointment.appointmentDate,
       treatmentName: appointment.treatmentName,
-      employeeId: appointment.employeeName
-        ? (await getEmployeeId(appointment.employeeName)) || undefined
-        : undefined,
-    });
+      employeeId: namedEmployeeId || undefined,
+    }),
+    checkCustomerExists(appointment.firstName, cleanedPhone),
+  ]);
 
-    if (!availableDates || availableDates.length === 0) {
-      return {
-        IsSuccess: false,
-        ErrorMessage: `No availability found for '${appointment.treatmentName}' on ${appointment.appointmentDate}. The business may be closed or fully booked on this date. Please choose a different date.`,
-        Appointment: undefined,
-      };
-    }
-  } catch (error) {
-    console.error("Error checking available dates:", error);
+  if (!availableDates || availableDates.length === 0) {
+    return {
+      IsSuccess: false,
+      ErrorMessage: `No availability found for '${appointment.treatmentName}' on ${appointment.appointmentDate}. The business may be closed or fully booked on this date. Please choose a different date.`,
+      Appointment: undefined,
+    };
   }
 
-  const customer = await checkCustomerExists(
-    appointment.firstName,
-    cleanedPhone,
-  );
+  let sendSMS = true;
+  let ccInfo: CreditCardRecord | null = null;
 
   if (customer?.CustomerID) {
-    const existingAppointments = await getCustomerAppointments({
-      customerId: customer.CustomerID,
-      date: appointment.appointmentDate,
-      time: appointment.startTime,
-    });
+    const [existingAppointments, fetchedCcInfo] = await Promise.all([
+      getCustomerAppointments({
+        customerId: customer.CustomerID,
+        date: appointment.appointmentDate,
+        time: appointment.startTime,
+      }),
+      getCustomerCreditCardInfo(customer.Customer?.ID || 0),
+    ]);
+
+    ccInfo = fetchedCcInfo;
+    if (ccInfo) {
+      sendSMS = false;
+    }
 
     const isBookedAppointment = Array.isArray(existingAppointments)
       ? existingAppointments.some(
@@ -813,45 +817,32 @@ export const createAppointment = async (
     }
   }
 
-  let sendSMS = true;
-
-  if (customer) {
-    const ccInfo = await getCustomerCreditCardInfo(customer.Customer?.ID || 0);
-    if (ccInfo) {
-      sendSMS = false;
-    }
-  }
-
   try {
     const accessToken = await getAccessToken();
 
     // Determine employee ID
     let employeeID: number | null = null;
 
-    if (appointment.employeeName) {
-      const namedEmployeeId = await getEmployeeId(appointment.employeeName);
-      if (namedEmployeeId !== null) {
-        const treatmentDoc = await TreatmentModel.findOne({ ID: treatmentID });
-        const availability = await findAvailableTimes({
-          date: appointment.appointmentDate,
-          time: appointment.startTime,
-          treatmentName: appointment.treatmentName,
-          employeeId: namedEmployeeId,
-        });
+    if (namedEmployeeId !== null) {
+      const availability = await findAvailableTimes({
+        date: appointment.appointmentDate,
+        time: appointment.startTime,
+        treatmentName: appointment.treatmentName,
+        employeeId: namedEmployeeId,
+      });
 
-        const isAvailable =
-          availability && Array.isArray(availability)
-            ? checkTimeSlotAvailability(
-                availability,
-                appointment.startTime,
-                appointment.appointmentDate,
-                treatmentDoc?.TotalDuration || 40,
-                namedEmployeeId,
-              )
-            : false;
+      const isAvailable =
+        availability && Array.isArray(availability)
+          ? checkTimeSlotAvailability(
+              availability,
+              appointment.startTime,
+              appointment.appointmentDate,
+              treatmentDoc?.TotalDuration || 40,
+              namedEmployeeId,
+            )
+          : false;
 
-        employeeID = isAvailable ? namedEmployeeId : null;
-      }
+      employeeID = isAvailable ? namedEmployeeId : null;
     } else {
       employeeID = await determineEmployeeId(treatmentID ?? 0);
     }
@@ -955,20 +946,21 @@ export const createAppointment = async (
         console.error("Error sending SMS via phone:", error);
       });
 
-      // Add Payment to Order
-      const order = await findCustomerOrders(customer?.CustomerID || 0);
-      if (order && order.length > 0) {
-        await addPaymentToOrder(
-          order[0].ID,
-          await getCustomerCreditCardInfo(customer?.CustomerID || 0).then(
-            (ccInfo) => ccInfo?.CreditCard || null,
-          ),
+      // Add Payment to Order — fire-and-forget, don't block the response
+      Promise.resolve()
+        .then(async () => {
+          const order = await findCustomerOrders(customer?.CustomerID || 0);
+          if (order && order.length > 0) {
+            await addPaymentToOrder(order[0].ID, ccInfo?.CreditCard || null);
+          } else {
+            console.warn(
+              `No order found for customer ID ${customer?.CustomerID}, unable to add payment to order.`,
+            );
+          }
+        })
+        .catch((err) =>
+          console.error("Error in post-booking payment step:", err),
         );
-      } else {
-        console.warn(
-          `No order found for customer ID ${customer?.CustomerID}, unable to add payment to order.`,
-        );
-      }
     }
 
     return response.data;
