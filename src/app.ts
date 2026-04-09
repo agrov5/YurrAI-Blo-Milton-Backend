@@ -14,21 +14,22 @@ dotenv.config({
     "../environments",
     env === "production"
       ? "../environments/.env.production"
-      : "../environments/.env.development"
+      : "../environments/.env.development",
   ),
 });
 
 console.log(`Running in ${env} mode`);
 
-// Import modules that depend on environment variables AFTER dotenv.config()
-import { authMiddleware } from "./auth/auth";
-import { loggerMiddleware } from "./middlewares/loggerMiddleware";
-import job from "./config/cron";
-import axios from "axios";
-import getRouter from "./routes/getRoutes";
-import postRouter from "./routes/postRoutes";
-import dashboardRoutes from "./routes/dashboardRoutes";
-import widgetRouter from "./routes/widgetRoutes";
+// These require() calls execute after dotenv.config() — unlike import declarations,
+// they are NOT hoisted by the TypeScript compiler.
+const { authMiddleware } = require("./auth/auth");
+const { loggerMiddleware } = require("./middlewares/loggerMiddleware");
+const job = require("./config/cron").default;
+const axios = require("axios");
+const getRouter = require("./routes/getRoutes").default;
+const postRouter = require("./routes/postRoutes").default;
+const dashboardRoutes = require("./routes/dashboardRoutes").default;
+const widgetRouter = require("./routes/widgetRoutes").default;
 
 axios.defaults.baseURL = process.env.AXIOS_BASE_URL || "http://localhost:5000";
 
