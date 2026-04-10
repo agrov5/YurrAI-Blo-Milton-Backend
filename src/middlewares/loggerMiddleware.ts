@@ -189,11 +189,11 @@ export const loggerMiddleware = (
       responseTimeMs: duration,
       ip: req.ip,
       query:
-        Object.keys(req.query).length > 0
+        req.query && Object.keys(req.query).length > 0
           ? (req.query as Record<string, unknown>)
           : undefined,
       params:
-        Object.keys(req.params).length > 0
+        req.params && Object.keys(req.params).length > 0
           ? (req.params as Record<string, unknown>)
           : undefined,
       reqBody: safeBody,

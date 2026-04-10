@@ -61,13 +61,13 @@ router.get("/dashboard", (req: Request, res: Response) => {
   res.sendFile(path.join(__dirname, "../public/dashboard.html"));
 });
 
-/**
- * @route   GET / (admin root)
- * @desc    Redirect to login page
- * @access  Public
- */
-router.get("/", (req: Request, res: Response) => {
-  res.redirect("/admin/login");
-});
+// /**
+//  * @route   GET / (admin root)
+//  * @desc    Redirect to login page
+//  * @access  Public
+//  */
+// router.get("/", (req: Request, res: Response) => {
+//   res.redirect("/admin/login");
+// });
 
 export default router;
