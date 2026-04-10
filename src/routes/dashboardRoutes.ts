@@ -1,12 +1,13 @@
 import { Router, Request, Response } from "express";
 import path from "path";
 import { clearLogs, getLogs, LogEntry } from "../middlewares/loggerMiddleware";
+import { authMiddleware } from "../auth/auth";
 
 const router = Router();
 
-// ── Log API ───────────────────────────────────────────────────────────────────
+// ── Log API (protected) ───────────────────────────────────────────────────────
 
-router.get("/logs/api", (req: Request, res: Response) => {
+router.get("/logs/api", authMiddleware, (req: Request, res: Response) => {
   const {
     level,
     type,
@@ -32,15 +33,9 @@ router.get("/logs/api", (req: Request, res: Response) => {
   res.json({ total: logs.length, count: sliced.length, logs: sliced });
 });
 
-router.delete("/logs/api", (req: Request, res: Response) => {
+router.delete("/logs/api", authMiddleware, (req: Request, res: Response) => {
   clearLogs();
   res.json({ ok: true, message: "Logs cleared" });
-});
-
-// ── Log Viewer UI ─────────────────────────────────────────────────────────────
-
-router.get("/logs", (req: Request, res: Response) => {
-  res.sendFile(path.join(__dirname, "../public/logs.html"));
 });
 
 /**
