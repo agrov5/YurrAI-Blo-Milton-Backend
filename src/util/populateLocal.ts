@@ -96,7 +96,7 @@ async function runPopulateFunctions() {
 
     if (treatments) {
       for (const treatment of treatments.Treatments || []) {
-        if (treatment.IsActive && !treatment.IsDeleted) {
+        if (treatment.IsActive && !treatment.IsDeleted && treatment.AllowCustomersToBookOnline) {
           // Filter to only include valid employee and room IDs
           const filteredEmployeeIDs = (treatment.EmployeeIDs || []).filter(
             (id) => validEmployeeIds.has(id),

@@ -211,6 +211,7 @@ export const findTreatments = async () => {
         },
       },
     );
+    console.log(response.data)
     return response.data;
   } catch (error) {
     console.error("Error finding treatments:", error);
