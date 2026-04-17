@@ -598,167 +598,555 @@
         background: #0a0a0f;
         border-radius: 10px;
         overflow: hidden;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
       }
 
       :root {
-        --log-bg:       #0a0a0f;
-        --log-surface:  #111118;
+        --log-bg: #0a0a0f;
+        --log-surface: #111118;
         --log-surface2: #16161f;
-        --log-border:   #1e1e2e;
-        --log-border2:  #252535;
-        --log-text:     #e2e2f0;
-        --log-muted:    #555570;
-        --log-accent:   #6c63ff;
-        --log-accent2:  #8b5cf6;
-        --log-green:    #22c55e;
-        --log-yellow:   #f59e0b;
-        --log-red:      #ef4444;
-        --log-blue:     #3b82f6;
+        --log-border: #1e1e2e;
+        --log-border2: #252535;
+        --log-text: #e2e2f0;
+        --log-muted: #555570;
+        --log-accent: #6c63ff;
+        --log-accent2: #8b5cf6;
+        --log-green: #22c55e;
+        --log-yellow: #f59e0b;
+        --log-red: #ef4444;
+        --log-blue: #3b82f6;
       }
 
       .log-topbar {
         background: var(--log-surface);
         border-bottom: 1px solid var(--log-border);
         padding: 0 16px;
-        display: flex; align-items: center; gap: 10px;
-        height: 52px; flex-wrap: wrap;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 52px;
+        flex-wrap: wrap;
       }
       .log-topbar-logo {
-        display: flex; align-items: center; gap: 8px;
-        font-weight: 700; font-size: 14px; color: var(--log-text);
-        margin-right: 8px; white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 700;
+        font-size: 14px;
+        color: var(--log-text);
+        margin-right: 8px;
+        white-space: nowrap;
       }
-      .log-divider { width: 1px; height: 20px; background: var(--log-border2); }
+      .log-divider {
+        width: 1px;
+        height: 20px;
+        background: var(--log-border2);
+      }
       .log-ctrl {
         background: var(--log-surface2);
         border: 1px solid var(--log-border2);
         color: var(--log-text);
-        padding: 0 10px; border-radius: 7px;
-        font-size: 12px; height: 32px; outline: none;
-        transition: border-color .15s;
+        padding: 0 10px;
+        border-radius: 7px;
+        font-size: 12px;
+        height: 32px;
+        outline: none;
+        transition: border-color 0.15s;
       }
-      .log-ctrl:focus { border-color: var(--log-accent2); }
-      input.log-ctrl { width: 180px; }
-      input.log-ctrl::placeholder { color: var(--log-muted); }
-      .log-spacer { flex: 1; }
+      .log-ctrl:focus {
+        border-color: var(--log-accent2);
+      }
+      input.log-ctrl {
+        width: 180px;
+      }
+      input.log-ctrl::placeholder {
+        color: var(--log-muted);
+      }
+      .log-spacer {
+        flex: 1;
+      }
       .log-btn {
         background: var(--log-surface2);
         border: 1px solid var(--log-border2);
         color: var(--log-text);
-        padding: 0 14px; border-radius: 7px;
-        font-size: 12px; height: 32px; cursor: pointer;
-        display: flex; align-items: center; gap: 6px;
+        padding: 0 14px;
+        border-radius: 7px;
+        font-size: 12px;
+        height: 32px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
         white-space: nowrap;
-        transition: background .15s, border-color .15s;
+        transition:
+          background 0.15s,
+          border-color 0.15s;
         font-weight: 500;
       }
-      .log-btn:hover { background: #1e1e2e; border-color: #3a3a50; }
-      .log-btn.danger { color: var(--log-red); border-color: #3a1a1a; }
-      .log-btn.danger:hover { background: #1e0f0f; }
-      .log-btn.primary { background: #1e1a40; border-color: var(--log-accent); color: #a78bfa; }
-      .log-btn.primary:hover { background: #252050; }
+      .log-btn:hover {
+        background: #1e1e2e;
+        border-color: #3a3a50;
+      }
+      .log-btn.danger {
+        color: var(--log-red);
+        border-color: #3a1a1a;
+      }
+      .log-btn.danger:hover {
+        background: #1e0f0f;
+      }
+      .log-btn.primary {
+        background: #1e1a40;
+        border-color: var(--log-accent);
+        color: #a78bfa;
+      }
+      .log-btn.primary:hover {
+        background: #252050;
+      }
 
       .log-statusbar {
         background: var(--log-surface);
         border-bottom: 1px solid var(--log-border);
         padding: 6px 16px;
-        display: flex; align-items: center; gap: 12px;
-        font-size: 11px; color: var(--log-muted);
-      }
-      .log-pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--log-green); animation: log-pulse 2.5s ease-in-out infinite; }
-      @keyframes log-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.85)} }
-      .log-stat-chip {
-        display: inline-flex; align-items: center; gap: 5px;
-        background: var(--log-surface2); border: 1px solid var(--log-border2);
-        border-radius: 5px; padding: 2px 8px; font-size: 10px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 11px;
         color: var(--log-muted);
       }
-      .log-stat-chip .log-dot { width: 5px; height: 5px; border-radius: 50%; }
-      .log-dot-green  { background: var(--log-green); }
-      .log-dot-yellow { background: var(--log-yellow); }
-      .log-dot-red    { background: var(--log-red); }
-      .log-dot-blue   { background: var(--log-blue); }
+      .log-pulse {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--log-green);
+        animation: log-pulse 2.5s ease-in-out infinite;
+      }
+      @keyframes log-pulse {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.5;
+          transform: scale(0.85);
+        }
+      }
+      .log-stat-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: var(--log-surface2);
+        border: 1px solid var(--log-border2);
+        border-radius: 5px;
+        padding: 2px 8px;
+        font-size: 10px;
+        color: var(--log-muted);
+      }
+      .log-stat-chip .log-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+      }
+      .log-dot-green {
+        background: var(--log-green);
+      }
+      .log-dot-yellow {
+        background: var(--log-yellow);
+      }
+      .log-dot-red {
+        background: var(--log-red);
+      }
+      .log-dot-blue {
+        background: var(--log-blue);
+      }
 
-      #log-list { padding: 12px 16px 24px; display: flex; flex-direction: column; gap: 4px; background: var(--log-bg); min-height: 120px; }
-      .log-empty { text-align: center; color: var(--log-muted); padding: 60px 0; }
-      .log-empty-icon { font-size: 28px; margin-bottom: 8px; opacity: .4; }
+      #log-list {
+        padding: 12px 16px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        background: var(--log-bg);
+        min-height: 120px;
+      }
+      .log-empty {
+        text-align: center;
+        color: var(--log-muted);
+        padding: 60px 0;
+      }
+      .log-empty-icon {
+        font-size: 28px;
+        margin-bottom: 8px;
+        opacity: 0.4;
+      }
 
       .log-row {
         border: 1px solid var(--log-border);
-        border-radius: 10px; overflow: hidden;
-        transition: border-color .15s;
+        border-radius: 10px;
+        overflow: hidden;
+        transition: border-color 0.15s;
       }
-      .log-row:hover { border-color: var(--log-border2); }
-      .log-row.http  { border-left: 3px solid #1d3a6a; }
-      .log-row.axios { border-left: 3px solid #2d1b5e; }
-      .log-row.app   { border-left: 3px solid #0e3d1e; }
-      .log-row.warn  { border-left-color: #6b3a00 !important; }
-      .log-row.error { border-left-color: #6b1a1a !important; }
+      .log-row:hover {
+        border-color: var(--log-border2);
+      }
+      .log-row.http {
+        border-left: 3px solid #1d3a6a;
+      }
+      .log-row.axios {
+        border-left: 3px solid #2d1b5e;
+      }
+      .log-row.app {
+        border-left: 3px solid #0e3d1e;
+      }
+      .log-row.warn {
+        border-left-color: #6b3a00 !important;
+      }
+      .log-row.error {
+        border-left-color: #6b1a1a !important;
+      }
 
       .log-row-summary {
-        display: flex; align-items: center; gap: 8px;
-        padding: 8px 14px; cursor: pointer; user-select: none;
-        transition: background .1s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        cursor: pointer;
+        user-select: none;
+        transition: background 0.1s;
       }
-      .log-row-summary:hover { background: rgba(255,255,255,.025); }
+      .log-row-summary:hover {
+        background: rgba(255, 255, 255, 0.025);
+      }
 
       .log-badge {
-        display: inline-flex; align-items: center; justify-content: center;
-        font-size: 10px; font-weight: 700;
-        padding: 2px 7px; border-radius: 5px;
-        min-width: 46px; letter-spacing: .3px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 2px 7px;
+        border-radius: 5px;
+        min-width: 46px;
+        letter-spacing: 0.3px;
       }
-      .log-badge.GET    { background: #0a2a3d; color: #38bdf8; border: 1px solid #0e3a55; }
-      .log-badge.POST   { background: #0d2e10; color: #4ade80; border: 1px solid #103d14; }
-      .log-badge.PUT    { background: #2a1f00; color: #fbbf24; border: 1px solid #3a2b00; }
-      .log-badge.PATCH  { background: #2a1500; color: #fb923c; border: 1px solid #3a1f00; }
-      .log-badge.DELETE { background: #2e0d0d; color: #f87171; border: 1px solid #3d1111; }
-      .log-badge.AXIOS  { background: #1a0c40; color: #a78bfa; border: 1px solid #26124f; }
-      .log-badge.APP    { background: #0a2810; color: #4ade80; border: 1px solid #0e3516; }
+      .log-badge.GET {
+        background: #0a2a3d;
+        color: #38bdf8;
+        border: 1px solid #0e3a55;
+      }
+      .log-badge.POST {
+        background: #0d2e10;
+        color: #4ade80;
+        border: 1px solid #103d14;
+      }
+      .log-badge.PUT {
+        background: #2a1f00;
+        color: #fbbf24;
+        border: 1px solid #3a2b00;
+      }
+      .log-badge.PATCH {
+        background: #2a1500;
+        color: #fb923c;
+        border: 1px solid #3a1f00;
+      }
+      .log-badge.DELETE {
+        background: #2e0d0d;
+        color: #f87171;
+        border: 1px solid #3d1111;
+      }
+      .log-badge.AXIOS {
+        background: #1a0c40;
+        color: #a78bfa;
+        border: 1px solid #26124f;
+      }
+      .log-badge.APP {
+        background: #0a2810;
+        color: #4ade80;
+        border: 1px solid #0e3516;
+      }
 
       .log-status-code {
-        font-size: 11px; font-weight: 700;
-        min-width: 32px; text-align: center;
-        padding: 2px 6px; border-radius: 5px;
+        font-size: 11px;
+        font-weight: 700;
+        min-width: 32px;
+        text-align: center;
+        padding: 2px 6px;
+        border-radius: 5px;
       }
-      .ls2xx { color: #4ade80; background: #0a2210; border: 1px solid #0e3016; }
-      .ls3xx { color: #60a5fa; background: #0a1830; border: 1px solid #0e2240; }
-      .ls4xx { color: #fbbf24; background: #2a1e00; border: 1px solid #3a2800; }
-      .ls5xx { color: #f87171; background: #2e0d0d; border: 1px solid #3d1111; }
+      .ls2xx {
+        color: #4ade80;
+        background: #0a2210;
+        border: 1px solid #0e3016;
+      }
+      .ls3xx {
+        color: #60a5fa;
+        background: #0a1830;
+        border: 1px solid #0e2240;
+      }
+      .ls4xx {
+        color: #fbbf24;
+        background: #2a1e00;
+        border: 1px solid #3a2800;
+      }
+      .ls5xx {
+        color: #f87171;
+        background: #2e0d0d;
+        border: 1px solid #3d1111;
+      }
 
-      .log-row-url  { flex: 1; color: #aaa; font-family: 'SF Mono','Fira Mono',monospace; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .log-row-ms   { color: var(--log-muted); font-size: 10px; min-width: 60px; text-align: right; font-family: monospace; }
-      .log-row-ts   { color: #333348; font-size: 10px; min-width: 90px; text-align: right; font-family: monospace; }
-      .log-chevron  { color: var(--log-muted); font-size: 10px; margin-left: 2px; transition: transform .2s; }
-      .log-chevron.open { transform: rotate(90deg); }
+      .log-row-url {
+        flex: 1;
+        color: #aaa;
+        font-family: "SF Mono", "Fira Mono", monospace;
+        font-size: 11px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .log-row-ms {
+        color: var(--log-muted);
+        font-size: 10px;
+        min-width: 60px;
+        text-align: right;
+        font-family: monospace;
+      }
+      .log-row-ts {
+        color: #333348;
+        font-size: 10px;
+        min-width: 90px;
+        text-align: right;
+        font-family: monospace;
+      }
+      .log-chevron {
+        color: var(--log-muted);
+        font-size: 10px;
+        margin-left: 2px;
+        transition: transform 0.2s;
+      }
+      .log-chevron.open {
+        transform: rotate(90deg);
+      }
 
       .log-row-detail {
         background: #09090e;
         border-top: 1px solid var(--log-border);
-        display: none; padding: 12px 14px;
+        display: none;
+        padding: 12px 14px;
       }
-      .log-row-detail.open { display: block; }
+      .log-row-detail.open {
+        display: block;
+      }
 
-      .log-copy-strip { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
-      .log-copy-btn {
-        background: var(--log-surface2); border: 1px solid var(--log-border2);
-        color: var(--log-muted); padding: 0 10px; border-radius: 6px;
-        font-size: 10px; height: 26px; cursor: pointer;
-        display: flex; align-items: center; gap: 5px;
-        transition: all .15s; font-family: inherit;
+      .log-copy-strip {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
       }
-      .log-copy-btn:hover { color: var(--log-text); border-color: #3a3a50; background: #1a1a2a; }
-      .log-copy-btn.copied { color: var(--log-green); border-color: #163d16; background: #091a09; }
+      .log-copy-btn {
+        background: var(--log-surface2);
+        border: 1px solid var(--log-border2);
+        color: var(--log-muted);
+        padding: 0 10px;
+        border-radius: 6px;
+        font-size: 10px;
+        height: 26px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        transition: all 0.15s;
+        font-family: inherit;
+      }
+      .log-copy-btn:hover {
+        color: var(--log-text);
+        border-color: #3a3a50;
+        background: #1a1a2a;
+      }
+      .log-copy-btn.copied {
+        color: var(--log-green);
+        border-color: #163d16;
+        background: #091a09;
+      }
 
       pre.log-json-block {
         background: #07070d;
         border: 1px solid var(--log-border);
-        border-radius: 8px; padding: 12px 14px;
-        font-family: 'SF Mono','Fira Mono',monospace;
-        font-size: 11px; color: #c9d1d9;
-        white-space: pre-wrap; word-break: break-all;
-        max-height: 340px; overflow-y: auto; line-height: 1.6;
+        border-radius: 8px;
+        padding: 12px 14px;
+        font-family: "SF Mono", "Fira Mono", monospace;
+        font-size: 11px;
+        color: #c9d1d9;
+        white-space: pre-wrap;
+        word-break: break-all;
+        max-height: 340px;
+        overflow-y: auto;
+        line-height: 1.6;
+      }
+
+      /* ── Treatments Section ── */
+      .treatments-section {
+        margin-bottom: 2rem;
+      }
+
+      .treatments-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .treatments-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        border-bottom: 2px solid #e1e5e9;
+        padding-bottom: 1rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .treatments-header-left h2 {
+        font-size: 1.25rem;
+        color: #333;
+        margin-bottom: 0.25rem;
+      }
+
+      .treatments-header-left p {
+        color: #666;
+        font-size: 0.9rem;
+      }
+
+      .treatments-stats {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+      }
+
+      .treatments-stat-badge {
+        background: #f8f9fa;
+        border: 1px solid #e1e5e9;
+        border-radius: 20px;
+        padding: 0.25rem 0.75rem;
+        font-size: 0.8rem;
+        color: #555;
+        font-weight: 500;
+      }
+
+      .treatments-stat-badge.active {
+        background: #d4edda;
+        border-color: #c3e6cb;
+        color: #155724;
+      }
+
+      .treatments-search {
+        width: 100%;
+        padding: 0.6rem 0.75rem;
+        border: 2px solid #e1e5e9;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+        transition: border-color 0.3s;
+        box-sizing: border-box;
+      }
+
+      .treatments-search:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .treatments-list {
+        max-height: 420px;
+        overflow-y: auto;
+        border: 1px solid #e1e5e9;
+        border-radius: 8px;
+      }
+
+      .treatment-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #f0f2f5;
+        transition: background 0.15s;
+        cursor: pointer;
+      }
+
+      .treatment-item:last-child {
+        border-bottom: none;
+      }
+
+      .treatment-item:hover {
+        background: #f8f9fa;
+      }
+
+      .treatment-item.removing {
+        opacity: 0.4;
+        pointer-events: none;
+      }
+
+      .treatment-checkbox {
+        width: 17px;
+        height: 17px;
+        cursor: pointer;
+        accent-color: #667eea;
+        flex-shrink: 0;
+      }
+
+      .treatment-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .treatment-name {
+        font-weight: 500;
+        color: #333;
+        font-size: 0.95rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .treatment-meta {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.2rem;
+        flex-wrap: wrap;
+      }
+
+      .treatment-tag {
+        background: #eef0fb;
+        color: #667eea;
+        padding: 0.1rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+      }
+
+      .treatment-tag.duration {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .treatments-empty {
+        text-align: center;
+        padding: 2rem;
+        color: #999;
+        font-size: 0.9rem;
+      }
+
+      .treatments-loading {
+        text-align: center;
+        padding: 2rem;
+        color: #666;
+        font-size: 0.9rem;
+      }
+
+      .treatments-note {
+        margin-top: 1rem;
+        padding: 0.75rem 1rem;
+        background: #fff8e1;
+        border: 1px solid #ffd54f;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        color: #7b5e00;
       }
     </style>
   </head>
@@ -797,8 +1185,49 @@
         </div>
       </div>
 
+      <!-- Treatments Manager -->
+      <div class="treatments-section">
+        <div class="treatments-card">
+          <div class="treatments-header">
+            <div class="treatments-header-left">
+              <h2>Treatments Manager</h2>
+              <p>Uncheck a treatment to remove it from the database</p>
+            </div>
+            <div class="treatments-stats">
+              <span
+                class="treatments-stat-badge active"
+                id="treatments-active-count"
+                >— active</span
+              >
+              <span class="treatments-stat-badge" id="treatments-total-count"
+                >— total</span
+              >
+            </div>
+          </div>
+
+          <input
+            class="treatments-search"
+            type="text"
+            id="treatments-search"
+            placeholder="Search treatments…"
+            oninput="treatmentsApplyFilter()"
+          />
+
+          <div class="treatments-list" id="treatments-list">
+            <div class="treatments-loading">Loading treatments…</div>
+          </div>
+
+          <div class="treatments-note">
+            Unchecking a treatment removes it from the database immediately. To
+            restore removed treatments, click
+            <strong>Repopulate Local Data</strong> above — this re-fetches all
+            treatments from the remote source and resets all selections.
+          </div>
+        </div>
+      </div>
+
       <!-- Server Logs -->
-      <div class="logs-section">
+      <!-- <div class="logs-section">
         <div class="log-topbar">
           <div class="log-topbar-logo">
             <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -854,7 +1283,7 @@
           <span id="stat-refresh" style="font-size:10px;color:#2a2a40;">auto-refresh 10s</span>
         </div>
         <div id="log-list"></div>
-      </div>
+      </div> -->
     </div>
 
     <script>
@@ -884,6 +1313,7 @@
             } else {
               console.log("Dashboard: Auth successful, loading dashboard");
               logsStart();
+              treatmentsLoad();
             }
           })
           .catch(() => {
@@ -922,6 +1352,7 @@
 
           successMsg.textContent = "Data repopulation completed successfully!";
           successMsg.style.display = "block";
+          treatmentsLoad();
         } catch (error) {
           console.error("Repopulate error:", error);
           errorMsg.textContent =
@@ -938,37 +1369,70 @@
       let logsAll = [];
       let logsFiltered = [];
 
-      const logsEsc   = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      const logsSc    = s => !s ? '' : s < 300 ? 'ls2xx' : s < 400 ? 'ls3xx' : s < 500 ? 'ls4xx' : 'ls5xx';
-      const logsFmtMs = n => n != null ? n < 1000 ? n.toFixed(0)+'ms' : (n/1000).toFixed(2)+'s' : '';
-      const logsFmtTs = ts => {
+      const logsEsc = (s) =>
+        String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      const logsSc = (s) =>
+        !s
+          ? ""
+          : s < 300
+            ? "ls2xx"
+            : s < 400
+              ? "ls3xx"
+              : s < 500
+                ? "ls4xx"
+                : "ls5xx";
+      const logsFmtMs = (n) =>
+        n != null
+          ? n < 1000
+            ? n.toFixed(0) + "ms"
+            : (n / 1000).toFixed(2) + "s"
+          : "";
+      const logsFmtTs = (ts) => {
         const d = new Date(ts);
-        return d.toLocaleTimeString('en-CA', { hour12: false })
-          + '.' + String(d.getMilliseconds()).padStart(3,'0');
+        return (
+          d.toLocaleTimeString("en-CA", { hour12: false }) +
+          "." +
+          String(d.getMilliseconds()).padStart(3, "0")
+        );
       };
 
       function logsMethodBadge(log) {
-        if (log.type === 'axios') return '<span class="log-badge AXIOS">AXIOS</span>';
-        if (log.type === 'app')   return '<span class="log-badge APP">APP</span>';
-        if (log.method) return `<span class="log-badge ${log.method}">${logsEsc(log.method)}</span>`;
-        return '';
+        if (log.type === "axios")
+          return '<span class="log-badge AXIOS">AXIOS</span>';
+        if (log.type === "app") return '<span class="log-badge APP">APP</span>';
+        if (log.method)
+          return `<span class="log-badge ${log.method}">${logsEsc(log.method)}</span>`;
+        return "";
       }
 
       function logsRender(logs) {
         logsFiltered = logs;
-        const el = document.getElementById('log-list');
+        const el = document.getElementById("log-list");
         if (!logs.length) {
           el.innerHTML = `<div class="log-empty"><div class="log-empty-icon">◎</div><p>No logs match the current filters</p></div>`;
           return;
         }
-        el.innerHTML = logs.map((log, i) => {
-          const label  = log.url || log.message || '—';
-          const rowCls = [log.type, log.level === 'error' ? 'error' : log.level === 'warn' ? 'warn' : ''].filter(Boolean).join(' ');
-          return `
+        el.innerHTML = logs
+          .map((log, i) => {
+            const label = log.url || log.message || "—";
+            const rowCls = [
+              log.type,
+              log.level === "error"
+                ? "error"
+                : log.level === "warn"
+                  ? "warn"
+                  : "",
+            ]
+              .filter(Boolean)
+              .join(" ");
+            return `
 <div class="log-row ${rowCls}">
   <div class="log-row-summary" onclick="logsToggle(${i})">
     ${logsMethodBadge(log)}
-    ${log.status ? `<span class="log-status-code ${logsSc(log.status)}">${log.status}</span>` : ''}
+    ${log.status ? `<span class="log-status-code ${logsSc(log.status)}">${log.status}</span>` : ""}
     <span class="log-row-url">${logsEsc(label)}</span>
     <span class="log-row-ms">${logsFmtMs(log.responseTimeMs)}</span>
     <span class="log-row-ts">${logsFmtTs(log.timestamp)}</span>
@@ -986,51 +1450,60 @@
     <pre class="log-json-block">${logsEsc(JSON.stringify(log, null, 2))}</pre>
   </div>
 </div>`;
-        }).join('');
+          })
+          .join("");
       }
 
       function logsToggle(i) {
-        document.getElementById('log-det-'  + i).classList.toggle('open');
-        document.getElementById('log-chev-' + i).classList.toggle('open');
+        document.getElementById("log-det-" + i).classList.toggle("open");
+        document.getElementById("log-chev-" + i).classList.toggle("open");
       }
 
       function logsCopy(e, i, field) {
         e.stopPropagation();
         const log = logsFiltered[i];
-        let text = '';
-        if (field === 'json')       text = JSON.stringify(log, null, 2);
-        else if (field === 'curl') {
+        let text = "";
+        if (field === "json") text = JSON.stringify(log, null, 2);
+        else if (field === "curl") {
           const base = window.location.origin;
-          const url  = (log.url || '').startsWith('http') ? log.url : base + (log.url || '');
-          const bodyPart = log.reqBody ? ` -d '${JSON.stringify(log.reqBody)}'` : '';
-          text = `curl -X ${log.method || 'GET'} '${url}'${bodyPart} -H 'Content-Type: application/json'`;
-        }
-        else if (field === 'url')   text = log.url || '';
-        else if (field === 'req')   text = JSON.stringify(log.reqBody ?? null, null, 2);
-        else if (field === 'res')   text = log.resBody || '(empty)';
-        else if (field === 'ip')    text = log.ip || '';
+          const url = (log.url || "").startsWith("http")
+            ? log.url
+            : base + (log.url || "");
+          const bodyPart = log.reqBody
+            ? ` -d '${JSON.stringify(log.reqBody)}'`
+            : "";
+          text = `curl -X ${log.method || "GET"} '${url}'${bodyPart} -H 'Content-Type: application/json'`;
+        } else if (field === "url") text = log.url || "";
+        else if (field === "req")
+          text = JSON.stringify(log.reqBody ?? null, null, 2);
+        else if (field === "res") text = log.resBody || "(empty)";
+        else if (field === "ip") text = log.ip || "";
 
         navigator.clipboard.writeText(text).then(() => {
           const btn = e.currentTarget;
           const orig = btn.innerHTML;
-          btn.innerHTML = '✓ Copied';
-          btn.classList.add('copied');
-          setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('copied'); }, 1600);
+          btn.innerHTML = "✓ Copied";
+          btn.classList.add("copied");
+          setTimeout(() => {
+            btn.innerHTML = orig;
+            btn.classList.remove("copied");
+          }, 1600);
         });
       }
 
       function logsApplyFilters() {
-        const q      = document.getElementById('f-search').value.toLowerCase();
-        const level  = document.getElementById('f-level').value;
-        const type   = document.getElementById('f-type').value;
-        const method = document.getElementById('f-method').value;
-        const status = document.getElementById('f-status').value;
-        const out = logsAll.filter(l => {
-          if (level  && l.level  !== level)                         return false;
-          if (type   && l.type   !== type)                          return false;
-          if (method && l.method !== method)                        return false;
-          if (status && !String(l.status || '').startsWith(status)) return false;
-          if (q && !JSON.stringify(l).toLowerCase().includes(q))    return false;
+        const q = document.getElementById("f-search").value.toLowerCase();
+        const level = document.getElementById("f-level").value;
+        const type = document.getElementById("f-type").value;
+        const method = document.getElementById("f-method").value;
+        const status = document.getElementById("f-status").value;
+        const out = logsAll.filter((l) => {
+          if (level && l.level !== level) return false;
+          if (type && l.type !== type) return false;
+          if (method && l.method !== method) return false;
+          if (status && !String(l.status || "").startsWith(status))
+            return false;
+          if (q && !JSON.stringify(l).toLowerCase().includes(q)) return false;
           return true;
         });
         logsUpdateStatusBar(out.length);
@@ -1038,38 +1511,47 @@
       }
 
       function logsUpdateStatusBar(shown) {
-        document.getElementById('stat-main').textContent =
-          'Showing ' + shown + ' of ' + logsAll.length + ' entries';
+        document.getElementById("stat-main").textContent =
+          "Showing " + shown + " of " + logsAll.length + " entries";
         const counts = { info: 0, warn: 0, error: 0 };
-        logsAll.forEach(l => { if (counts[l.level] !== undefined) counts[l.level]++; });
-        document.getElementById('stat-chips').innerHTML = [
-          counts.info  ? `<span class="log-stat-chip"><span class="log-dot log-dot-blue"></span>${counts.info} info</span>`   : '',
-          counts.warn  ? `<span class="log-stat-chip"><span class="log-dot log-dot-yellow"></span>${counts.warn} warn</span>` : '',
-          counts.error ? `<span class="log-stat-chip"><span class="log-dot log-dot-red"></span>${counts.error} error</span>`  : '',
-        ].join('');
+        logsAll.forEach((l) => {
+          if (counts[l.level] !== undefined) counts[l.level]++;
+        });
+        document.getElementById("stat-chips").innerHTML = [
+          counts.info
+            ? `<span class="log-stat-chip"><span class="log-dot log-dot-blue"></span>${counts.info} info</span>`
+            : "",
+          counts.warn
+            ? `<span class="log-stat-chip"><span class="log-dot log-dot-yellow"></span>${counts.warn} warn</span>`
+            : "",
+          counts.error
+            ? `<span class="log-stat-chip"><span class="log-dot log-dot-red"></span>${counts.error} error</span>`
+            : "",
+        ].join("");
       }
 
       async function logsLoad() {
-        const tick = document.getElementById('stat-refresh');
-        tick.textContent = 'refreshing…';
+        const tick = document.getElementById("stat-refresh");
+        tick.textContent = "refreshing…";
         try {
-          const res  = await fetch('/admin/logs/api?limit=500', {
+          const res = await fetch("/admin/logs/api?limit=500", {
             headers: { Authorization: authCredentials },
           });
           const data = await res.json();
           logsAll = data.logs || [];
           logsApplyFilters();
         } catch (err) {
-          document.getElementById('stat-main').textContent = 'Error: ' + err.message;
+          document.getElementById("stat-main").textContent =
+            "Error: " + err.message;
         } finally {
-          tick.textContent = 'auto-refresh 10s';
+          tick.textContent = "auto-refresh 10s";
         }
       }
 
       async function logsConfirmClear() {
-        if (!confirm('Clear all in-memory logs?')) return;
-        await fetch('/admin/logs/api', {
-          method: 'DELETE',
+        if (!confirm("Clear all in-memory logs?")) return;
+        await fetch("/admin/logs/api", {
+          method: "DELETE",
           headers: { Authorization: authCredentials },
         });
         logsLoad();
@@ -1080,6 +1562,134 @@
       function logsStart() {
         logsLoad();
         logsInterval = setInterval(logsLoad, 10000);
+      }
+
+      // ── Treatments Manager ───────────────────────────────────────────────────
+      let treatmentsAll = [];
+
+      async function treatmentsLoad() {
+        const listEl = document.getElementById("treatments-list");
+        listEl.innerHTML =
+          '<div class="treatments-loading">Loading treatments…</div>';
+        try {
+          const res = await fetch("/admin/treatments", {
+            headers: { Authorization: authCredentials },
+          });
+          const data = await res.json();
+          if (!data.ok)
+            throw new Error(data.error || "Failed to load treatments");
+          treatmentsAll = data.treatments || [];
+          treatmentsUpdateCounts();
+          treatmentsApplyFilter();
+        } catch (err) {
+          listEl.innerHTML = `<div class="treatments-empty">Error loading treatments: ${err.message}</div>`;
+        }
+      }
+
+      function treatmentsUpdateCounts() {
+        document.getElementById("treatments-total-count").textContent =
+          treatmentsAll.length + " total";
+        document.getElementById("treatments-active-count").textContent =
+          treatmentsAll.length + " active";
+      }
+
+      function treatmentsApplyFilter() {
+        const q = document
+          .getElementById("treatments-search")
+          .value.toLowerCase()
+          .trim();
+        const filtered = q
+          ? treatmentsAll.filter((t) =>
+              (t.TreatmentName || "").toLowerCase().includes(q),
+            )
+          : treatmentsAll;
+        treatmentsRender(filtered);
+      }
+
+      function treatmentsRender(list) {
+        const listEl = document.getElementById("treatments-list");
+        if (!list.length) {
+          listEl.innerHTML =
+            '<div class="treatments-empty">No treatments found</div>';
+          return;
+        }
+        listEl.innerHTML = list
+          .map((t) => {
+            const name = t.TreatmentName || "Unnamed";
+            const category =
+              t.Category && t.Category.Name ? t.Category.Name : "";
+            const duration = t.TotalDuration ? t.TotalDuration + " min" : "";
+            return `
+<div class="treatment-item" id="treatment-item-${t.ID}" onclick="treatmentToggle(event, ${t.ID})">
+  <input
+    class="treatment-checkbox"
+    type="checkbox"
+    id="treatment-cb-${t.ID}"
+    checked
+    onclick="treatmentToggle(event, ${t.ID})"
+  />
+  <div class="treatment-info">
+    <div class="treatment-name">${escHtml(name)}</div>
+    <div class="treatment-meta">
+      ${category ? `<span class="treatment-tag">${escHtml(category)}</span>` : ""}
+      ${duration ? `<span class="treatment-tag duration">${escHtml(duration)}</span>` : ""}
+    </div>
+  </div>
+</div>`;
+          })
+          .join("");
+      }
+
+      function escHtml(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      async function treatmentToggle(event, treatmentId) {
+        event.stopPropagation();
+        const cb = document.getElementById("treatment-cb-" + treatmentId);
+        const item = document.getElementById("treatment-item-" + treatmentId);
+
+        // The checkbox reflects what we're about to do — if it just got unchecked, remove
+        // If it's being re-checked we don't allow that (user must repopulate)
+        if (cb.checked) {
+          // Was just checked via click on row — don't do anything (already in DB)
+          return;
+        }
+
+        // Confirm before removing
+        const treatmentName = item.querySelector(".treatment-name").textContent;
+        if (
+          !confirm(
+            `Remove "${treatmentName}" from the database?\n\nTo restore it, use "Repopulate Local Data".`,
+          )
+        ) {
+          cb.checked = true;
+          return;
+        }
+
+        item.classList.add("removing");
+
+        try {
+          const res = await fetch(`/admin/treatments/${treatmentId}`, {
+            method: "DELETE",
+            headers: { Authorization: authCredentials },
+          });
+          const data = await res.json();
+          if (!data.ok) throw new Error(data.error || "Delete failed");
+
+          // Remove from local array and re-render
+          treatmentsAll = treatmentsAll.filter((t) => t.ID !== treatmentId);
+          treatmentsUpdateCounts();
+          treatmentsApplyFilter();
+        } catch (err) {
+          alert("Failed to remove treatment: " + err.message);
+          cb.checked = true;
+          item.classList.remove("removing");
+        }
       }
     </script>
   </body>

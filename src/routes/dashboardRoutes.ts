@@ -2,6 +2,10 @@ import { Router, Request, Response } from "express";
 import path from "path";
 import { clearLogs, getLogs, LogEntry } from "../middlewares/loggerMiddleware";
 import { authMiddleware } from "../auth/auth";
+import {
+  getTreatmentsForDashboard,
+  deleteTreatmentFromDB,
+} from "../controllers/treatmentController";
 
 const router = Router();
 
@@ -37,6 +41,11 @@ router.delete("/logs/api", authMiddleware, (req: Request, res: Response) => {
   clearLogs();
   res.json({ ok: true, message: "Logs cleared" });
 });
+
+// ── Treatment Management API (protected) ─────────────────────────────────────
+
+router.get("/treatments", authMiddleware, getTreatmentsForDashboard);
+router.delete("/treatments/:id", authMiddleware, deleteTreatmentFromDB);
 
 /**
  * @route   GET /login

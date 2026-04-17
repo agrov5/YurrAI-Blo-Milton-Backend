@@ -461,3 +461,7 @@ export interface PreferredPhoneType {
   ID: number;
   Name: string;
 }
+
+export interface DeleteTreatmentParams {
+  id: string;
+}
