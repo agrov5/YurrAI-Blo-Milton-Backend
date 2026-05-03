@@ -12,37 +12,57 @@
       }
 
       body {
-        font-family: "Arial", sans-serif;
-        background: #f5f7fa;
+        font-family: "Inter", "Arial", sans-serif;
+        background:
+          radial-gradient(
+            circle at top left,
+            rgba(81, 102, 255, 0.14),
+            transparent 28%
+          ),
+          radial-gradient(
+            circle at bottom right,
+            rgba(255, 115, 130, 0.12),
+            transparent 22%
+          ),
+          #05070f;
         min-height: 100vh;
+        color: #eef3ff;
       }
 
       .header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 1rem 2rem;
+        background: rgba(10, 16, 32, 0.95);
+        color: #f8fbff;
+        padding: 1.25rem 2rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 20px 80px rgba(0, 0, 0, 0.35);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(16px);
       }
 
       .header h1 {
-        font-size: 1.5rem;
+        font-size: 1.6rem;
+        letter-spacing: 0.03em;
       }
 
       .logout-btn {
-        background: rgba(255, 255, 255, 0.2);
-        border: 1px solid rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.14);
         color: white;
-        padding: 0.5rem 1rem;
-        border-radius: 5px;
+        padding: 0.65rem 1.2rem;
+        border-radius: 999px;
         cursor: pointer;
-        transition: background 0.3s;
+        transition:
+          transform 0.25s ease,
+          background 0.25s ease,
+          box-shadow 0.25s ease;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
       }
 
       .logout-btn:hover {
-        background: rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.16);
+        transform: translateY(-1px);
       }
 
       .container {
@@ -53,39 +73,136 @@
 
       .dashboard-grid {
         display: flex;
-        justify-content: center;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1.5rem;
+        flex-wrap: wrap;
         margin-bottom: 2rem;
       }
 
       .card {
-        background: white;
-        border-radius: 10px;
-        padding: 1.5rem;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        transition: transform 0.2s;
-        max-width: 500px;
-        width: 100%;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 24px;
+        padding: 1.75rem;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.28);
+        transition:
+          transform 0.25s ease,
+          border-color 0.25s ease,
+          box-shadow 0.25s ease;
+        flex: 1 1 420px;
+        min-width: 300px;
+        backdrop-filter: blur(18px);
       }
 
       .card:hover {
-        transform: translateY(-2px);
+        transform: translateY(-8px);
+        border-color: rgba(167, 209, 255, 0.28);
+        box-shadow: 0 35px 90px rgba(0, 0, 0, 0.35);
       }
 
       .card-header {
-        border-bottom: 2px solid #e1e5e9;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
         padding-bottom: 1rem;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1.25rem;
       }
 
       .card-title {
-        font-size: 1.25rem;
-        color: #333;
-        margin-bottom: 0.5rem;
+        font-size: 1.4rem;
+        color: #f8fbff;
+        margin-bottom: 0.4rem;
       }
 
       .card-subtitle {
-        color: #666;
-        font-size: 0.9rem;
+        color: #bec8ff;
+        font-size: 0.95rem;
+      }
+
+      .card-text {
+        color: #d9e4ff;
+        line-height: 1.75;
+        margin-bottom: 1rem;
+      }
+
+      .admin-controls {
+        text-align: center;
+      }
+
+      .repopulate-btn {
+        background: linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        font-size: 1.05rem;
+        border-radius: 14px;
+        cursor: pointer;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s,
+          opacity 0.2s;
+        margin: 1rem 0;
+        box-shadow: 0 18px 30px rgba(124, 58, 237, 0.25);
+      }
+
+      .repopulate-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 24px 40px rgba(124, 58, 237, 0.24);
+      }
+
+      .repopulate-btn:disabled {
+        background: rgba(255, 255, 255, 0.08);
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+        opacity: 0.6;
+      }
+
+      .call-btn {
+        background: linear-gradient(135deg, #ff7a18 0%, #ff4f55 100%);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        font-size: 1.1rem;
+        border-radius: 14px;
+        cursor: pointer;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+        width: 100%;
+        box-shadow: 0 18px 30px rgba(255, 79, 85, 0.24);
+      }
+
+      .call-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 24px 40px rgba(255, 79, 85, 0.28);
+      }
+
+      .call-btn:disabled {
+        background: #555;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .success-message,
+      .error-message {
+        padding: 1rem;
+        border-radius: 12px;
+        margin: 1rem 0;
+        display: none;
+        font-weight: 500;
+      }
+
+      .success-message {
+        background: rgba(34, 197, 94, 0.12);
+        color: #b8ffe5;
+        border: 1px solid rgba(34, 197, 94, 0.25);
+      }
+
+      .error-message {
+        background: rgba(239, 68, 68, 0.12);
+        color: #ffcccb;
+        border: 1px solid rgba(239, 68, 68, 0.25);
       }
 
       .admin-controls {
@@ -989,29 +1106,32 @@
       }
 
       .treatments-card {
-        background: white;
-        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 24px;
         padding: 1.5rem;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.22);
+        backdrop-filter: blur(16px);
       }
 
       .treatments-header {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
-        border-bottom: 2px solid #e1e5e9;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
         padding-bottom: 1rem;
         margin-bottom: 1.5rem;
+        gap: 1rem;
       }
 
       .treatments-header-left h2 {
         font-size: 1.25rem;
-        color: #333;
+        color: #f8fbff;
         margin-bottom: 0.25rem;
       }
 
       .treatments-header-left p {
-        color: #666;
+        color: #cbd5ff;
         font-size: 0.9rem;
       }
 
@@ -1019,55 +1139,65 @@
         display: flex;
         gap: 1rem;
         align-items: center;
+        flex-wrap: wrap;
       }
 
       .treatments-stat-badge {
-        background: #f8f9fa;
-        border: 1px solid #e1e5e9;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 20px;
         padding: 0.25rem 0.75rem;
         font-size: 0.8rem;
-        color: #555;
+        color: #d8e2ff;
         font-weight: 500;
       }
 
       .treatments-stat-badge.active {
-        background: #d4edda;
-        border-color: #c3e6cb;
-        color: #155724;
+        background: rgba(99, 102, 241, 0.14);
+        border-color: rgba(99, 102, 241, 0.28);
+        color: #d8e2ff;
       }
 
       .treatments-search {
         width: 100%;
-        padding: 0.6rem 0.75rem;
-        border: 2px solid #e1e5e9;
-        border-radius: 6px;
-        font-size: 0.9rem;
+        padding: 0.75rem 0.85rem;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.05);
+        color: #eef3ff;
+        border-radius: 12px;
+        font-size: 0.95rem;
         margin-bottom: 1rem;
-        transition: border-color 0.3s;
+        transition:
+          border-color 0.3s,
+          box-shadow 0.3s;
         box-sizing: border-box;
       }
 
       .treatments-search:focus {
         outline: none;
-        border-color: #667eea;
+        border-color: #7c3aed;
+        box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.12);
       }
 
       .treatments-list {
         max-height: 420px;
         overflow-y: auto;
-        border: 1px solid #e1e5e9;
-        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.03);
       }
 
       .treatment-item {
         display: flex;
         align-items: center;
         gap: 0.75rem;
-        padding: 0.75rem 1rem;
-        border-bottom: 1px solid #f0f2f5;
-        transition: background 0.15s;
+        padding: 0.85rem 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        transition:
+          background 0.18s,
+          transform 0.18s;
         cursor: pointer;
+        background: rgba(255, 255, 255, 0.02);
       }
 
       .treatment-item:last-child {
@@ -1075,19 +1205,20 @@
       }
 
       .treatment-item:hover {
-        background: #f8f9fa;
+        background: rgba(255, 255, 255, 0.08);
+        transform: translateX(1px);
       }
 
       .treatment-item.removing {
-        opacity: 0.4;
+        opacity: 0.45;
         pointer-events: none;
       }
 
       .treatment-checkbox {
-        width: 17px;
-        height: 17px;
+        width: 18px;
+        height: 18px;
         cursor: pointer;
-        accent-color: #667eea;
+        accent-color: #7c3aed;
         flex-shrink: 0;
       }
 
@@ -1097,8 +1228,8 @@
       }
 
       .treatment-name {
-        font-weight: 500;
-        color: #333;
+        font-weight: 600;
+        color: #f8fbff;
         font-size: 0.95rem;
         white-space: nowrap;
         overflow: hidden;
@@ -1113,40 +1244,40 @@
       }
 
       .treatment-tag {
-        background: #eef0fb;
-        color: #667eea;
-        padding: 0.1rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.75rem;
+        background: rgba(99, 102, 241, 0.14);
+        color: #d8e2ff;
+        padding: 0.1rem 0.55rem;
+        border-radius: 999px;
+        font-size: 0.8rem;
       }
 
       .treatment-tag.duration {
-        background: #fff3cd;
-        color: #856404;
+        background: rgba(250, 204, 21, 0.14);
+        color: #ffeb99;
       }
 
       .treatments-empty {
         text-align: center;
         padding: 2rem;
-        color: #999;
-        font-size: 0.9rem;
+        color: #a1a9c9;
+        font-size: 0.95rem;
       }
 
       .treatments-loading {
         text-align: center;
         padding: 2rem;
-        color: #666;
-        font-size: 0.9rem;
+        color: #a1a9c9;
+        font-size: 0.95rem;
       }
 
       .treatments-note {
         margin-top: 1rem;
-        padding: 0.75rem 1rem;
-        background: #fff8e1;
-        border: 1px solid #ffd54f;
-        border-radius: 6px;
-        font-size: 0.85rem;
-        color: #7b5e00;
+        padding: 0.95rem 1rem;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        font-size: 0.9rem;
+        color: #d4d9ff;
       }
     </style>
   </head>
@@ -1177,11 +1308,31 @@
             <div id="success-message" class="success-message"></div>
             <div id="error-message" class="error-message"></div>
 
-            <p style="color: #666; font-size: 0.9rem; margin-top: 1rem">
+            <p class="card-text">
               This will refresh the local database with the latest data from the
               remote source.
             </p>
           </div>
+        </div>
+
+        <!-- Meeting Booking Card -->
+        <div class="card meeting-card">
+          <div class="card-header">
+            <h2 class="card-title">Book a Meeting</h2>
+            <p class="card-subtitle">Schedule a call with me using Cal.com</p>
+          </div>
+          <p class="card-text">
+          
+          </p>
+          <button
+            class="call-btn"
+            id="booking-button"
+            data-cal-link="yurrai/client-meeting"
+            data-cal-namespace="client-meeting"
+            data-cal-config='{"layout":"month_view","useSlotsViewOnSmallScreen":"true"}'
+          >
+            Schedule a Meeting with Me
+          </button>
         </div>
       </div>
 
@@ -1691,6 +1842,47 @@
           item.classList.remove("removing");
         }
       }
+    </script>
+
+    <script type="text/javascript">
+      (function (C, A, L) {
+        let p = function (a, ar) {
+          a.q.push(ar);
+        };
+        let d = C.document;
+        C.Cal =
+          C.Cal ||
+          function () {
+            let cal = C.Cal;
+            let ar = arguments;
+            if (!cal.loaded) {
+              cal.ns = {};
+              cal.q = cal.q || [];
+              d.head.appendChild(d.createElement("script")).src = A;
+              cal.loaded = true;
+            }
+            if (ar[0] === L) {
+              const api = function () {
+                p(api, arguments);
+              };
+              const namespace = ar[1];
+              api.q = api.q || [];
+              if (typeof namespace === "string") {
+                cal.ns[namespace] = cal.ns[namespace] || api;
+                p(cal.ns[namespace], ar);
+                p(cal, ["initNamespace", namespace]);
+              } else p(cal, ar);
+              return;
+            }
+            p(cal, ar);
+          };
+      })(window, "https://app.cal.com/embed/embed.js", "init");
+
+      Cal("init", "client-meeting", { origin: "https://app.cal.com" });
+      Cal.ns["client-meeting"]("ui", {
+        hideEventTypeDetails: false,
+        layout: "month_view",
+      });
     </script>
   </body>
 </html>
