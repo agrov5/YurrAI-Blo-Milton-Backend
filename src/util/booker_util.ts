@@ -211,7 +211,7 @@ export const findTreatments = async () => {
         },
       },
     );
-    console.log(response.data)
+    console.log(response.data);
     return response.data;
   } catch (error) {
     console.error("Error finding treatments:", error);
@@ -663,11 +663,10 @@ export const createAppointment = async (
                 continue;
               }
 
-              // Rule 2: requested start must be before block end (service can extend beyond if needed)
-              // We only need to ensure the appointment STARTS within the available window
-              if (requestedStart >= blockEnd) {
+              // Rule 2: requested end must be at or before block end (appointment must be fully contained within the block)
+              if (requestedEnd > blockEnd) {
                 console.log(
-                  `    ❌ Rule 2 failed: requested start is at or after block end`,
+                  `    ❌ Rule 2 failed: requested end is after block end`,
                 );
                 continue;
               }
@@ -791,8 +790,7 @@ export const createAppointment = async (
     const [existingAppointments, fetchedCcInfo] = await Promise.all([
       getCustomerAppointments({
         customerId: customer.CustomerID,
-        date: appointment.appointmentDate,
-        time: appointment.startTime,
+        fromStartDate: appointment.appointmentDate,
       }),
       getCustomerCreditCardInfo(customer.Customer?.ID || 0),
     ]);
@@ -802,17 +800,45 @@ export const createAppointment = async (
       sendSMS = false;
     }
 
-    const isBookedAppointment = Array.isArray(existingAppointments)
-      ? existingAppointments.some(
-          (existingAppointment) =>
-            existingAppointment.Status?.Name?.toLowerCase() === "booked",
-        )
+    // Check for overlapping appointments
+    const newStart = new Date(
+      convert24toISO(appointment.startTime, appointment.appointmentDate),
+    );
+    const newEnd = new Date(
+      await determineEndTime(
+        appointment.startTime,
+        treatmentID || 0,
+        appointment.appointmentDate,
+      ),
+    );
+
+    const hasOverlappingAppointment = Array.isArray(existingAppointments)
+      ? existingAppointments.some((existingAppointment) => {
+          if (existingAppointment.Status?.Name?.toLowerCase() !== "booked")
+            return false;
+          if (
+            !existingAppointment.StartDateTimeOffset ||
+            !existingAppointment.EndDateTimeOffset
+          )
+            return false;
+
+          const existingStart = new Date(
+            existingAppointment.StartDateTimeOffset,
+          );
+          const existingEnd = new Date(existingAppointment.EndDateTimeOffset);
+
+          // Check for overlap: intervals [newStart, newEnd) and [existingStart, existingEnd) overlap if max(start) < min(end)
+          const overlap =
+            Math.max(newStart.getTime(), existingStart.getTime()) <
+            Math.min(newEnd.getTime(), existingEnd.getTime());
+          return overlap;
+        })
       : false;
 
-    if (isBookedAppointment) {
+    if (hasOverlappingAppointment) {
       return {
         IsSuccess: false,
-        ErrorMessage: `${appointment.firstName} already has an appointment on ${appointment.appointmentDate} at ${appointment.startTime}. Please choose a different time.`,
+        ErrorMessage: `${appointment.firstName} already has an overlapping appointment on ${appointment.appointmentDate}. Please choose a different time.`,
         Appointment: undefined,
       };
     }
