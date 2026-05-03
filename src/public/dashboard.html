@@ -1319,20 +1319,46 @@
         <div class="card meeting-card">
           <div class="card-header">
             <h2 class="card-title">Book a Meeting</h2>
-            <p class="card-subtitle">Schedule a call with me using Cal.com</p>
+            <p class="card-subtitle">Book a meeting w/ Aryan</p>
           </div>
-          <p class="card-text">
-          
-          </p>
+
+
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input
+              class="form-input"
+              type="date"
+              id="zoho-date"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Time</label>
+            <input
+              class="form-input"
+              type="time"
+              id="zoho-time"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Reason</label>
+            <textarea
+              class="form-textarea"
+              id="zoho-reason"
+              placeholder="Reason for Appointment"
+            ></textarea>
+          </div>
+
           <button
             class="call-btn"
-            id="booking-button"
-            data-cal-link="yurrai/client-meeting"
-            data-cal-namespace="client-meeting"
-            data-cal-config='{"layout":"month_view","useSlotsViewOnSmallScreen":"true"}'
+            id="zoho-submit"
+            onclick="submitZohoRequest()"
           >
-            Schedule a Meeting with Me
+            Submit Appointment Request
           </button>
+
+          <div id="zoho-status" class="success-message"></div>
         </div>
       </div>
 
@@ -1439,6 +1465,67 @@
 
     <script>
       let authCredentials = "";
+      const zohoHardcodedName = "Bijal Patel";
+      const zohoHardcodedMailId = "bijal@blomedry.com";
+      const zohoBaseUrl =
+        "https://calendar.zoho.com/eventreq/zz080112308e7a876686e756ec062dec68f649128461b60bfb7a1b8bb4c85f04ee55f11eb6c4aa91e80ae10528e8a78a8a43aabd10";
+
+      function formatDateForZoho(value) {
+        if (!value) return "";
+        const d = new Date(value);
+        if (Number.isNaN(d.getTime())) return "";
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        const year = String(d.getFullYear());
+        return `${month}/${day}/${year}`;
+      }
+
+      function submitZohoRequest() {
+        const dateInput = document.getElementById("zoho-date");
+        const timeInput = document.getElementById("zoho-time");
+        const reasonInput = document.getElementById("zoho-reason");
+        const statusEl = document.getElementById("zoho-status");
+
+        const date = dateInput.value;
+        const time = timeInput.value;
+        const reason = reasonInput.value.trim();
+
+        statusEl.style.display = "none";
+        statusEl.textContent = "";
+
+        if (!date || !time || !reason) {
+          statusEl.textContent =
+            "Please enter a date, time, and reason before submitting.";
+          statusEl.className = "error-message";
+          statusEl.style.display = "block";
+          return;
+        }
+
+        const formattedDate = formatDateForZoho(date);
+        const url =
+          `${zohoBaseUrl}?name=${encodeURIComponent(
+            zohoHardcodedName,
+          )}&mailId=${encodeURIComponent(
+            zohoHardcodedMailId,
+          )}&date=${encodeURIComponent(
+            formattedDate,
+          )}&time=${encodeURIComponent(time)}&reason=${encodeURIComponent(
+            reason,
+          )}`;
+
+        try {
+          window.open(url, "_blank");
+          statusEl.textContent =
+            "Appointment request sent. A new tab has been opened to finish the Zoho request.";
+          statusEl.className = "success-message";
+          statusEl.style.display = "block";
+        } catch (err) {
+          statusEl.textContent =
+            "Unable to open the Zoho request. Please try again or copy the link manually.";
+          statusEl.className = "error-message";
+          statusEl.style.display = "block";
+        }
+      }
 
       // Check authentication on page load
       window.addEventListener("load", function () {
