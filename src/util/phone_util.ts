@@ -41,13 +41,21 @@ export async function sendMessageSMS(to: string, body: string) {
   }
 }
 
-export async function sendMessageToAdmin(body: string) {
+export async function sendMessageToAdmin(body: string, type: string) {
   try {
+    if (!type) {
+      type = "SMS"; // Default to SMS if no type is provided
+    }
+
+    if (type !== "SMS" && type !== "MMS") {
+      console.error("Invalid message type. Must be 'SMS' or 'MMS'.");
+    }
+
     const response = await axios.get(BASE_URL, {
       params: {
         api_username: API_USER,
         api_password: API_PASSWORD,
-        method: "sendMMS",
+        method: "send"+type.toUpperCase(),
         dst: process.env.ADMIN_PHONE, // Admin's phone number
         message: body,
         did: DID,

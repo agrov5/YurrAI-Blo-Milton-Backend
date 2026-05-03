@@ -956,6 +956,7 @@ export const createAppointment = async (
         // Send SMS to Admin saying payment on appointment missing.
         sendMessageToAdmin(
           `${appointment.firstName} ${appointment.lastName[0]}. (${cleanPhone(appointment.phone.toString())}) has booked ${appointment.treatmentName} on ${appointment.appointmentDate} @ ${appointment.startTime} (PayMis)`,
+          "SMS",
         );
       } else {
         // Missing appointment or customer ID - log and skip generating URL

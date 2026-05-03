@@ -60,7 +60,7 @@ export const sendMessageToAdminController = async (
         message: "Message body is required",
       });
     }
-    await sendMessageToAdmin(body);
+    await sendMessageToAdmin(body, "MMS");
     res.status(200).json({
       success: true,
       message: "Message sent to admin successfully",
