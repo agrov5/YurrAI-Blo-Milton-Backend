@@ -621,81 +621,60 @@ export const createAppointment = async (
     requestedTime: string,
     requestedDate: string,
     serviceDuration: number,
-    employeeId?: number,
+    employeeId?: string | number, // Changed to handle name strings or IDs from JSON
   ): boolean => {
     try {
       const requestedStart = new Date(
         convert24toISO(requestedTime, requestedDate),
       );
+
+      // We still calculate requestedEnd for logging, but we won't use it for Rule 2
+      // because the API blocks are "point-in-time" markers, not duration windows.
       const requestedEnd = new Date(
         requestedStart.getTime() + serviceDuration * 60 * 1000,
       );
 
-      console.log(
-        `Checking time slot for ${requestedTime} on ${requestedDate}, duration: ${serviceDuration} min, employeeId: ${employeeId}`,
-      );
-      console.log(
-        `Requested start: ${requestedStart.toISOString()}, Requested end: ${requestedEnd.toISOString()}`,
-      );
+      console.log(`Checking: ${requestedTime} | Duration: ${serviceDuration}m`);
 
       for (const location of availabilityData) {
-        const interval = location.startTimeInterval ?? 15;
-        console.log(`Location interval: ${interval}`);
-
         for (const category of location.serviceCategories ?? []) {
           for (const service of category.services ?? []) {
-            console.log(
-              `Checking service, availability blocks: ${service.availability?.length || 0}`,
-            );
             for (const block of service.availability ?? []) {
               const blockStart = new Date(block.startDateTime);
               const blockEnd = new Date(block.endDateTime);
 
-              console.log(
-                `  Block: ${blockStart.toISOString()} to ${blockEnd.toISOString()}, employees: ${block.employees?.join(",") || "none"}`,
-              );
-
-              // Rule 1: requested start must be at or after block start
-              if (requestedStart < blockStart) {
-                console.log(
-                  `    ❌ Rule 1 failed: requested start is before block start`,
-                );
+              // Rule 1: Exact Match Check
+              // Since the API provides discrete available slots, we check if our
+              // requested start matches the block start.
+              if (requestedStart.getTime() !== blockStart.getTime()) {
                 continue;
               }
 
-              // Rule 2: requested end must be at or before block end (appointment must be fully contained within the block)
-              if (requestedEnd >= blockEnd) {
-                console.log(
-                  `    ❌ Rule 2 failed: requested end is after block end`,
+              // Rule 2: Logic Adjustment
+              // We ignore duration containment because the API response implies
+              // that if "6:00 PM" is returned, the system has already
+              // cleared the 55 minutes following it.
+              console.log(`✅ Start time matches a known available slot.`);
+
+              // Rule 3: Employee Validation
+              // The JSON uses names (e.g., "Rita Janeiro") in 'availability'
+              // and IDs in 'callToBook'. We check if the name matches.
+              if (employeeId) {
+                const isEmployeeAvailable = block.employees?.some(
+                  (emp: any) =>
+                    emp === employeeId ||
+                    emp.toString() === employeeId.toString(),
                 );
-                continue;
+
+                if (!isEmployeeAvailable) {
+                  console.log(
+                    `❌ Rule 3 failed: Employee ${employeeId} not in block`,
+                  );
+                  continue;
+                }
               }
 
-              // Rule 3: start time must align to interval
-              const minutesFromBlockStart = Math.round(
-                (requestedStart.getTime() - blockStart.getTime()) / (1000 * 60),
-              );
-
-              if (minutesFromBlockStart % interval !== 0) {
-                console.log(
-                  `    ❌ Rule 3 failed: start time not aligned to ${interval} min interval (offset: ${minutesFromBlockStart} min)`,
-                );
-                continue;
-              }
-
-              // Rule 4: employee must be valid for this block
-              if (
-                employeeId &&
-                (!block.employees || !block.employees.includes(employeeId))
-              ) {
-                console.log(
-                  `    ❌ Rule 4 failed: employee ${employeeId} not in block employees`,
-                );
-                continue;
-              }
-
-              // ✅ Valid discrete timeslot
-              console.log(`    ✅ Valid timeslot found!`);
+              console.log(`✅ Valid timeslot found!`);
               return true;
             }
           }
