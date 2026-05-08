@@ -334,7 +334,7 @@ export const convertBookerAvailabilityEmployeeIdsToNames = async <T>(
                       employees: Array.isArray(slot?.employees)
                         ? slot.employees.map((id: unknown) =>
                             typeof id === "number"
-                              ? (employeeNameById.get(id) ?? id)
+                              ? `${employeeNameById.get(id) ?? id} [${id}]`
                               : id,
                           )
                         : slot?.employees,
