@@ -664,7 +664,7 @@ export const createAppointment = async (
               }
 
               // Rule 2: requested end must be at or before block end (appointment must be fully contained within the block)
-              if (requestedEnd > blockEnd) {
+              if (requestedEnd >= blockEnd) {
                 console.log(
                   `    ❌ Rule 2 failed: requested end is after block end`,
                 );
