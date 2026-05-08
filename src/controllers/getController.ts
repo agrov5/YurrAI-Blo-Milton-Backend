@@ -222,7 +222,7 @@ export const getEmployeesSimplified = async (req: Request, res: Response) => {
   try {
     const employees: IEmployee[] = await EmployeeModel.find(
       {},
-      { ID: 1, FullName: 1, _id: 0 },
+      { ID: 1, FullName: 1, Gender: 1, _id: 0 },
     );
     res.status(200).json({
       success: true,
