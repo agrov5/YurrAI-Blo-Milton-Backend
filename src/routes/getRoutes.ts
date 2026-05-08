@@ -16,7 +16,12 @@ import {
 } from "../controllers/getController";
 import { phoneController } from "../controllers/phoneController";
 import { get } from "http";
-import { convertISOtoFriendly } from "../util/db_util";
+import {
+  convertISOtoFriendly,
+  convertBookerAvailabilityEmployeeIdsToNames,
+  convertBookerAvailabilityToFriendlyTime,
+} from "../util/db_util";
+import { findAvailableTimes } from "../util/booker_util";
 
 const getRouter = Router();
 

@@ -616,54 +616,137 @@ export const createAppointment = async (
     }
   }
 
-  const checkTimeSlotAvailability = (
+  const parseBookerAvailabilityDateTime = (
+    rawValue: string,
+    requestedDate: string,
+  ): Date | null => {
+    if (!rawValue || typeof rawValue !== "string") {
+      return null;
+    }
+
+    const normalized = rawValue.trim();
+    if (normalized.includes("T")) {
+      const parsed = new Date(normalized);
+      return isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    const timeMatch = normalized.match(/^([0-9]{1,2}):([0-9]{2})\s*(AM|PM)$/i);
+    if (!timeMatch) {
+      const parsed = new Date(normalized);
+      return isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    let hour = Number(timeMatch[1]);
+    const minute = Number(timeMatch[2]);
+    const meridiem = timeMatch[3].toUpperCase();
+
+    if (meridiem === "PM" && hour !== 12) {
+      hour += 12;
+    }
+    if (meridiem === "AM" && hour === 12) {
+      hour = 0;
+    }
+
+    const [year, month, day] = requestedDate.split("-").map(Number);
+    const isoString =
+      `${year.toString().padStart(4, "0")}-${month
+        .toString()
+        .padStart(2, "0")}-${day.toString().padStart(2, "0")}` +
+      `T${hour.toString().padStart(2, "0")}:${minute
+        .toString()
+        .padStart(2, "0")}:00-04:00`;
+
+    const parsed = new Date(isoString);
+    return isNaN(parsed.getTime()) ? null : parsed;
+  };
+
+  const checkTimeSlotAvailability = async (
     availabilityData: any[],
     requestedTime: string,
     requestedDate: string,
     serviceDuration: number,
     employeeId?: string | number, // Changed to handle name strings or IDs from JSON
-  ): boolean => {
+  ): Promise<boolean> => {
     try {
       const requestedStart = new Date(
         convert24toISO(requestedTime, requestedDate),
       );
-
-      // We still calculate requestedEnd for logging, but we won't use it for Rule 2
-      // because the API blocks are "point-in-time" markers, not duration windows.
-      const requestedEnd = new Date(
-        requestedStart.getTime() + serviceDuration * 60 * 1000,
-      );
+      const requestedStartMs = requestedStart.getTime();
 
       console.log(`Checking: ${requestedTime} | Duration: ${serviceDuration}m`);
+
+      let employeeNameCandidates: string[] = [];
+      if (typeof employeeId === "number") {
+        const employee = await EmployeeModel.findOne({ ID: employeeId }).exec();
+        if (employee) {
+          employeeNameCandidates = [
+            employee.FullName,
+            employee.DisplayName,
+            `${employee.FirstName} ${employee.LastName ?? ""}`.trim(),
+            ...(employee.AliasNames ?? []),
+          ]
+            .filter(Boolean)
+            .map((name) => name.toString().trim());
+        }
+      }
 
       for (const location of availabilityData) {
         for (const category of location.serviceCategories ?? []) {
           for (const service of category.services ?? []) {
-            for (const block of service.availability ?? []) {
-              const blockStart = new Date(block.startDateTime);
-              const blockEnd = new Date(block.endDateTime);
+            const blocks = [
+              ...(service.availability ?? []),
+              ...(service.callToBookAvailability ?? []),
+              ...(service.callToBookAvaiability ?? []),
+            ];
 
-              // Rule 1: Exact Match Check
-              // Since the API provides discrete available slots, we check if our
-              // requested start matches the block start.
-              if (requestedStart.getTime() !== blockStart.getTime()) {
+            for (const block of blocks) {
+              const blockStart = parseBookerAvailabilityDateTime(
+                block.startDateTime,
+                requestedDate,
+              );
+              if (!blockStart) {
                 continue;
               }
 
-              // Rule 2: Logic Adjustment
-              // We ignore duration containment because the API response implies
-              // that if "6:00 PM" is returned, the system has already
-              // cleared the 55 minutes following it.
+              // Since the API returns discrete start slots, we only need the
+              // requested start to exactly match the block's start.
+              if (blockStart.getTime() !== requestedStartMs) {
+                continue;
+              }
+
               console.log(`✅ Start time matches a known available slot.`);
 
-              // Rule 3: Employee Validation
-              // The JSON uses names (e.g., "Rita Janeiro") in 'availability'
-              // and IDs in 'callToBook'. We check if the name matches.
               if (employeeId) {
-                const isEmployeeAvailable = block.employees?.some(
-                  (emp: any) =>
-                    emp === employeeId ||
-                    emp.toString() === employeeId.toString(),
+                const availableEmployees = Array.isArray(block.employees)
+                  ? block.employees
+                  : [];
+
+                const isEmployeeAvailable = availableEmployees.some(
+                  (emp: any) => {
+                    if (typeof employeeId === "number") {
+                      if (typeof emp === "number" && emp === employeeId) {
+                        return true;
+                      }
+
+                      const empText = emp?.toString().trim();
+                      if (!empText) {
+                        return false;
+                      }
+
+                      if (/^\d+$/.test(empText)) {
+                        return Number(empText) === employeeId;
+                      }
+
+                      return employeeNameCandidates.some(
+                        (name) => name.toLowerCase() === empText.toLowerCase(),
+                      );
+                    }
+
+                    return (
+                      emp?.toString().trim().toLowerCase() ===
+                      employeeId.toString().trim().toLowerCase()
+                    );
+                  },
                 );
 
                 if (!isEmployeeAvailable) {
@@ -720,7 +803,7 @@ export const createAppointment = async (
             return null;
           }
 
-          const isAvailable = checkTimeSlotAvailability(
+          const isAvailable = await checkTimeSlotAvailability(
             availability,
             appointment.startTime,
             appointment.appointmentDate,
@@ -839,7 +922,7 @@ export const createAppointment = async (
 
       const isAvailable =
         availability && Array.isArray(availability)
-          ? checkTimeSlotAvailability(
+          ? await checkTimeSlotAvailability(
               availability,
               appointment.startTime,
               appointment.appointmentDate,
