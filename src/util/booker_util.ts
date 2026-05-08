@@ -17,7 +17,7 @@ import {
   CreateAppointmentResponse,
   FullAppointmentObject,
 } from "../models/Appointment";
-import { Employee } from "../models/Employee";
+import { Employee, EmployeeModel } from "../models/Employee";
 import { CreditCardResponse, CreditCardRecord } from "../models/CreditCard";
 import {
   sendMessageMMS,
@@ -685,8 +685,8 @@ export const createAppointment = async (
             `${employee.FirstName} ${employee.LastName ?? ""}`.trim(),
             ...(employee.AliasNames ?? []),
           ]
-            .filter(Boolean)
-            .map((name) => name.toString().trim());
+            .map((name) => (name == null ? null : name.toString().trim()))
+            .filter((name): name is string => Boolean(name));
         }
       }
 
