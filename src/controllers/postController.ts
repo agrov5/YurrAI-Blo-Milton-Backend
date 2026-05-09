@@ -23,6 +23,27 @@ import {
   convertISOtoFriendly,
 } from "../util/db_util";
 
+// Helper function
+const cleanAppointment = (appointment: any) => ({
+  appointmentId: appointment.ID,
+  status: appointment.Status?.Name,
+  startDateTime: convertISOtoFriendly(appointment.StartDateTimeOffset),
+  endDateTime: convertISOtoFriendly(appointment.EndDateTimeOffset),
+  customer: {
+    id: appointment.CustomerID,
+    firstName: appointment.CustomerFirstName,
+    lastName: appointment.CustomerLastName,
+    email: appointment.CustomerEmail,
+    phone: appointment.CustomerMobilePhone || appointment.CustomerHomePhone,
+  },
+  treatment: appointment.TreatmentName,
+  employee: appointment.Employee
+    ? `${appointment.Employee.FirstName} ${appointment.Employee.LastName}`
+    : null,
+  finalTotal: appointment.FinalTotal?.Amount,
+  notes: appointment.Notes,
+});
+
 export const postCreateAppointment = async (req: Request, res: Response) => {
   try {
     const appointment: AgentAppointment = req.body;
@@ -50,7 +71,7 @@ export const postCreateAppointment = async (req: Request, res: Response) => {
         success: true,
         message: "Appointment created successfully",
         locationID: locationID,
-        appointment: appointmentResponse.Appointment,
+        appointment: cleanAppointment(appointmentResponse.Appointment),
         appointmentId: appointmentResponse.Appointment?.ID,
       });
     } else {
@@ -242,27 +263,6 @@ export const getAppointments = async (req: Request, res: Response) => {
       onlyActive: body.onlyActive,
       fromStartDate: body.fromStartDate,
       returnSingle: body.returnSingle,
-    });
-
-    // Helper function to clean appointment data
-    const cleanAppointment = (appointment: any) => ({
-      appointmentId: appointment.ID,
-      status: appointment.Status?.Name, 
-      startDateTime: convertISOtoFriendly(appointment.StartDateTimeOffset),
-      endDateTime: convertISOtoFriendly(appointment.EndDateTimeOffset),
-      customer: {
-        id: appointment.CustomerID,
-        firstName: appointment.CustomerFirstName,
-        lastName: appointment.CustomerLastName,
-        email: appointment.CustomerEmail,
-        phone: appointment.CustomerMobilePhone || appointment.CustomerHomePhone,
-      },
-      treatment: appointment.TreatmentName,
-      employee: appointment.Employee
-        ? `${appointment.Employee.FirstName} ${appointment.Employee.LastName}`
-        : null,
-      finalTotal: appointment.FinalTotal?.Amount,
-      notes: appointment.Notes,
     });
 
     // Handle single appointment return
