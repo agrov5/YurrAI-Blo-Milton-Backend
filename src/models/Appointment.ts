@@ -642,6 +642,7 @@ export interface CreateAppointmentResponse {
   ErrorCode?: number;
   ErrorMessage?: string;
   ArgumentErrors?: ArgumentError[];
+  cardOnFile?: boolean;
 }
 
 // Legacy response interface for backward compatibility

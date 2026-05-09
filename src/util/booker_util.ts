@@ -1005,6 +1005,8 @@ export const createAppointment = async (
       },
     );
 
+    let cardOnFile = false;
+
     if (sendSMS) {
       const appointmentObj = response.data?.Appointment;
       const customerId = appointmentObj?.Customer?.ID;
@@ -1031,6 +1033,7 @@ export const createAppointment = async (
       }
     } else {
       const message = `Dear ${appointment.firstName}, your appointment on ${appointment.appointmentDate} at ${appointment.startTime} has been booked. We look forward to seeing you then!`;
+      cardOnFile = true;
       // Send SMS via phone
       sendMessageSMS(appointment.phone.toString(), message).catch((error) => {
         console.error("Error sending SMS via phone:", error);
@@ -1053,7 +1056,7 @@ export const createAppointment = async (
         );
     }
 
-    return response.data;
+    return { ...response.data, cardOnFile };
   } catch (error: any) {
     console.error("Error creating appointment:", error);
 
