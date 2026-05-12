@@ -704,17 +704,28 @@ export const createAppointment = async (
                 block.startDateTime,
                 requestedDate,
               );
-              if (!blockStart) {
+              const blockEnd = parseBookerAvailabilityDateTime(
+                block.endDateTime,
+                requestedDate,
+              );
+              if (!blockStart || !blockEnd) {
                 continue;
               }
 
-              // Since the API returns discrete start slots, we only need the
-              // requested start to exactly match the block's start.
-              if (blockStart.getTime() !== requestedStartMs) {
+              const requestedEndMs =
+                requestedStartMs + serviceDuration * 60 * 1000;
+
+              // Check if the requested time slot fits within the availability block
+              if (
+                requestedStartMs < blockStart.getTime() ||
+                requestedEndMs > blockEnd.getTime()
+              ) {
                 continue;
               }
 
-              console.log(`✅ Start time matches a known available slot.`);
+              console.log(
+                `✅ Requested time slot fits within available block.`,
+              );
 
               if (employeeId) {
                 const availableEmployees = Array.isArray(block.employees)
