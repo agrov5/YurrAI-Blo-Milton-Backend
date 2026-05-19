@@ -45,6 +45,15 @@ export function extractEndOfCallData(
   if (!callerNumber) throw new Error("Missing customer.number");
   if (!sipUri) throw new Error("Missing customer.sipUri");
 
+  // Prefer analysis.summary, fall back to message.summary
+  const summary =
+    (m.analysis?.summary?.trim() ?? "") || (m.summary?.trim() ?? "");
+
+  if (!summary)
+    throw new Error(
+      "Missing summary (message.analysis.summary / message.summary)",
+    );
+
   const transcript =
     (m.transcript?.trim() ?? "") || (m.artifact?.transcript?.trim() ?? "");
 
@@ -107,6 +116,8 @@ export function extractEndOfCallData(
     callerName,
     callerNumber,
     sipUri,
+
+    summary,
 
     transcript,
 

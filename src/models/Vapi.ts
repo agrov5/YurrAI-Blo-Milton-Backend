@@ -10,6 +10,9 @@ export interface ExtractedVapiCallSummary {
   callerNumber: string;
   sipUri: string;
 
+  /** Call summary (prefer analysis.summary, fall back to message.summary) */
+  summary: string;
+
   transcript: string;
 
   recordingUrl: string;
@@ -43,6 +46,10 @@ export interface VapiWebhookMessage {
     sipUri?: string;
   };
   transcript?: string;
+  summary?: string;
+  analysis?: {
+    summary?: string;
+  };
   recordingUrl?: string;
   stereoRecordingUrl?: string;
   durationMinutes: number;
@@ -63,7 +70,9 @@ export interface VapiWebhookMessage {
   };
 }
 
-export interface VapiCallDocument extends ExtractedVapiCallSummary, Document {}
+export interface VapiCallDocument extends ExtractedVapiCallSummary, Document {
+  callSummary?: ExtractedVapiCallSummary | any;
+}
 
 const VapiCallSchema = new Schema<VapiCallDocument>(
   {
@@ -73,6 +82,8 @@ const VapiCallSchema = new Schema<VapiCallDocument>(
     callerName: { type: String, required: true },
     callerNumber: { type: String, required: true },
     sipUri: { type: String, required: true },
+
+    summary: { type: String, required: true },
 
     transcript: { type: String, required: true },
 
@@ -92,6 +103,8 @@ const VapiCallSchema = new Schema<VapiCallDocument>(
     callDate: { type: String, required: true },
     startTime: { type: String, required: true },
     endTime: { type: String, required: true },
+    // full parsed summary for reference/searching
+    callSummary: { type: Schema.Types.Mixed, required: false },
   },
   {
     timestamps: true,

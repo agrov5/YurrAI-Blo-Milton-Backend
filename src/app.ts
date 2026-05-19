@@ -23,7 +23,10 @@ console.log(`Running in ${env} mode`);
 // These require() calls execute after dotenv.config() — unlike import declarations,
 // they are NOT hoisted by the TypeScript compiler.
 const { authMiddleware } = require("./auth/auth");
-const { loggerMiddleware } = require("./middlewares/loggerMiddleware");
+const {
+  loggerMiddleware,
+  captureResponseBody,
+} = require("./middlewares/loggerMiddleware");
 const job = require("./config/cron").default;
 const axios = require("axios");
 const getRouter = require("./routes/getRoutes").default;
@@ -42,7 +45,8 @@ app.use(express.urlencoded({ limit: "100mb", extended: true }));
 // Serve static files
 app.use(express.static(path.join(__dirname, "public")));
 
-// Routes
+// Request body + response capture before logging
+app.use(captureResponseBody);
 app.use(loggerMiddleware);
 
 // Public routes (no authentication required)

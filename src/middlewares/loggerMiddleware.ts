@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import http from "http";
 import axios from "axios";
+import { RequestLogModel } from "../models/RequestLog";
 
 // ── Log entry types ──────────────────────────────────────────────────────────
 
@@ -12,6 +13,7 @@ export interface LogEntry {
   type: LogType;
   level: LogLevel;
   timestamp: string;
+  env: string;
   method?: string;
   url?: string;
   status?: number;
@@ -47,23 +49,69 @@ function makeId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
+async function saveLogToMongo(entry: LogEntry): Promise<void> {
+  try {
+    await RequestLogModel.create(entry);
+  } catch (error) {
+    console.error("Failed to save request log to MongoDB:", error);
+  }
+}
+
 export const getLogs = (): LogEntry[] => [...logStore];
-export const clearLogs = (): void => { logStore.length = 0; };
+export const clearLogs = (): void => {
+  logStore.length = 0;
+};
 
 // ── App-level logger (use anywhere in your codebase) ─────────────────────────
 
+const currentEnv = process.env.NODE_ENV || "development";
+
 export const appLogger = {
   info: (message: string, meta?: unknown) =>
-    pushLog({ id: makeId(), type: "app", level: "info", timestamp: new Date().toISOString(), message, meta }),
+    pushLog({
+      id: makeId(),
+      type: "app",
+      level: "info",
+      timestamp: new Date().toISOString(),
+      env: currentEnv,
+      message,
+      meta,
+    }),
   warn: (message: string, meta?: unknown) =>
-    pushLog({ id: makeId(), type: "app", level: "warn", timestamp: new Date().toISOString(), message, meta }),
+    pushLog({
+      id: makeId(),
+      type: "app",
+      level: "warn",
+      timestamp: new Date().toISOString(),
+      env: currentEnv,
+      message,
+      meta,
+    }),
   error: (message: string, meta?: unknown) =>
-    pushLog({ id: makeId(), type: "app", level: "error", timestamp: new Date().toISOString(), message, meta }),
+    pushLog({
+      id: makeId(),
+      type: "app",
+      level: "error",
+      timestamp: new Date().toISOString(),
+      env: currentEnv,
+      message,
+      meta,
+    }),
 };
 
 // ── Redact sensitive fields from request bodies ───────────────────────────────
 
-const SENSITIVE_KEYS = new Set(["password", "token", "secret", "authorization", "apiKey", "api_key", "access_token", "accessToken", "username"]);
+const SENSITIVE_KEYS = new Set([
+  "password",
+  "token",
+  "secret",
+  "authorization",
+  "apiKey",
+  "api_key",
+  "access_token",
+  "accessToken",
+  "username",
+]);
 
 function redactBody(body: Record<string, unknown>): Record<string, unknown> {
   const sanitized: Record<string, unknown> = { ...body };
@@ -85,6 +133,7 @@ axios.interceptors.request.use(
       type: "axios",
       level: "info",
       timestamp: new Date().toISOString(),
+      env: currentEnv,
       method: config.method?.toUpperCase(),
       url: config.url,
       axiosRequestNumber: axiosRequestCounter,
@@ -94,11 +143,11 @@ axios.interceptors.request.use(
     };
     pushLog(entry);
     console.log(
-      `[Axios Request #${axiosRequestCounter}] ${config.method?.toUpperCase()} ${config.url}`
+      `[Axios Request #${axiosRequestCounter}] ${config.method?.toUpperCase()} ${config.url}`,
     );
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 axios.interceptors.response.use(
@@ -108,6 +157,7 @@ axios.interceptors.response.use(
       type: "axios",
       level: response.status >= 400 ? "warn" : "info",
       timestamp: new Date().toISOString(),
+      env: currentEnv,
       method: response.config.method?.toUpperCase(),
       url: response.config.url,
       status: response.status,
@@ -115,6 +165,7 @@ axios.interceptors.response.use(
       resBody: JSON.stringify(response.data)?.slice(0, 2000),
     };
     pushLog(entry);
+    saveLogToMongo(entry);
     return response;
   },
   (error) => {
@@ -123,6 +174,7 @@ axios.interceptors.response.use(
       type: "axios",
       level: "error",
       timestamp: new Date().toISOString(),
+      env: currentEnv,
       method: error.config?.method?.toUpperCase(),
       url: error.config?.url,
       status: error.response?.status,
@@ -130,8 +182,9 @@ axios.interceptors.response.use(
       resBody: JSON.stringify(error.response?.data)?.slice(0, 2000),
     };
     pushLog(entry);
+    saveLogToMongo(entry);
     return Promise.reject(error);
-  }
+  },
 );
 
 // ── Response body capture (call before loggerMiddleware) ──────────────────────
@@ -139,7 +192,7 @@ axios.interceptors.response.use(
 export const captureResponseBody = (
   _req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void => {
   const originalJson = res.json.bind(res);
   res.json = (body: unknown) => {
@@ -157,11 +210,13 @@ export const captureResponseBody = (
 export const loggerMiddleware = (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void => {
   const start = Date.now();
 
   res.on("finish", () => {
+    if (req.path === "/") return;
+
     const duration = Date.now() - start;
     const statusCode = res.statusCode;
     const statusMessage = http.STATUS_CODES[statusCode] ?? "Unknown Status";
@@ -182,6 +237,7 @@ export const loggerMiddleware = (
       type: "http",
       level,
       timestamp: new Date().toISOString(),
+      env: currentEnv,
       method: req.method,
       url: req.originalUrl,
       status: statusCode,
@@ -203,6 +259,7 @@ export const loggerMiddleware = (
     };
 
     pushLog(entry);
+    saveLogToMongo(entry);
 
     // Keep your original flat console log for Render's log stream
     let logMessage =
@@ -210,11 +267,14 @@ export const loggerMiddleware = (
       `Status: ${statusCode} (${statusMessage}) | ` +
       `Time: ${duration}ms | IP: ${req.ip}`;
 
-    if (entry.query)       logMessage += ` | Query: ${JSON.stringify(entry.query)}`;
-    if (entry.params)      logMessage += ` | Params: ${JSON.stringify(entry.params)}`;
-    if (entry.reqBody)     logMessage += ` | Body: ${JSON.stringify(entry.reqBody).slice(0, 500)}`;
-    if (entry.contentType) logMessage += ` | Content-Type: ${entry.contentType}`;
-    if (entry.userAgent)   logMessage += ` | User-Agent: ${entry.userAgent}`;
+    if (entry.query) logMessage += ` | Query: ${JSON.stringify(entry.query)}`;
+    if (entry.params)
+      logMessage += ` | Params: ${JSON.stringify(entry.params)}`;
+    if (entry.reqBody)
+      logMessage += ` | Body: ${JSON.stringify(entry.reqBody).slice(0, 500)}`;
+    if (entry.contentType)
+      logMessage += ` | Content-Type: ${entry.contentType}`;
+    if (entry.userAgent) logMessage += ` | User-Agent: ${entry.userAgent}`;
 
     console.log(logMessage);
   });
