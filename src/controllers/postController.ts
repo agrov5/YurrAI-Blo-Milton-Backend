@@ -411,3 +411,24 @@ export const getCustomerOrders = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const vapiCallDataWebhook = async (req: Request, res: Response) => {
+  try {
+    const data = req.body;
+    console.log("Received VAPI call data webhook:", data);
+
+    // Process the data as needed (e.g., store in database, trigger other actions)
+
+    res.status(200).json({
+      success: true,
+      message: "Call data received successfully",
+    });
+  } catch (error) {
+    console.error("Error processing VAPI call data webhook:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to process VAPI call data webhook",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};

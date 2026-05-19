@@ -1067,7 +1067,10 @@ export const createAppointment = async (
         );
     }
 
-    return { ...response.data, cardOnFile };
+    return {
+      ...response.data,
+      cardOnFile:cardOnFile,
+    };
   } catch (error: any) {
     console.error("Error creating appointment:", error);
 
@@ -1134,6 +1137,7 @@ export const createAppointment = async (
       IsSuccess: false,
       ErrorMessage: errorMessage,
       Appointment: undefined,
+      cardOnFile: false,
     };
 
     return errorResponse;

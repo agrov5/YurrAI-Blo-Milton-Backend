@@ -10,6 +10,7 @@ import {
   postAvailableTimes,
   postGenerateCCLink,
   getCustomerOrders,
+  vapiCallDataWebhook,
 } from "../controllers/postController";
 import {
   sendMessageToAdminController,
@@ -36,4 +37,7 @@ postRouter.post("/cc-info", getCustomerCCInfo);
 postRouter.post("/generate-cc-link", postGenerateCCLink);
 
 postRouter.post('/get-customer-orders', getCustomerOrders)
+
+postRouter.post("/vapi/webhook", vapiCallDataWebhook); 
 export default postRouter;
+
