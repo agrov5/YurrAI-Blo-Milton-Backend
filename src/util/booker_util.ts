@@ -1006,6 +1006,8 @@ export const createAppointment = async (
       JSON.stringify(appointmentPayload, null, 2),
     );
 
+    let cardOnFile = sendSMS ? false : true;
+
     const response = await axios.post<CreateAppointmentResponse>(
       "/v4.1/merchant/appointment",
       appointmentPayload,
@@ -1015,8 +1017,6 @@ export const createAppointment = async (
         },
       },
     );
-
-    let cardOnFile = false;
 
     if (sendSMS) {
       const appointmentObj = response.data?.Appointment;
@@ -1044,7 +1044,6 @@ export const createAppointment = async (
       }
     } else {
       const message = `Dear ${appointment.firstName}, your appointment on ${appointment.appointmentDate} at ${appointment.startTime} has been booked. We look forward to seeing you then!`;
-      cardOnFile = true;
       // Send SMS via phone
       sendMessageSMS(appointment.phone.toString(), message).catch((error) => {
         console.error("Error sending SMS via phone:", error);
@@ -1069,7 +1068,7 @@ export const createAppointment = async (
 
     return {
       ...response.data,
-      cardOnFile:cardOnFile,
+      cardOnFile: cardOnFile,
     };
   } catch (error: any) {
     console.error("Error creating appointment:", error);

@@ -73,6 +73,7 @@ export const postCreateAppointment = async (req: Request, res: Response) => {
         locationID: locationID,
         appointment: cleanAppointment(appointmentResponse.Appointment),
         appointmentId: appointmentResponse.Appointment?.ID,
+        cardOnFile: appointmentResponse.cardOnFile,
       });
     } else {
       res.status(400).json({
