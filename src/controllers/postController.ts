@@ -22,6 +22,111 @@ import {
   ISOToFriendlyTime,
   convertISOtoFriendly,
 } from "../util/db_util";
+import {
+  ExtractedVapiCallSummary,
+  VapiWebhookBody,
+  VapiCallModel,
+} from "../models/Vapi";
+
+export function extractEndOfCallData(
+  body: VapiWebhookBody,
+): ExtractedVapiCallSummary {
+  const m = body.message;
+
+  if (m.type !== "end-of-call-report") {
+    throw new Error(`Unexpected webhook type: ${m.type}`);
+  }
+
+  const callerName = m.customer.name?.trim();
+  const callerNumber = m.customer.number?.trim();
+  const sipUri = m.customer.sipUri?.trim();
+
+  if (!callerName) throw new Error("Missing customer.name");
+  if (!callerNumber) throw new Error("Missing customer.number");
+  if (!sipUri) throw new Error("Missing customer.sipUri");
+
+  const transcript =
+    (m.transcript?.trim() ?? "") || (m.artifact?.transcript?.trim() ?? "");
+
+  if (!transcript) {
+    throw new Error(
+      "Missing transcript (message.transcript / message.artifact.transcript)",
+    );
+  }
+
+  const recordingUrl =
+    (m.recordingUrl?.trim() ?? "") || (m.artifact?.recordingUrl?.trim() ?? "");
+  const stereoRecordingUrl =
+    (m.stereoRecordingUrl?.trim() ?? "") ||
+    (m.artifact?.stereoRecordingUrl?.trim() ?? "");
+
+  if (!recordingUrl) {
+    throw new Error(
+      "Missing recordingUrl (message.recordingUrl / message.artifact.recordingUrl)",
+    );
+  }
+  if (!stereoRecordingUrl) {
+    throw new Error(
+      "Missing stereoRecordingUrl (message.stereoRecordingUrl / message.artifact.stereoRecordingUrl)",
+    );
+  }
+
+  const durationMinutes = m.durationMinutes;
+  const durationSeconds = m.durationSeconds;
+
+  if (!Number.isFinite(durationMinutes))
+    throw new Error("Invalid durationMinutes");
+  if (!Number.isFinite(durationSeconds))
+    throw new Error("Invalid durationSeconds");
+
+  const cost = m.cost;
+  if (!Number.isFinite(cost)) throw new Error("Invalid cost");
+
+  const startedAt = m.startedAt?.trim();
+  const endedAt = m.endedAt?.trim();
+  if (!startedAt) throw new Error("Missing startedAt");
+  if (!endedAt) throw new Error("Missing endedAt");
+
+  const startedAtDate = new Date(startedAt);
+  const endedAtDate = new Date(endedAt);
+
+  if (isNaN(startedAtDate.getTime())) {
+    throw new Error("Invalid startedAt format");
+  }
+  if (isNaN(endedAtDate.getTime())) {
+    throw new Error("Invalid endedAt format");
+  }
+
+  const startTime = startedAtDate.toISOString();
+  const endTime = endedAtDate.toISOString();
+
+  return {
+    durationMinutes,
+    durationSeconds,
+
+    callerName,
+    callerNumber,
+    sipUri,
+
+    transcript,
+
+    recordingUrl,
+    stereoRecordingUrl,
+
+    cost,
+
+    callId: m.call.id,
+    assistantId: m.call.assistantId,
+    phoneNumberId: m.call.phoneNumberId,
+
+    startedAt,
+    endedAt,
+    endedReason: m.endedReason,
+    callDate: startTime.split("T")[0],
+    startTime,
+    endTime,
+  };
+}
 
 // Helper function
 const cleanAppointment = (appointment: any) => ({
@@ -415,18 +520,26 @@ export const getCustomerOrders = async (req: Request, res: Response) => {
 
 export const vapiCallDataWebhook = async (req: Request, res: Response) => {
   try {
-    const data = req.body;
-    console.log("Received VAPI call data webhook:", data);
+    const body = req.body as VapiWebhookBody;
+    const summary = extractEndOfCallData(body);
+    const savedCall = await VapiCallModel.create(summary);
 
-    // Process the data as needed (e.g., store in database, trigger other actions)
+    console.log(
+      "Received VAPI call data webhook:",
+      summary,
+      "saved to",
+      savedCall._id,
+    );
 
     res.status(200).json({
       success: true,
       message: "Call data received successfully",
+      data: summary,
+      recordId: savedCall._id,
     });
   } catch (error) {
     console.error("Error processing VAPI call data webhook:", error);
-    res.status(500).json({
+    res.status(400).json({
       success: false,
       message: "Failed to process VAPI call data webhook",
       error: error instanceof Error ? error.message : "Unknown error",
