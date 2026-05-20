@@ -24,7 +24,7 @@ export async function sendMessageMMS(to: string, body: string) {
 }
 
 export async function sendMessageSMS(to: string, body: string) {
-  try {
+  try { 
     const response = await axios.get(BASE_URL, {
       params: {
         api_username: API_USER,

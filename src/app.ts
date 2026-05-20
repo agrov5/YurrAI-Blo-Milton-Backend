@@ -31,6 +31,7 @@ const job = require("./config/cron").default;
 const axios = require("axios");
 const getRouter = require("./routes/getRoutes").default;
 const postRouter = require("./routes/postRoutes").default;
+const deleteRouter = require("./routes/deleteRoutes").default;
 const dashboardRoutes = require("./routes/dashboardRoutes").default;
 const widgetRouter = require("./routes/widgetRoutes").default;
 
@@ -61,6 +62,7 @@ app.use("/api", authMiddleware);
 
 app.use("/api/get", getRouter);
 app.use("/api/post", postRouter);
+app.use("/api/delete", deleteRouter);
 
 // Utility routes (also protected by auth middleware)
 app.use("/api/populateLocal", require("./util/populateLocal").default);

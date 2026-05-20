@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import { ITreatment, TreatmentModel } from "../models/Treatment";
 import { EmployeeModel, IEmployee } from "../models/Employee";
 import { IRoom, RoomModel } from "../models/Room";
+import { VapiCallModel } from "../models/Vapi";
+import { RequestLogModel } from "../models/RequestLog";
 import {
   findAvailableDates,
   findAvailableTimes,
@@ -504,6 +506,51 @@ export const getAppointments = async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       message: "Failed to retrieve appointments",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+export const getVapiCalls = async (req: Request, res: Response) => {
+  try {
+    const calls = await VapiCallModel.find();
+    res.status(200).json({
+      success: true,
+      message: "VAPI calls retrieved successfully",
+      locationID: locationID,
+      count: calls.length,
+      calls: calls,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve VAPI calls",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+export const getRequestLogs = async (req: Request, res: Response) => {
+  try {
+    const logs = await RequestLogModel.find().sort({ timestamp: -1 }).limit(100);
+    if (!logs || logs.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No request logs found",
+      });
+    }
+    // Logs are already sorted by timestamp descending due to the query
+    res.status(200).json({
+      success: true,
+      message: "Request logs retrieved successfully",
+      locationID: locationID,
+      count: logs.length,
+      logs: logs,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve request logs",
       error: error instanceof Error ? error.message : "Unknown error",
     });
   }
