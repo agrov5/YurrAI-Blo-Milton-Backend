@@ -24,120 +24,11 @@ import {
 } from "../util/db_util";
 import {
   ExtractedVapiCallSummary,
+  extractEndOfCallData,
   VapiWebhookBody,
   VapiCallModel,
 } from "../models/Vapi";
 
-export function extractEndOfCallData(
-  body: VapiWebhookBody,
-): ExtractedVapiCallSummary {
-  const m = body.message;
-
-  if (m.type !== "end-of-call-report") {
-    throw new Error(`Unexpected webhook type: ${m.type}`);
-  }
-
-  const callerName = m.customer.name?.trim();
-  const callerNumber = m.customer.number?.trim();
-  const sipUri = m.customer.sipUri?.trim();
-
-  if (!callerName) throw new Error("Missing customer.name");
-  if (!callerNumber) throw new Error("Missing customer.number");
-  if (!sipUri) throw new Error("Missing customer.sipUri");
-
-  // Prefer analysis.summary, fall back to message.summary
-  const summary =
-    (m.analysis?.summary?.trim() ?? "") || (m.summary?.trim() ?? "");
-
-  if (!summary)
-    throw new Error(
-      "Missing summary (message.analysis.summary / message.summary)",
-    );
-
-  const transcript =
-    (m.transcript?.trim() ?? "") || (m.artifact?.transcript?.trim() ?? "");
-
-  if (!transcript) {
-    throw new Error(
-      "Missing transcript (message.transcript / message.artifact.transcript)",
-    );
-  }
-
-  const recordingUrl =
-    (m.recordingUrl?.trim() ?? "") || (m.artifact?.recordingUrl?.trim() ?? "");
-  const stereoRecordingUrl =
-    (m.stereoRecordingUrl?.trim() ?? "") ||
-    (m.artifact?.stereoRecordingUrl?.trim() ?? "");
-
-  if (!recordingUrl) {
-    throw new Error(
-      "Missing recordingUrl (message.recordingUrl / message.artifact.recordingUrl)",
-    );
-  }
-  if (!stereoRecordingUrl) {
-    throw new Error(
-      "Missing stereoRecordingUrl (message.stereoRecordingUrl / message.artifact.stereoRecordingUrl)",
-    );
-  }
-
-  const durationMinutes = m.durationMinutes;
-  const durationSeconds = m.durationSeconds;
-
-  if (!Number.isFinite(durationMinutes))
-    throw new Error("Invalid durationMinutes");
-  if (!Number.isFinite(durationSeconds))
-    throw new Error("Invalid durationSeconds");
-
-  const cost = m.cost;
-  if (!Number.isFinite(cost)) throw new Error("Invalid cost");
-
-  const startedAt = m.startedAt?.trim();
-  const endedAt = m.endedAt?.trim();
-  if (!startedAt) throw new Error("Missing startedAt");
-  if (!endedAt) throw new Error("Missing endedAt");
-
-  const startedAtDate = new Date(startedAt);
-  const endedAtDate = new Date(endedAt);
-
-  if (isNaN(startedAtDate.getTime())) {
-    throw new Error("Invalid startedAt format");
-  }
-  if (isNaN(endedAtDate.getTime())) {
-    throw new Error("Invalid endedAt format");
-  }
-
-  const startTime = startedAtDate.toISOString();
-  const endTime = endedAtDate.toISOString();
-
-  return {
-    durationMinutes,
-    durationSeconds,
-
-    callerName,
-    callerNumber,
-    sipUri,
-
-    summary,
-
-    transcript,
-
-    recordingUrl,
-    stereoRecordingUrl,
-
-    cost,
-
-    callId: m.call.id,
-    assistantId: m.call.assistantId,
-    phoneNumberId: m.call.phoneNumberId,
-
-    startedAt,
-    endedAt,
-    endedReason: m.endedReason,
-    callDate: startTime.split("T")[0],
-    startTime,
-    endTime,
-  };
-}
 
 // Helper function
 const cleanAppointment = (appointment: any) => ({
@@ -557,3 +448,86 @@ export const vapiCallDataWebhook = async (req: Request, res: Response) => {
     });
   }
 };
+
+
+export const getVapiCostByMonth = async (req: Request, res: Response) => {
+  const body: { month: string; year: string } = req.body;
+
+  // Calculate begin and end dates dynamically
+  const dateBegin = new Date(`${body.month} 1 ${body.year}`);
+  const dateEnd = new Date(
+    dateBegin.getFullYear(),
+    dateBegin.getMonth() + 1,
+    0,
+  );
+  dateEnd.setHours(23, 59, 59, 999); // Set to end of day
+
+  const ISOdateBegin = dateBegin.toISOString();
+  const ISOdateEnd = dateEnd.toISOString();
+
+  try {
+    const costs = await VapiCallModel.aggregate([
+      {
+        $match: {
+          startedAt: {
+            $gte: ISOdateBegin,
+            $lte: ISOdateEnd,
+          },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalCost: { $sum: "$cost" },
+          callCount: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          month: {
+            $concat: [
+              { $toString: dateBegin.getFullYear() },
+              "-",
+              {
+                $cond: [
+                  { $lte: [dateBegin.getMonth() + 1, 9] },
+                  { $concat: ["0", { $toString: dateBegin.getMonth() + 1 }] },
+                  { $toString: dateBegin.getMonth() + 1 },
+                ],
+              },
+            ],
+          },
+          totalCost: 1,
+          callCount: 1,
+        },
+      },
+    ]);
+
+    // If no documents found in date range, return zero cost
+    const result =
+      costs.length > 0
+        ? costs[0]
+        : {
+            month: `${dateBegin.getFullYear()}-${String(dateBegin.getMonth() + 1).padStart(2, "0")}`,
+            totalCost: 0,
+            callCount: 0,
+          };
+
+    res.status(200).json({
+      success: true,
+      message: "VAPI costs by month retrieved successfully",
+      locationID: locationID,
+      month: result.month,
+      totalCost: result.totalCost || 0,
+      callCount: result.callCount || 0,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve VAPI costs by month",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+

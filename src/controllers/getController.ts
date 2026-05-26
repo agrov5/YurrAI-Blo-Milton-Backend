@@ -530,9 +530,13 @@ export const getVapiCalls = async (req: Request, res: Response) => {
   }
 };
 
+
+
 export const getRequestLogs = async (req: Request, res: Response) => {
   try {
-    const logs = await RequestLogModel.find().sort({ timestamp: -1 }).limit(100);
+    const logs = await RequestLogModel.find()
+      .sort({ timestamp: -1 })
+      .limit(100);
     if (!logs || logs.length === 0) {
       return res.status(404).json({
         success: false,
