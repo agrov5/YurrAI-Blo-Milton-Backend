@@ -874,47 +874,47 @@ export const createAppointment = async (
     }
 
     // Check for overlapping appointments
-    const newStart = new Date(
-      convert24toISO(appointment.startTime, appointment.appointmentDate),
-    );
-    const newEnd = new Date(
-      await determineEndTime(
-        appointment.startTime,
-        treatmentID || 0,
-        appointment.appointmentDate,
-      ),
-    );
+    // const newStart = new Date(
+    //   convert24toISO(appointment.startTime, appointment.appointmentDate),
+    // );
+    // const newEnd = new Date(
+    //   await determineEndTime(
+    //     appointment.startTime,
+    //     treatmentID || 0,
+    //     appointment.appointmentDate,
+    //   ),
+    // );
 
-    const hasOverlappingAppointment = Array.isArray(existingAppointments)
-      ? existingAppointments.some((existingAppointment) => {
-          if (existingAppointment.Status?.Name?.toLowerCase() !== "booked")
-            return false;
-          if (
-            !existingAppointment.StartDateTimeOffset ||
-            !existingAppointment.EndDateTimeOffset
-          )
-            return false;
+    // const hasOverlappingAppointment = Array.isArray(existingAppointments)
+    //   ? existingAppointments.some((existingAppointment) => {
+    //       if (existingAppointment.Status?.Name?.toLowerCase() !== "booked")
+    //         return false;
+    //       if (
+    //         !existingAppointment.StartDateTimeOffset ||
+    //         !existingAppointment.EndDateTimeOffset
+    //       )
+    //         return false;
 
-          const existingStart = new Date(
-            existingAppointment.StartDateTimeOffset,
-          );
-          const existingEnd = new Date(existingAppointment.EndDateTimeOffset);
+    //       const existingStart = new Date(
+    //         existingAppointment.StartDateTimeOffset,
+    //       );
+    //       const existingEnd = new Date(existingAppointment.EndDateTimeOffset);
 
-          // Check for overlap: intervals [newStart, newEnd) and [existingStart, existingEnd) overlap if max(start) < min(end)
-          const overlap =
-            Math.max(newStart.getTime(), existingStart.getTime()) <
-            Math.min(newEnd.getTime(), existingEnd.getTime());
-          return overlap;
-        })
-      : false;
+    //       // Check for overlap: intervals [newStart, newEnd) and [existingStart, existingEnd) overlap if max(start) < min(end)
+    //       const overlap =
+    //         Math.max(newStart.getTime(), existingStart.getTime()) <
+    //         Math.min(newEnd.getTime(), existingEnd.getTime());
+    //       return overlap;
+    //     })
+    //   : false;
 
-    if (hasOverlappingAppointment) {
-      return {
-        IsSuccess: false,
-        ErrorMessage: `${appointment.firstName} already has an overlapping appointment on ${appointment.appointmentDate}. Please choose a different time.`,
-        Appointment: undefined,
-      };
-    }
+    // if (hasOverlappingAppointment) {
+    //   return {
+    //     IsSuccess: false,
+    //     ErrorMessage: `${appointment.firstName} already has an overlapping appointment on ${appointment.appointmentDate}. Please choose a different time.`,
+    //     Appointment: undefined,
+    //   };
+    // }
   }
 
   try {
