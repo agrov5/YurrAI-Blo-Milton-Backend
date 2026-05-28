@@ -7,6 +7,7 @@ import {
   getTreatmentsForDashboard,
   deleteTreatmentFromDB,
 } from "../controllers/treatmentController";
+import { EmployeeModel } from "../models/Employee";
 
 const router = Router();
 
@@ -79,6 +80,62 @@ router.delete(
 
 router.get("/treatments", authMiddleware, getTreatmentsForDashboard);
 router.delete("/treatments/:id", authMiddleware, deleteTreatmentFromDB);
+
+// ── Employee Alias Management API (protected) ─────────────────────────────────
+
+router.get("/employees", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const employees = await EmployeeModel.find({}, { ID: 1, DisplayName: 1, FirstName: 1, LastName: 1, AliasNames: 1 }).sort({ DisplayName: 1 }).lean();
+    res.json({ ok: true, employees });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: "Failed to load employees" });
+  }
+});
+
+router.post("/employees/:id/aliases", authMiddleware, async (req: Request, res: Response) => {
+  const { alias } = req.body as { alias?: string };
+  if (!alias || !alias.trim()) {
+    res.status(400).json({ ok: false, error: "Alias is required" });
+    return;
+  }
+  const trimmed = alias.trim();
+  try {
+    const employee = await EmployeeModel.findOne({ ID: Number(req.params.id) });
+    if (!employee) {
+      res.status(404).json({ ok: false, error: "Employee not found" });
+      return;
+    }
+    if (employee.AliasNames && employee.AliasNames.includes(trimmed)) {
+      res.status(409).json({ ok: false, error: "Alias already exists" });
+      return;
+    }
+    employee.AliasNames = [...(employee.AliasNames || []), trimmed];
+    await employee.save();
+    res.json({ ok: true, aliases: employee.AliasNames });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: "Failed to add alias" });
+  }
+});
+
+router.delete("/employees/:id/aliases", authMiddleware, async (req: Request, res: Response) => {
+  const { alias } = req.body as { alias?: string };
+  if (!alias) {
+    res.status(400).json({ ok: false, error: "Alias is required" });
+    return;
+  }
+  try {
+    const employee = await EmployeeModel.findOne({ ID: Number(req.params.id) });
+    if (!employee) {
+      res.status(404).json({ ok: false, error: "Employee not found" });
+      return;
+    }
+    employee.AliasNames = (employee.AliasNames || []).filter((a) => a !== alias);
+    await employee.save();
+    res.json({ ok: true, aliases: employee.AliasNames });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: "Failed to remove alias" });
+  }
+});
 
 /**
  * @route   GET /login

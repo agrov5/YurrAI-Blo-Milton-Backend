@@ -1279,6 +1279,184 @@
         font-size: 0.9rem;
         color: #d4d9ff;
       }
+
+      /* ── Employee Alias Manager ── */
+      .aliases-section {
+        margin-bottom: 2rem;
+      }
+
+      .aliases-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 24px;
+        padding: 1.5rem;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.22);
+        backdrop-filter: blur(16px);
+      }
+
+      .aliases-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+        padding-bottom: 1rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .aliases-header-left h2 {
+        font-size: 1.25rem;
+        color: #f8fbff;
+        margin-bottom: 0.25rem;
+      }
+
+      .aliases-header-left p {
+        color: #cbd5ff;
+        font-size: 0.9rem;
+      }
+
+      .aliases-select {
+        width: 100%;
+        padding: 0.75rem 0.85rem;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.07);
+        color: #eef3ff;
+        border-radius: 12px;
+        font-size: 0.95rem;
+        margin-bottom: 1.25rem;
+        transition: border-color 0.3s, box-shadow 0.3s;
+        box-sizing: border-box;
+        appearance: none;
+        cursor: pointer;
+      }
+
+      .aliases-select:focus {
+        outline: none;
+        border-color: #7c3aed;
+        box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.12);
+      }
+
+      .aliases-select option {
+        background: #0f1628;
+        color: #eef3ff;
+      }
+
+      .aliases-add-row {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+      }
+
+      .aliases-input {
+        flex: 1;
+        padding: 0.75rem 0.85rem;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.05);
+        color: #eef3ff;
+        border-radius: 12px;
+        font-size: 0.95rem;
+        transition: border-color 0.3s, box-shadow 0.3s;
+      }
+
+      .aliases-input::placeholder {
+        color: rgba(255, 255, 255, 0.3);
+      }
+
+      .aliases-input:focus {
+        outline: none;
+        border-color: #7c3aed;
+        box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.12);
+      }
+
+      .aliases-input:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      .aliases-add-btn {
+        background: linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.4rem;
+        border-radius: 12px;
+        font-size: 0.95rem;
+        cursor: pointer;
+        font-weight: 600;
+        transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+        white-space: nowrap;
+        box-shadow: 0 8px 20px rgba(124, 58, 237, 0.2);
+      }
+
+      .aliases-add-btn:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 28px rgba(124, 58, 237, 0.28);
+      }
+
+      .aliases-add-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .aliases-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        min-height: 42px;
+        padding: 0.6rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.03);
+        margin-bottom: 0.75rem;
+      }
+
+      .aliases-empty-hint {
+        color: rgba(255, 255, 255, 0.3);
+        font-size: 0.88rem;
+        align-self: center;
+        padding: 0 0.25rem;
+      }
+
+      .alias-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: rgba(99, 102, 241, 0.18);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        color: #d8e2ff;
+        padding: 0.3rem 0.65rem;
+        border-radius: 999px;
+        font-size: 0.88rem;
+        font-weight: 500;
+      }
+
+      .alias-remove-btn {
+        background: none;
+        border: none;
+        color: rgba(255, 200, 200, 0.6);
+        cursor: pointer;
+        font-size: 1rem;
+        line-height: 1;
+        padding: 0;
+        transition: color 0.15s;
+        display: flex;
+        align-items: center;
+      }
+
+      .alias-remove-btn:hover {
+        color: #f87171;
+      }
+
+      .aliases-feedback {
+        font-size: 0.88rem;
+        min-height: 1.2em;
+        color: #b8ffe5;
+        margin-top: 0.25rem;
+      }
+
+      .aliases-feedback.error {
+        color: #ffcccb;
+      }
     </style>
   </head>
   <body>
@@ -1400,6 +1578,42 @@
             <strong>Repopulate Local Data</strong> above — this re-fetches all
             treatments from the remote source and resets all selections.
           </div>
+        </div>
+      </div>
+
+      <!-- Employee Alias Manager -->
+      <div class="aliases-section">
+        <div class="aliases-card">
+          <div class="aliases-header">
+            <div class="aliases-header-left">
+              <h2>Employee Alias Manager</h2>
+              <p>Select an employee to view, add, or remove their alias names</p>
+            </div>
+          </div>
+
+          <select class="aliases-select" id="aliases-employee-select" onchange="aliasesOnEmployeeChange()">
+            <option value="">— Select an employee —</option>
+          </select>
+
+          <div class="aliases-tags" id="aliases-tags">
+            <span class="aliases-empty-hint">Select an employee above to see their aliases</span>
+          </div>
+
+          <div class="aliases-add-row">
+            <input
+              class="aliases-input"
+              type="text"
+              id="aliases-new-input"
+              placeholder="New alias name…"
+              disabled
+              onkeydown="if(event.key==='Enter') aliasesAdd()"
+            />
+            <button class="aliases-add-btn" id="aliases-add-btn" onclick="aliasesAdd()" disabled>
+              Add Alias
+            </button>
+          </div>
+
+          <div class="aliases-feedback" id="aliases-feedback"></div>
         </div>
       </div>
 
@@ -1552,6 +1766,7 @@
               console.log("Dashboard: Auth successful, loading dashboard");
               logsStart();
               treatmentsLoad();
+              aliasesLoad();
             }
           })
           .catch(() => {
@@ -1884,6 +2099,141 @@
           .replace(/</g, "&lt;")
           .replace(/>/g, "&gt;")
           .replace(/"/g, "&quot;");
+      }
+
+      // ── Employee Alias Manager ────────────────────────────────────────────────
+      let aliasesEmployees = [];
+      let aliasesCurrentId = null;
+      let aliasesCurrentAliases = [];
+
+      async function aliasesLoad() {
+        try {
+          const res = await fetch("/admin/employees", {
+            headers: { Authorization: authCredentials },
+          });
+          const data = await res.json();
+          if (!data.ok) throw new Error(data.error || "Failed to load employees");
+          aliasesEmployees = data.employees || [];
+          const sel = document.getElementById("aliases-employee-select");
+          sel.innerHTML = '<option value="">— Select an employee —</option>';
+          aliasesEmployees.forEach((emp) => {
+            const opt = document.createElement("option");
+            opt.value = emp.ID;
+            opt.textContent = emp.DisplayName || `${emp.FirstName} ${emp.LastName || ""}`.trim();
+            sel.appendChild(opt);
+          });
+        } catch (err) {
+          aliasesSetFeedback("Error loading employees: " + err.message, true);
+        }
+      }
+
+      function aliasesOnEmployeeChange() {
+        const sel = document.getElementById("aliases-employee-select");
+        aliasesCurrentId = sel.value ? Number(sel.value) : null;
+        aliasesSetFeedback("");
+        if (!aliasesCurrentId) {
+          aliasesCurrentAliases = [];
+          aliasesRenderTags();
+          document.getElementById("aliases-new-input").disabled = true;
+          document.getElementById("aliases-add-btn").disabled = true;
+          return;
+        }
+        const emp = aliasesEmployees.find((e) => e.ID === aliasesCurrentId);
+        aliasesCurrentAliases = emp ? [...(emp.AliasNames || [])] : [];
+        aliasesRenderTags();
+        document.getElementById("aliases-new-input").disabled = false;
+        document.getElementById("aliases-add-btn").disabled = false;
+        document.getElementById("aliases-new-input").focus();
+      }
+
+      function aliasesRenderTags() {
+        const container = document.getElementById("aliases-tags");
+        if (!aliasesCurrentId) {
+          container.innerHTML = '<span class="aliases-empty-hint">Select an employee above to see their aliases</span>';
+          return;
+        }
+        if (!aliasesCurrentAliases.length) {
+          container.innerHTML = '<span class="aliases-empty-hint">No aliases yet — add one below</span>';
+          return;
+        }
+        container.innerHTML = aliasesCurrentAliases
+          .map(
+            (alias) =>
+              `<span class="alias-tag">
+                ${escHtml(alias)}
+                <button class="alias-remove-btn" title="Remove alias" onclick="aliasesRemove(${JSON.stringify(alias)})">&#x2715;</button>
+              </span>`,
+          )
+          .join("");
+      }
+
+      async function aliasesAdd() {
+        const input = document.getElementById("aliases-new-input");
+        const alias = input.value.trim();
+        if (!alias) {
+          aliasesSetFeedback("Please enter an alias name.", true);
+          return;
+        }
+        if (!aliasesCurrentId) return;
+        aliasesSetFeedback("");
+        const btn = document.getElementById("aliases-add-btn");
+        btn.disabled = true;
+        input.disabled = true;
+        try {
+          const res = await fetch(`/admin/employees/${aliasesCurrentId}/aliases`, {
+            method: "POST",
+            headers: {
+              Authorization: authCredentials,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ alias }),
+          });
+          const data = await res.json();
+          if (!data.ok) throw new Error(data.error || "Failed to add alias");
+          aliasesCurrentAliases = data.aliases;
+          const emp = aliasesEmployees.find((e) => e.ID === aliasesCurrentId);
+          if (emp) emp.AliasNames = data.aliases;
+          aliasesRenderTags();
+          input.value = "";
+          aliasesSetFeedback(`Added alias "${alias}".`);
+        } catch (err) {
+          aliasesSetFeedback(err.message, true);
+        } finally {
+          btn.disabled = false;
+          input.disabled = false;
+          input.focus();
+        }
+      }
+
+      async function aliasesRemove(alias) {
+        if (!aliasesCurrentId) return;
+        if (!confirm(`Remove alias "${alias}" from this employee?`)) return;
+        aliasesSetFeedback("");
+        try {
+          const res = await fetch(`/admin/employees/${aliasesCurrentId}/aliases`, {
+            method: "DELETE",
+            headers: {
+              Authorization: authCredentials,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ alias }),
+          });
+          const data = await res.json();
+          if (!data.ok) throw new Error(data.error || "Failed to remove alias");
+          aliasesCurrentAliases = data.aliases;
+          const emp = aliasesEmployees.find((e) => e.ID === aliasesCurrentId);
+          if (emp) emp.AliasNames = data.aliases;
+          aliasesRenderTags();
+          aliasesSetFeedback(`Removed alias "${alias}".`);
+        } catch (err) {
+          aliasesSetFeedback(err.message, true);
+        }
+      }
+
+      function aliasesSetFeedback(msg, isError = false) {
+        const el = document.getElementById("aliases-feedback");
+        el.textContent = msg;
+        el.className = isError ? "aliases-feedback error" : "aliases-feedback";
       }
 
       async function treatmentToggle(event, treatmentId) {

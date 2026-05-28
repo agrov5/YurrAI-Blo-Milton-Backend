@@ -712,14 +712,23 @@ export const createAppointment = async (
                 continue;
               }
 
-              const requestedEndMs =
-                requestedStartMs + serviceDuration * 60 * 1000;
+              const slotStepMs = 15 * 60 * 1000;
+              const startWindowMs = blockStart.getTime();
+              const endWindowMs = blockEnd.getTime();
 
-              // Check if the requested time slot fits within the availability block
-              if (
-                requestedStartMs < blockStart.getTime() ||
-                requestedEndMs > blockEnd.getTime()
-              ) {
+              // Booker returns availability as a block of 15-minute booking
+              // intervals. Treat startDateTime as the first allowable booking
+              // start, endDateTime as the last allowable booking start, and
+              // allow any 15-minute-aligned start within that window.
+              const totalBlockMinutes =
+                (endWindowMs - startWindowMs) / 60 / 1000;
+              const slotCount = Math.floor(totalBlockMinutes / 15) + 1;
+              const is15MinuteAlignedStart = Array.from(
+                { length: slotCount },
+                (_, index) => startWindowMs + index * slotStepMs,
+              ).includes(requestedStartMs);
+
+              if (!is15MinuteAlignedStart) {
                 continue;
               }
 
