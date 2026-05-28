@@ -480,6 +480,7 @@ export const getVapiCostByMonth = async (req: Request, res: Response) => {
           _id: null,
           totalCost: { $sum: "$cost" },
           callCount: { $sum: 1 },
+          totalMinutes: { $sum: "$durationMinutes" },
         },
       },
       {
@@ -500,6 +501,7 @@ export const getVapiCostByMonth = async (req: Request, res: Response) => {
           },
           totalCost: 1,
           callCount: 1,
+          totalMinutes: 1,
         },
       },
     ]);
@@ -512,6 +514,7 @@ export const getVapiCostByMonth = async (req: Request, res: Response) => {
             month: `${dateBegin.getFullYear()}-${String(dateBegin.getMonth() + 1).padStart(2, "0")}`,
             totalCost: 0,
             callCount: 0,
+            totalMinutes: 0,
           };
 
     res.status(200).json({
@@ -521,6 +524,7 @@ export const getVapiCostByMonth = async (req: Request, res: Response) => {
       month: result.month,
       totalCost: result.totalCost || 0,
       callCount: result.callCount || 0,
+      totalMinutes: result.totalMinutes || 0,
     });
   } catch (error) {
     res.status(500).json({
