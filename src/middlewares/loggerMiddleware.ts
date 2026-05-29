@@ -49,9 +49,50 @@ function makeId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
+function toDbEntry(
+  entry: LogEntry,
+): Pick<
+  LogEntry,
+  | "id"
+  | "type"
+  | "level"
+  | "timestamp"
+  | "env"
+  | "method"
+  | "url"
+  | "status"
+  | "statusMessage"
+  | "responseTimeMs"
+  | "ip"
+  | "query"
+  | "params"
+  | "resBody"
+  | "message"
+  | "meta"
+> {
+  return {
+    id: entry.id,
+    type: entry.type,
+    level: entry.level,
+    timestamp: entry.timestamp,
+    env: entry.env,
+    method: entry.method,
+    url: entry.url,
+    status: entry.status,
+    statusMessage: entry.statusMessage,
+    responseTimeMs: entry.responseTimeMs,
+    ip: entry.ip,
+    query: entry.query,
+    params: entry.params,
+    resBody: entry.resBody?.slice(0, 300),
+    message: entry.message,
+    meta: entry.meta,
+  };
+}
+
 async function saveLogToMongo(entry: LogEntry): Promise<void> {
   try {
-    await RequestLogModel.create(entry);
+    await RequestLogModel.create(toDbEntry(entry));
   } catch (error) {
     console.error("Failed to save request log to MongoDB:", error);
   }
