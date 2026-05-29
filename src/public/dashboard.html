@@ -1323,7 +1323,9 @@
         border-radius: 12px;
         font-size: 0.95rem;
         margin-bottom: 1.25rem;
-        transition: border-color 0.3s, box-shadow 0.3s;
+        transition:
+          border-color 0.3s,
+          box-shadow 0.3s;
         box-sizing: border-box;
         appearance: none;
         cursor: pointer;
@@ -1354,7 +1356,9 @@
         color: #eef3ff;
         border-radius: 12px;
         font-size: 0.95rem;
-        transition: border-color 0.3s, box-shadow 0.3s;
+        transition:
+          border-color 0.3s,
+          box-shadow 0.3s;
       }
 
       .aliases-input::placeholder {
@@ -1381,7 +1385,10 @@
         font-size: 0.95rem;
         cursor: pointer;
         font-weight: 600;
-        transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s,
+          opacity 0.2s;
         white-space: nowrap;
         box-shadow: 0 8px 20px rgba(124, 58, 237, 0.2);
       }
@@ -1500,23 +1507,14 @@
             <p class="card-subtitle">Book a meeting w/ Aryan</p>
           </div>
 
-
           <div class="form-group">
             <label class="form-label">Date</label>
-            <input
-              class="form-input"
-              type="date"
-              id="zoho-date"
-            />
+            <input class="form-input" type="date" id="zoho-date" />
           </div>
 
           <div class="form-group">
             <label class="form-label">Time</label>
-            <input
-              class="form-input"
-              type="time"
-              id="zoho-time"
-            />
+            <input class="form-input" type="time" id="zoho-time" />
           </div>
 
           <div class="form-group">
@@ -1538,7 +1536,41 @@
 
           <div id="zoho-status" class="success-message"></div>
         </div>
+
+        <!-- Call Statistics Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Call Statistics</h2>
+            <p class="card-subtitle">Monthly call analytics and history</p>
+          </div>
+
+          <div class="admin-controls">
+            <button
+              class="repopulate-btn"
+              style="
+                background: linear-gradient(135deg, #ff7a18 0%, #ff4f55 100%);
+                box-shadow: 0 18px 30px rgba(255, 79, 85, 0.24);
+              "
+              onclick="goToCallStats()"
+            >
+              View Call Statistics
+            </button>
+
+            <p class="card-text">
+              Access detailed call statistics, including call counts, total
+              costs, average duration, and complete call history with
+              transcripts.
+            </p>
+          </div>
+        </div>
       </div>
+
+      <!-- Hidden script for call stats navigation -->
+      <script>
+        function goToCallStats() {
+          window.location.href = "/call-stats.html";
+        }
+      </script>
 
       <!-- Treatments Manager -->
       <div class="treatments-section">
@@ -1587,16 +1619,24 @@
           <div class="aliases-header">
             <div class="aliases-header-left">
               <h2>Employee Alias Manager</h2>
-              <p>Select an employee to view, add, or remove their alias names</p>
+              <p>
+                Select an employee to view, add, or remove their alias names
+              </p>
             </div>
           </div>
 
-          <select class="aliases-select" id="aliases-employee-select" onchange="aliasesOnEmployeeChange()">
+          <select
+            class="aliases-select"
+            id="aliases-employee-select"
+            onchange="aliasesOnEmployeeChange()"
+          >
             <option value="">— Select an employee —</option>
           </select>
 
           <div class="aliases-tags" id="aliases-tags">
-            <span class="aliases-empty-hint">Select an employee above to see their aliases</span>
+            <span class="aliases-empty-hint"
+              >Select an employee above to see their aliases</span
+            >
           </div>
 
           <div class="aliases-add-row">
@@ -1606,9 +1646,14 @@
               id="aliases-new-input"
               placeholder="New alias name…"
               disabled
-              onkeydown="if(event.key==='Enter') aliasesAdd()"
+              onkeydown="if (event.key === 'Enter') aliasesAdd();"
             />
-            <button class="aliases-add-btn" id="aliases-add-btn" onclick="aliasesAdd()" disabled>
+            <button
+              class="aliases-add-btn"
+              id="aliases-add-btn"
+              onclick="aliasesAdd()"
+              disabled
+            >
               Add Alias
             </button>
           </div>
@@ -1716,16 +1761,15 @@
         }
 
         const formattedDate = formatDateForZoho(date);
-        const url =
-          `${zohoBaseUrl}?name=${encodeURIComponent(
-            zohoHardcodedName,
-          )}&mailId=${encodeURIComponent(
-            zohoHardcodedMailId,
-          )}&date=${encodeURIComponent(
-            formattedDate,
-          )}&time=${encodeURIComponent(time)}&reason=${encodeURIComponent(
-            reason,
-          )}`;
+        const url = `${zohoBaseUrl}?name=${encodeURIComponent(
+          zohoHardcodedName,
+        )}&mailId=${encodeURIComponent(
+          zohoHardcodedMailId,
+        )}&date=${encodeURIComponent(
+          formattedDate,
+        )}&time=${encodeURIComponent(time)}&reason=${encodeURIComponent(
+          reason,
+        )}`;
 
         try {
           window.open(url, "_blank");
@@ -2112,14 +2156,17 @@
             headers: { Authorization: authCredentials },
           });
           const data = await res.json();
-          if (!data.ok) throw new Error(data.error || "Failed to load employees");
+          if (!data.ok)
+            throw new Error(data.error || "Failed to load employees");
           aliasesEmployees = data.employees || [];
           const sel = document.getElementById("aliases-employee-select");
           sel.innerHTML = '<option value="">— Select an employee —</option>';
           aliasesEmployees.forEach((emp) => {
             const opt = document.createElement("option");
             opt.value = emp.ID;
-            opt.textContent = emp.DisplayName || `${emp.FirstName} ${emp.LastName || ""}`.trim();
+            opt.textContent =
+              emp.DisplayName ||
+              `${emp.FirstName} ${emp.LastName || ""}`.trim();
             sel.appendChild(opt);
           });
         } catch (err) {
@@ -2149,11 +2196,13 @@
       function aliasesRenderTags() {
         const container = document.getElementById("aliases-tags");
         if (!aliasesCurrentId) {
-          container.innerHTML = '<span class="aliases-empty-hint">Select an employee above to see their aliases</span>';
+          container.innerHTML =
+            '<span class="aliases-empty-hint">Select an employee above to see their aliases</span>';
           return;
         }
         if (!aliasesCurrentAliases.length) {
-          container.innerHTML = '<span class="aliases-empty-hint">No aliases yet — add one below</span>';
+          container.innerHTML =
+            '<span class="aliases-empty-hint">No aliases yet — add one below</span>';
           return;
         }
         container.innerHTML = aliasesCurrentAliases
@@ -2180,14 +2229,17 @@
         btn.disabled = true;
         input.disabled = true;
         try {
-          const res = await fetch(`/admin/employees/${aliasesCurrentId}/aliases`, {
-            method: "POST",
-            headers: {
-              Authorization: authCredentials,
-              "Content-Type": "application/json",
+          const res = await fetch(
+            `/admin/employees/${aliasesCurrentId}/aliases`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: authCredentials,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ alias }),
             },
-            body: JSON.stringify({ alias }),
-          });
+          );
           const data = await res.json();
           if (!data.ok) throw new Error(data.error || "Failed to add alias");
           aliasesCurrentAliases = data.aliases;
@@ -2210,14 +2262,17 @@
         if (!confirm(`Remove alias "${alias}" from this employee?`)) return;
         aliasesSetFeedback("");
         try {
-          const res = await fetch(`/admin/employees/${aliasesCurrentId}/aliases`, {
-            method: "DELETE",
-            headers: {
-              Authorization: authCredentials,
-              "Content-Type": "application/json",
+          const res = await fetch(
+            `/admin/employees/${aliasesCurrentId}/aliases`,
+            {
+              method: "DELETE",
+              headers: {
+                Authorization: authCredentials,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ alias }),
             },
-            body: JSON.stringify({ alias }),
-          });
+          );
           const data = await res.json();
           if (!data.ok) throw new Error(data.error || "Failed to remove alias");
           aliasesCurrentAliases = data.aliases;

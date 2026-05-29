@@ -15,6 +15,7 @@ import {
   getAppointments,
   getVapiCalls,
   getRequestLogs,
+  getCallStats,
 } from "../controllers/getController";
 import { phoneController } from "../controllers/phoneController";
 import { get } from "http";
@@ -27,7 +28,7 @@ import { findAvailableTimes } from "../util/booker_util";
 
 const getRouter = Router();
 
-getRouter.get("/treatments", getTreatments); 
+getRouter.get("/treatments", getTreatments);
 getRouter.get("/treatments/id", getTreatmentById);
 getRouter.get("/treatments/name", getTreatmentByName);
 getRouter.get("/treatments/agent", getTreatmentsSimplified);
@@ -41,6 +42,7 @@ getRouter.get("/rooms", getRooms);
 
 getRouter.get("/widget/auth", getWidgetAuth);
 
+getRouter.get("/calls/stats", getCallStats);
 getRouter.get("/calls", getVapiCalls);
 getRouter.get("/logs", getRequestLogs);
 
@@ -70,7 +72,6 @@ getRouter.get("/auth-test", (req, res) => {
     message: "Authentication successful",
   });
 });
-
 
 // /**
 //  * @route   GET /config

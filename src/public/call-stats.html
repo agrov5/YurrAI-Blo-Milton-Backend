@@ -1,0 +1,893 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Call Statistics - Blo Milton Backend</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", "Arial", sans-serif;
+        background:
+          radial-gradient(
+            circle at top left,
+            rgba(81, 102, 255, 0.14),
+            transparent 28%
+          ),
+          radial-gradient(
+            circle at bottom right,
+            rgba(255, 115, 130, 0.12),
+            transparent 22%
+          ),
+          #05070f;
+        min-height: 100vh;
+        color: #eef3ff;
+      }
+
+      .header {
+        background: rgba(10, 16, 32, 0.95);
+        color: #f8fbff;
+        padding: 1.25rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 20px 80px rgba(0, 0, 0, 0.35);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(16px);
+        flex-wrap: wrap;
+        gap: 1.5rem;
+      }
+
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .header h1 {
+        font-size: 1.6rem;
+        letter-spacing: 0.03em;
+      }
+
+      .month-year-selector {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+      }
+
+      .selector-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .selector-label {
+        font-size: 0.9rem;
+        color: #cbd5ff;
+      }
+
+      .selector-input {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        color: #eef3ff;
+        padding: 0.5rem 0.75rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition:
+          border-color 0.25s,
+          box-shadow 0.25s;
+      }
+
+      .selector-input:focus {
+        outline: none;
+        border-color: #7c3aed;
+        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+      }
+
+      .selector-input option {
+        background: #0f1628;
+        color: #eef3ff;
+      }
+
+      .back-btn {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        color: white;
+        padding: 0.65rem 1.2rem;
+        border-radius: 999px;
+        cursor: pointer;
+        transition:
+          transform 0.25s ease,
+          background 0.25s ease,
+          box-shadow 0.25s ease;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      }
+
+      .back-btn:hover {
+        background: rgba(255, 255, 255, 0.16);
+        transform: translateY(-1px);
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .stat-card {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 24px;
+        padding: 1.75rem;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.28);
+        transition:
+          transform 0.25s ease,
+          border-color 0.25s ease,
+          box-shadow 0.25s ease;
+        backdrop-filter: blur(18px);
+      }
+
+      .stat-card:hover {
+        transform: translateY(-8px);
+        border-color: rgba(167, 209, 255, 0.28);
+        box-shadow: 0 35px 90px rgba(0, 0, 0, 0.35);
+      }
+
+      .stat-label {
+        color: #bec8ff;
+        font-size: 0.95rem;
+        margin-bottom: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .stat-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #f8fbff;
+        margin-bottom: 0.5rem;
+      }
+
+      .stat-unit {
+        color: #a7d1ff;
+        font-size: 0.85rem;
+      }
+
+      .call-history-section {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 24px;
+        padding: 1.75rem;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.28);
+        backdrop-filter: blur(18px);
+      }
+
+      .section-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+        padding-bottom: 1rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .section-title {
+        font-size: 1.4rem;
+        color: #f8fbff;
+        margin-bottom: 0.4rem;
+      }
+
+      .section-subtitle {
+        color: #bec8ff;
+        font-size: 0.95rem;
+      }
+
+      .call-item {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        margin-bottom: 1rem;
+        overflow: hidden;
+        transition: all 0.25s ease;
+      }
+
+      .call-item:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(167, 209, 255, 0.28);
+        transform: translateY(-2px);
+      }
+
+      .call-header {
+        background: linear-gradient(
+          135deg,
+          rgba(124, 58, 237, 0.1),
+          rgba(59, 130, 246, 0.1)
+        );
+        padding: 1rem 1.25rem;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .call-header-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        flex: 1;
+      }
+
+      .call-info-item {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .call-info-label {
+        font-size: 0.75rem;
+        color: #a7d1ff;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.25rem;
+      }
+
+      .call-info-value {
+        font-size: 0.95rem;
+        color: #f8fbff;
+        font-weight: 500;
+      }
+
+      .call-expand-icon {
+        font-size: 1.5rem;
+        color: #a7d1ff;
+        transition: transform 0.3s ease;
+        margin-left: 1rem;
+        flex-shrink: 0;
+      }
+
+      .call-expand-icon.expanded {
+        transform: rotate(180deg);
+      }
+
+      .call-details {
+        padding: 0;
+        max-height: 0;
+        overflow: hidden;
+        transition:
+          max-height 0.3s ease,
+          padding 0.3s ease;
+      }
+
+      .call-details.expanded {
+        max-height: 2000px;
+        padding: 1.25rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .detail-section {
+        margin-bottom: 1.25rem;
+      }
+
+      .detail-section:last-child {
+        margin-bottom: 0;
+      }
+
+      .detail-section-title {
+        font-size: 0.85rem;
+        color: #a7d1ff;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.75rem;
+        font-weight: 600;
+      }
+
+      .detail-content {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 1rem;
+        color: #d9e4ff;
+        line-height: 1.6;
+        word-break: break-word;
+        white-space: pre-wrap;
+        font-size: 0.9rem;
+      }
+
+      .detail-row {
+        display: grid;
+        grid-template-columns: 150px 1fr;
+        gap: 1rem;
+        margin-bottom: 0.75rem;
+      }
+
+      .detail-row:last-child {
+        margin-bottom: 0;
+      }
+
+      .detail-label {
+        color: #a7d1ff;
+        font-weight: 500;
+        font-size: 0.85rem;
+      }
+
+      .detail-value {
+        color: #d9e4ff;
+        font-size: 0.85rem;
+        word-break: break-all;
+      }
+
+      .recording-link {
+        color: #5b8cff;
+        text-decoration: none;
+        transition: color 0.25s ease;
+      }
+
+      .recording-link:hover {
+        color: #7c3aed;
+        text-decoration: underline;
+      }
+
+      .no-calls-message {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: #bec8ff;
+        font-size: 1.1rem;
+      }
+
+      .loading-state {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        gap: 1rem;
+      }
+
+      .spinner {
+        width: 24px;
+        height: 24px;
+        border: 3px solid rgba(255, 255, 255, 0.1);
+        border-top-color: #7c3aed;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @media (max-width: 1024px) {
+        .header {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .header-left {
+          flex-direction: column;
+        }
+
+        .month-year-selector {
+          flex-wrap: wrap;
+        }
+
+        .stats-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .call-header-info {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 1rem;
+        }
+
+        .header {
+          padding: 1rem;
+          gap: 1rem;
+        }
+
+        .header h1 {
+          font-size: 1.3rem;
+        }
+
+        .stats-grid {
+          grid-template-columns: 1fr;
+          gap: 1rem;
+        }
+
+        .stat-card {
+          padding: 1.25rem;
+        }
+
+        .stat-value {
+          font-size: 1.75rem;
+        }
+
+        .call-history-section {
+          padding: 1rem;
+        }
+
+        .call-header {
+          padding: 0.75rem;
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .call-header-info {
+          width: 100%;
+          grid-template-columns: 1fr;
+          gap: 0.5rem;
+          margin-bottom: 0.75rem;
+        }
+
+        .call-expand-icon {
+          align-self: flex-start;
+          margin-left: 0;
+        }
+
+        .detail-row {
+          grid-template-columns: 1fr;
+          gap: 0.5rem;
+        }
+
+        .month-year-selector {
+          width: 100%;
+        }
+
+        .selector-group {
+          flex: 1;
+        }
+
+        .selector-input {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div class="header-left">
+        <button class="back-btn" onclick="goBack()">← Back to Dashboard</button>
+        <h1>Call Statistics</h1>
+      </div>
+      <div class="month-year-selector">
+        <div class="selector-group">
+          <label class="selector-label">Month</label>
+          <select
+            class="selector-input"
+            id="monthSelector"
+            onchange="updateStats()"
+          >
+            <option value="1">January</option>
+            <option value="2">February</option>
+            <option value="3">March</option>
+            <option value="4">April</option>
+            <option value="5">May</option>
+            <option value="6">June</option>
+            <option value="7">July</option>
+            <option value="8">August</option>
+            <option value="9">September</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+          </select>
+        </div>
+        <div class="selector-group">
+          <label class="selector-label">Year</label>
+          <select
+            class="selector-input"
+            id="yearSelector"
+            onchange="updateStats()"
+          >
+            <option value="2024">2024</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+            <option value="2027">2027</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <!-- Stats Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Call Count</div>
+          <div class="stat-value" id="callCountValue">0</div>
+          <div class="stat-unit">calls this month</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Total Cost</div>
+          <div class="stat-value" id="totalCostValue">$0.00</div>
+          <div class="stat-unit">USD</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Total Minutes</div>
+          <div class="stat-value" id="totalMinutesValue">0</div>
+          <div class="stat-unit">minutes</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Average Minutes</div>
+          <div class="stat-value" id="averageMinutesValue">0</div>
+          <div class="stat-unit">per call</div>
+        </div>
+      </div>
+
+      <!-- Call History Section -->
+      <div class="call-history-section">
+        <div class="section-header">
+          <h2 class="section-title">Call History</h2>
+          <p class="section-subtitle">Detailed view of all calls this month</p>
+        </div>
+
+        <div id="callsList"></div>
+      </div>
+    </div>
+
+    <script>
+      // Set current month and year on page load
+      function initializeDateSelectors() {
+        const now = new Date();
+        document.getElementById("monthSelector").value = now.getMonth() + 1;
+        document.getElementById("yearSelector").value = now.getFullYear();
+      }
+
+      // Format date to readable format
+      function formatDate(isoDate) {
+        if (!isoDate) return "N/A";
+        const date = new Date(isoDate);
+        return date.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+      }
+
+      // Format transcript with proper newline handling
+      function formatTranscript(transcript) {
+        if (!transcript) return "No transcript available";
+        // Replace \n with actual line breaks and HTML escape
+        return transcript
+          .split("\\n")
+          .map((line) => escapeHtml(line))
+          .join("\n");
+      }
+
+      // Escape HTML special characters
+      function escapeHtml(text) {
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      // Format currency
+      function formatCurrency(amount) {
+        if (!amount) return "$0.00";
+        return "$" + parseFloat(amount).toFixed(2);
+      }
+
+      // Toggle call details
+      function toggleCallDetails(callIndex) {
+        const detailsElement = document.getElementById(
+          `call-details-${callIndex}`,
+        );
+        const iconElement = document.getElementById(`call-icon-${callIndex}`);
+
+        detailsElement.classList.toggle("expanded");
+        iconElement.classList.toggle("expanded");
+      }
+
+      // Render call item
+      function renderCallItem(call, index) {
+        const startedAt = formatDate(call.startedAt);
+        const duration = call.durationMinutes
+          ? `${call.durationMinutes.toFixed(2)} min`
+          : "N/A";
+        const cost = formatCurrency(call.cost);
+
+        return `
+          <div class="call-item">
+            <div class="call-header" onclick="toggleCallDetails(${index})">
+              <div class="call-header-info">
+                <div class="call-info-item">
+                  <div class="call-info-label">Date & Time</div>
+                  <div class="call-info-value">${startedAt}</div>
+                </div>
+                <div class="call-info-item">
+                  <div class="call-info-label">Duration</div>
+                  <div class="call-info-value">${duration}</div>
+                </div>
+                <div class="call-info-item">
+                  <div class="call-info-label">Cost</div>
+                  <div class="call-info-value">${cost}</div>
+                </div>
+                <div class="call-info-item">
+                  <div class="call-info-label">Caller</div>
+                  <div class="call-info-value">${call.callerName || call.callerNumber || "Unknown"}</div>
+                </div>
+              </div>
+              <div class="call-expand-icon" id="call-icon-${index}">▼</div>
+            </div>
+            <div class="call-details" id="call-details-${index}">
+              ${
+                call.summary
+                  ? `
+                <div class="detail-section">
+                  <div class="detail-section-title">Summary</div>
+                  <div class="detail-content">${escapeHtml(call.summary)}</div>
+                </div>
+              `
+                  : ""
+              }
+
+              ${
+                call.transcript
+                  ? `
+                <div class="detail-section">
+                  <div class="detail-section-title">Transcript</div>
+                  <div class="detail-content">${formatTranscript(call.transcript)}</div>
+                </div>
+              `
+                  : ""
+              }
+
+              <div class="detail-section">
+                <div class="detail-section-title">Details</div>
+                <div>
+                  ${
+                    call.callId
+                      ? `
+                    <div class="detail-row">
+                      <div class="detail-label">Call ID</div>
+                      <div class="detail-value">${escapeHtml(call.callId)}</div>
+                    </div>
+                  `
+                      : ""
+                  }
+                  ${
+                    call.callerNumber
+                      ? `
+                    <div class="detail-row">
+                      <div class="detail-label">Caller Number</div>
+                      <div class="detail-value">${escapeHtml(call.callerNumber)}</div>
+                    </div>
+                  `
+                      : ""
+                  }
+                  ${
+                    call.sipUri
+                      ? `
+                    <div class="detail-row">
+                      <div class="detail-label">SIP URI</div>
+                      <div class="detail-value">${escapeHtml(call.sipUri)}</div>
+                    </div>
+                  `
+                      : ""
+                  }
+                  ${
+                    call.assistantId
+                      ? `
+                    <div class="detail-row">
+                      <div class="detail-label">Assistant ID</div>
+                      <div class="detail-value">${escapeHtml(call.assistantId)}</div>
+                    </div>
+                  `
+                      : ""
+                  }
+                  ${
+                    call.phoneNumberId
+                      ? `
+                    <div class="detail-row">
+                      <div class="detail-label">Phone Number ID</div>
+                      <div class="detail-value">${escapeHtml(call.phoneNumberId)}</div>
+                    </div>
+                  `
+                      : ""
+                  }
+                  ${
+                    call.endedReason
+                      ? `
+                    <div class="detail-row">
+                      <div class="detail-label">Ended Reason</div>
+                      <div class="detail-value">${escapeHtml(call.endedReason)}</div>
+                    </div>
+                  `
+                      : ""
+                  }
+                  ${
+                    call.durationSeconds
+                      ? `
+                    <div class="detail-row">
+                      <div class="detail-label">Duration (seconds)</div>
+                      <div class="detail-value">${call.durationSeconds}</div>
+                    </div>
+                  `
+                      : ""
+                  }
+                  ${
+                    call.endedAt
+                      ? `
+                    <div class="detail-row">
+                      <div class="detail-label">Ended At</div>
+                      <div class="detail-value">${formatDate(call.endedAt)}</div>
+                    </div>
+                  `
+                      : ""
+                  }
+                </div>
+              </div>
+
+              ${
+                call.recordingUrl || call.stereoRecordingUrl
+                  ? `
+                <div class="detail-section">
+                  <div class="detail-section-title">Recording</div>
+                  <div>
+                    ${
+                      call.recordingUrl
+                        ? `
+                      <div class="detail-row">
+                        <div class="detail-label">Recording</div>
+                        <div class="detail-value">
+                          <a href="${call.recordingUrl}" target="_blank" class="recording-link">Download Recording</a>
+                        </div>
+                      </div>
+                    `
+                        : ""
+                    }
+                    ${
+                      call.stereoRecordingUrl
+                        ? `
+                      <div class="detail-row">
+                        <div class="detail-label">Stereo Recording</div>
+                        <div class="detail-value">
+                          <a href="${call.stereoRecordingUrl}" target="_blank" class="recording-link">Download Stereo Recording</a>
+                        </div>
+                      </div>
+                    `
+                        : ""
+                    }
+                  </div>
+                </div>
+              `
+                  : ""
+              }
+            </div>
+          </div>
+        `;
+      }
+
+      // Filter calls by month and year
+      function filterCallsByMonthYear(calls, month, year) {
+        return calls.filter((call) => {
+          if (!call.startedAt) return false;
+          const date = new Date(call.startedAt);
+          return (
+            date.getMonth() + 1 === parseInt(month) &&
+            date.getFullYear() === parseInt(year)
+          );
+        });
+      }
+
+      // Calculate stats from calls
+      function calculateStats(calls) {
+        let totalCost = 0;
+        let totalMinutes = 0;
+
+        calls.forEach((call) => {
+          if (call.cost) totalCost += call.cost;
+          if (call.durationMinutes) totalMinutes += call.durationMinutes;
+        });
+
+        const averageMinutes =
+          calls.length > 0 ? totalMinutes / calls.length : 0;
+
+        return {
+          callCount: calls.length,
+          totalCost: Math.round(totalCost * 100) / 100,
+          totalMinutes: Math.round(totalMinutes * 100) / 100,
+          averageMinutes: Math.round(averageMinutes * 100) / 100,
+        };
+      }
+
+      // Fetch and update stats
+      async function updateStats() {
+        const month = document.getElementById("monthSelector").value;
+        const year = document.getElementById("yearSelector").value;
+        const callsList = document.getElementById("callsList");
+
+        try {
+          callsList.innerHTML = `<div class="loading-state"><div class="spinner"></div> Loading call data...</div>`;
+
+          const authCredentials = sessionStorage.getItem("authCredentials");
+          if (!authCredentials) {
+            callsList.innerHTML = `<div class="no-calls-message">Authentication required. Please log in again.</div>`;
+            return;
+          }
+
+          const response = await fetch("/api/get/calls", {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: authCredentials,
+            },
+          });
+
+          const data = await response.json();
+
+          if (!data.success) {
+            callsList.innerHTML = `<div class="no-calls-message">Error loading call data</div>`;
+            return;
+          }
+
+          // Filter calls by selected month and year
+          const filteredCalls = filterCallsByMonthYear(
+            data.calls,
+            month,
+            year,
+          ).sort((a, b) => {
+            const dateA = new Date(a.startedAt || 0).getTime();
+            const dateB = new Date(b.startedAt || 0).getTime();
+            return dateB - dateA; // Sort descending (most recent first)
+          });
+
+          // Calculate stats
+          const stats = calculateStats(filteredCalls);
+
+          // Update stat cards
+          document.getElementById("callCountValue").textContent =
+            stats.callCount;
+          document.getElementById("totalCostValue").textContent =
+            formatCurrency(stats.totalCost);
+          document.getElementById("totalMinutesValue").textContent =
+            stats.totalMinutes.toFixed(2);
+          document.getElementById("averageMinutesValue").textContent =
+            stats.averageMinutes.toFixed(2);
+
+          // Render calls
+          if (!filteredCalls || filteredCalls.length === 0) {
+            callsList.innerHTML = `<div class="no-calls-message">No calls found for this month</div>`;
+          } else {
+            callsList.innerHTML = filteredCalls
+              .map((call, index) => renderCallItem(call, index))
+              .join("");
+          }
+        } catch (error) {
+          console.error("Error fetching call stats:", error);
+          callsList.innerHTML = `<div class="no-calls-message">Failed to load call data</div>`;
+        }
+      }
+
+      // Go back to dashboard
+      function goBack() {
+        window.location.href = "/dashboard.html";
+      }
+
+      // Initialize on page load
+      window.addEventListener("DOMContentLoaded", () => {
+        initializeDateSelectors();
+        updateStats();
+      });
+    </script>
+  </body>
+</html>

@@ -557,3 +557,66 @@ export const getRequestLogs = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const getCallStats = async (req: Request, res: Response) => {
+  const { month, year } = req.query;
+
+  try {
+    // Get current date if not provided
+    const now = new Date();
+    const targetMonth = month ? parseInt(month as string) : now.getMonth() + 1;
+    const targetYear = year ? parseInt(year as string) : now.getFullYear();
+
+    // Validate month and year
+    if (targetMonth < 1 || targetMonth > 12) {
+      return res.status(400).json({
+        success: false,
+        message: "Month must be between 1 and 12",
+      });
+    }
+
+    // Create date range for the month
+    const startDate = new Date(targetYear, targetMonth - 1, 1);
+    const endDate = new Date(targetYear, targetMonth, 1);
+
+    // Fetch all calls for the month
+    const calls = await VapiCallModel.find({
+      startedAt: {
+        $gte: startDate.toISOString(),
+        $lt: endDate.toISOString(),
+      },
+    }).sort({ startedAt: -1 });
+
+    // Calculate statistics
+    const callCount = calls.length;
+    let totalCost = 0;
+    let totalMinutes = 0;
+
+    calls.forEach((call) => {
+      if (call.cost) totalCost += call.cost;
+      if (call.durationMinutes) totalMinutes += call.durationMinutes;
+    });
+
+    const averageMinutes = callCount > 0 ? totalMinutes / callCount : 0;
+
+    res.status(200).json({
+      success: true,
+      message: "Call statistics retrieved successfully",
+      month: targetMonth,
+      year: targetYear,
+      stats: {
+        callCount,
+        totalCost: Math.round(totalCost * 100) / 100,
+        totalMinutes: Math.round(totalMinutes * 100) / 100,
+        averageMinutes: Math.round(averageMinutes * 100) / 100,
+      },
+      calls: calls,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve call statistics",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
