@@ -14,7 +14,7 @@ import { sortEmployeeIdsInTreatementsByRank } from "./db_util";
 // Example function to run and populate local DB
 async function runPopulateFunctions() {
   // Global toggle for all models
-  const useFindAndUpdate = false;
+  const useFindAndUpdate = true;
 
   if (!useFindAndUpdate) {
     await clearDB();
@@ -96,7 +96,11 @@ async function runPopulateFunctions() {
 
     if (treatments) {
       for (const treatment of treatments.Treatments || []) {
-        if (treatment.IsActive && !treatment.IsDeleted && treatment.AllowCustomersToBookOnline) {
+        if (
+          treatment.IsActive &&
+          !treatment.IsDeleted &&
+          treatment.AllowCustomersToBookOnline
+        ) {
           // Filter to only include valid employee and room IDs
           const filteredEmployeeIDs = (treatment.EmployeeIDs || []).filter(
             (id) => validEmployeeIds.has(id),

@@ -3,615 +3,668 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Call Statistics - Blo Milton Backend</title>
+    <title>Call Statistics — Blo Milton</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&display=swap" rel="stylesheet" />
     <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
+      *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+      :root {
+        --bg:          #07090f;
+        --surface:     #0c0f1d;
+        --surface2:    #131728;
+        --border:      rgba(255,255,255,0.08);
+        --border-hi:   rgba(255,255,255,0.18);
+        --text:        #eef3ff;
+        --muted:       #6d7a9f;
+        --accent:      #6366f1;
+        --accent-glow: rgba(99,102,241,0.18);
+        --purple:      #7c3aed;
+        --green:       #22c55e;
+        --green-dim:   rgba(34,197,94,0.12);
+        --orange:      #f97316;
+        --red:         #ef4444;
+        --sidebar-w:   224px;
+        --topbar-h:    64px;
+        --radius-sm:   10px;
+        --radius:      16px;
+        --radius-lg:   22px;
       }
 
       body {
-        font-family: "Inter", "Arial", sans-serif;
-        background:
-          radial-gradient(
-            circle at top left,
-            rgba(81, 102, 255, 0.14),
-            transparent 28%
-          ),
-          radial-gradient(
-            circle at bottom right,
-            rgba(255, 115, 130, 0.12),
-            transparent 22%
-          ),
-          #05070f;
+        font-family: "Inter", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
         min-height: 100vh;
-        color: #eef3ff;
+        display: flex;
+        overflow-x: hidden;
       }
 
-      .header {
-        background: rgba(10, 16, 32, 0.95);
-        color: #f8fbff;
-        padding: 1.25rem 2rem;
+      /* ── Sidebar ─────────────────────────────────────────── */
+      .sidebar {
+        width: var(--sidebar-w);
+        min-height: 100vh;
+        background: var(--surface);
+        border-right: 1px solid var(--border);
         display: flex;
-        justify-content: space-between;
+        flex-direction: column;
+        position: fixed;
+        left: 0; top: 0;
+        z-index: 100;
+        padding: 0 0 1.5rem;
+      }
+
+      .sidebar-brand {
+        display: flex;
         align-items: center;
-        box-shadow: 0 20px 80px rgba(0, 0, 0, 0.35);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        gap: 0.65rem;
+        padding: 1.25rem 1.25rem 0;
+        height: var(--topbar-h);
+      }
+
+      .brand-icon {
+        width: 32px; height: 32px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, var(--accent) 0%, var(--purple) 100%);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.95rem; font-weight: 700; color: #fff;
+        flex-shrink: 0;
+        box-shadow: 0 4px 14px rgba(99,102,241,0.35);
+      }
+
+      .brand-name {
+        font-size: 1.05rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        color: var(--text);
+      }
+
+      .sidebar-nav {
+        padding: 1.5rem 0.75rem 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        flex: 1;
+      }
+
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        padding: 0.6rem 0.75rem;
+        border-radius: var(--radius-sm);
+        color: var(--muted);
+        text-decoration: none;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: background 0.18s, color 0.18s;
+        cursor: pointer;
+        border: none;
+        background: none;
+        width: 100%;
+        text-align: left;
+      }
+
+      .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+      .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+      .nav-item.is-active {
+        background: rgba(99,102,241,0.12);
+        color: #a5b4fc;
+        border: 1px solid rgba(99,102,241,0.2);
+      }
+
+      .sidebar-divider { margin: 0.75rem 1rem; height: 1px; background: var(--border); }
+
+      .sidebar-status {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0 1.25rem;
+        font-size: 0.78rem;
+        color: var(--muted);
+      }
+
+      .pulse-dot {
+        width: 7px; height: 7px;
+        border-radius: 50%;
+        background: var(--green);
+        flex-shrink: 0;
+        animation: pulse-anim 2.4s ease-in-out infinite;
+      }
+
+      @keyframes pulse-anim {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50%       { opacity: 0.5; transform: scale(0.8); }
+      }
+
+      /* ── Main ────────────────────────────────────────────── */
+      .main {
+        margin-left: var(--sidebar-w);
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+
+      /* ── Topbar ──────────────────────────────────────────── */
+      .topbar {
+        height: var(--topbar-h);
+        border-bottom: 1px solid var(--border);
+        background: rgba(7,9,15,0.85);
         backdrop-filter: blur(16px);
-        flex-wrap: wrap;
-        gap: 1.5rem;
-      }
-
-      .header-left {
         display: flex;
         align-items: center;
+        justify-content: space-between;
+        padding: 0 2rem;
+        position: sticky;
+        top: 0;
+        z-index: 50;
         gap: 1rem;
       }
 
-      .header h1 {
-        font-size: 1.6rem;
-        letter-spacing: 0.03em;
+      .topbar-left { display: flex; align-items: center; gap: 1.25rem; }
+
+      .page-title {
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: var(--text);
+        letter-spacing: 0.01em;
+        white-space: nowrap;
       }
 
-      .month-year-selector {
+      .topbar-right { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+
+      .back-btn {
         display: flex;
-        gap: 0.75rem;
         align-items: center;
+        gap: 0.4rem;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid var(--border);
+        color: var(--muted);
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        cursor: pointer;
+        font-size: 0.78rem;
+        font-weight: 500;
+        font-family: inherit;
+        transition: background 0.2s, color 0.2s, border-color 0.2s;
+        text-decoration: none;
+        white-space: nowrap;
       }
 
-      .selector-group {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-      }
+      .back-btn:hover { background: rgba(255,255,255,0.1); color: var(--text); border-color: var(--border-hi); }
+
+      /* Month/year selectors */
+      .selector-group { display: flex; align-items: center; gap: 0.5rem; }
 
       .selector-label {
-        font-size: 0.9rem;
-        color: #cbd5ff;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--muted);
+        white-space: nowrap;
       }
 
       .selector-input {
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        color: #eef3ff;
-        padding: 0.5rem 0.75rem;
-        border-radius: 8px;
-        font-size: 0.9rem;
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        color: var(--text);
+        padding: 0.4rem 0.75rem;
+        border-radius: var(--radius-sm);
+        font-size: 0.82rem;
+        font-family: inherit;
         cursor: pointer;
-        transition:
-          border-color 0.25s,
-          box-shadow 0.25s;
-      }
-
-      .selector-input:focus {
         outline: none;
-        border-color: #7c3aed;
-        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+        transition: border-color 0.2s, box-shadow 0.2s;
       }
 
-      .selector-input option {
-        background: #0f1628;
-        color: #eef3ff;
-      }
+      .selector-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+      .selector-input option { background: #131728; color: var(--text); }
 
-      .back-btn {
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        color: white;
-        padding: 0.65rem 1.2rem;
-        border-radius: 999px;
-        cursor: pointer;
-        transition:
-          transform 0.25s ease,
-          background 0.25s ease,
-          box-shadow 0.25s ease;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-      }
-
-      .back-btn:hover {
-        background: rgba(255, 255, 255, 0.16);
-        transform: translateY(-1px);
-      }
-
-      .container {
-        max-width: 1400px;
-        margin: 0 auto;
+      /* ── Content ─────────────────────────────────────────── */
+      .content {
         padding: 2rem;
+        max-width: 1320px;
+        width: 100%;
       }
 
-      .stats-grid {
+      /* ── Stat strip ──────────────────────────────────────── */
+      .stat-strip {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
         margin-bottom: 2rem;
       }
 
-      .stat-card {
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 24px;
-        padding: 1.75rem;
-        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.28);
-        transition:
-          transform 0.25s ease,
-          border-color 0.25s ease,
-          box-shadow 0.25s ease;
-        backdrop-filter: blur(18px);
+      .stat-tile {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.4rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        transition: border-color 0.22s, transform 0.22s, box-shadow 0.22s;
+        position: relative;
+        overflow: hidden;
       }
 
-      .stat-card:hover {
-        transform: translateY(-8px);
-        border-color: rgba(167, 209, 255, 0.28);
-        box-shadow: 0 35px 90px rgba(0, 0, 0, 0.35);
+      .stat-tile::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto 0;
+        height: 2px;
+        background: var(--tile-accent, var(--accent));
+        opacity: 0.7;
+        border-radius: 999px 999px 0 0;
       }
 
-      .stat-label {
-        color: #bec8ff;
-        font-size: 0.95rem;
-        margin-bottom: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
+      .stat-tile:hover {
+        border-color: var(--border-hi);
+        transform: translateY(-3px);
+        box-shadow: 0 16px 40px rgba(0,0,0,0.3);
       }
 
-      .stat-value {
-        font-size: 2.5rem;
+      .tile-icon {
+        width: 32px; height: 32px;
+        border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        background: var(--tile-icon-bg, rgba(99,102,241,0.12));
+        flex-shrink: 0;
+      }
+      .tile-icon svg { width: 16px; height: 16px; }
+
+      .tile-bottom { display: flex; flex-direction: column; gap: 0.2rem; }
+
+      .tile-val {
+        font-size: 1.9rem;
         font-weight: 700;
-        color: #f8fbff;
-        margin-bottom: 0.5rem;
+        color: var(--text);
+        line-height: 1;
       }
 
-      .stat-unit {
-        color: #a7d1ff;
-        font-size: 0.85rem;
+      .tile-lbl {
+        font-size: 0.75rem;
+        color: var(--muted);
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
       }
 
-      .call-history-section {
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 24px;
-        padding: 1.75rem;
-        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.28);
-        backdrop-filter: blur(18px);
+      /* ── Call history section ────────────────────────────── */
+      .history-section {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        transition: border-color 0.22s;
       }
 
-      .section-header {
-        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      .history-section:hover { border-color: var(--border-hi); }
+
+      .section-head {
+        border-bottom: 1px solid var(--border);
         padding-bottom: 1rem;
         margin-bottom: 1.5rem;
       }
 
       .section-title {
-        font-size: 1.4rem;
-        color: #f8fbff;
-        margin-bottom: 0.4rem;
-      }
-
-      .section-subtitle {
-        color: #bec8ff;
         font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 0.2rem;
       }
 
+      .section-subtitle { font-size: 0.8rem; color: var(--muted); }
+
+      /* ── Call items ──────────────────────────────────────── */
       .call-item {
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 16px;
-        margin-bottom: 1rem;
+        background: rgba(0,0,0,0.15);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        margin-bottom: 0.85rem;
         overflow: hidden;
-        transition: all 0.25s ease;
+        transition: border-color 0.22s, box-shadow 0.22s, transform 0.22s;
       }
+
+      .call-item:last-child { margin-bottom: 0; }
 
       .call-item:hover {
-        background: rgba(255, 255, 255, 0.06);
-        border-color: rgba(167, 209, 255, 0.28);
+        border-color: var(--border-hi);
         transform: translateY(-2px);
+        box-shadow: 0 12px 30px rgba(0,0,0,0.3);
       }
 
       .call-header {
-        background: linear-gradient(
-          135deg,
-          rgba(124, 58, 237, 0.1),
-          rgba(59, 130, 246, 0.1)
-        );
         padding: 1rem 1.25rem;
         cursor: pointer;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        background: linear-gradient(135deg, rgba(99,102,241,0.06) 0%, rgba(124,58,237,0.04) 100%);
+        user-select: none;
       }
 
       .call-header-info {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
         gap: 1rem;
         flex: 1;
       }
 
-      .call-info-item {
-        display: flex;
-        flex-direction: column;
-      }
+      .call-info-item { display: flex; flex-direction: column; gap: 0.15rem; }
 
       .call-info-label {
-        font-size: 0.75rem;
-        color: #a7d1ff;
+        font-size: 0.68rem;
+        color: var(--muted);
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin-bottom: 0.25rem;
+        letter-spacing: 0.07em;
+        font-weight: 600;
       }
 
       .call-info-value {
-        font-size: 0.95rem;
-        color: #f8fbff;
+        font-size: 0.875rem;
+        color: var(--text);
         font-weight: 500;
       }
 
       .call-expand-icon {
-        font-size: 1.5rem;
-        color: #a7d1ff;
-        transition: transform 0.3s ease;
-        margin-left: 1rem;
+        font-size: 0.7rem;
+        color: var(--muted);
+        margin-left: 1.25rem;
         flex-shrink: 0;
+        transition: transform 0.28s ease;
+        opacity: 0.7;
       }
 
-      .call-expand-icon.expanded {
-        transform: rotate(180deg);
-      }
+      .call-expand-icon.expanded { transform: rotate(180deg); }
 
       .call-details {
-        padding: 0;
         max-height: 0;
         overflow: hidden;
-        transition:
-          max-height 0.3s ease,
-          padding 0.3s ease;
+        transition: max-height 0.32s ease, padding 0.32s ease;
+        padding: 0 1.25rem;
       }
 
       .call-details.expanded {
-        max-height: 2000px;
+        max-height: 2400px;
         padding: 1.25rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        border-top: 1px solid var(--border);
       }
 
-      .detail-section {
-        margin-bottom: 1.25rem;
-      }
-
-      .detail-section:last-child {
-        margin-bottom: 0;
-      }
+      .detail-section { margin-bottom: 1.25rem; }
+      .detail-section:last-child { margin-bottom: 0; }
 
       .detail-section-title {
-        font-size: 0.85rem;
-        color: #a7d1ff;
+        font-size: 0.7rem;
+        color: var(--muted);
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin-bottom: 0.75rem;
+        letter-spacing: 0.07em;
         font-weight: 600;
+        margin-bottom: 0.6rem;
       }
 
       .detail-content {
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 12px;
-        padding: 1rem;
-        color: #d9e4ff;
-        line-height: 1.6;
-        word-break: break-word;
+        background: rgba(0,0,0,0.2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 0.9rem 1rem;
+        color: #c7d2fe;
+        line-height: 1.65;
         white-space: pre-wrap;
-        font-size: 0.9rem;
+        word-break: break-word;
+        font-size: 0.85rem;
       }
 
       .detail-row {
         display: grid;
-        grid-template-columns: 150px 1fr;
-        gap: 1rem;
-        margin-bottom: 0.75rem;
+        grid-template-columns: 160px 1fr;
+        gap: 0.75rem;
+        margin-bottom: 0.6rem;
+        align-items: start;
       }
+      .detail-row:last-child { margin-bottom: 0; }
 
-      .detail-row:last-child {
-        margin-bottom: 0;
-      }
-
-      .detail-label {
-        color: #a7d1ff;
-        font-weight: 500;
-        font-size: 0.85rem;
-      }
-
-      .detail-value {
-        color: #d9e4ff;
-        font-size: 0.85rem;
-        word-break: break-all;
-      }
+      .detail-label { color: var(--muted); font-size: 0.8rem; font-weight: 500; }
+      .detail-value { color: #d4dbff; font-size: 0.8rem; word-break: break-all; }
 
       .recording-link {
-        color: #5b8cff;
+        color: #818cf8;
         text-decoration: none;
-        transition: color 0.25s ease;
+        transition: color 0.18s;
       }
+      .recording-link:hover { color: #a5b4fc; text-decoration: underline; }
 
-      .recording-link:hover {
-        color: #7c3aed;
-        text-decoration: underline;
-      }
-
-      .no-calls-message {
+      /* ── States ──────────────────────────────────────────── */
+      .no-calls, .loading-state {
         text-align: center;
         padding: 3rem 1rem;
-        color: #bec8ff;
-        font-size: 1.1rem;
-      }
-
-      .loading-state {
+        color: var(--muted);
+        font-size: 0.9rem;
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 2rem;
-        gap: 1rem;
+        gap: 0.75rem;
       }
 
       .spinner {
-        width: 24px;
-        height: 24px;
-        border: 3px solid rgba(255, 255, 255, 0.1);
-        border-top-color: #7c3aed;
+        width: 20px; height: 20px;
+        border: 2px solid rgba(255,255,255,0.1);
+        border-top-color: var(--accent);
         border-radius: 50%;
-        animation: spin 0.8s linear infinite;
+        animation: spin 0.7s linear infinite;
+        flex-shrink: 0;
       }
 
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
+      @keyframes spin { to { transform: rotate(360deg); } }
+
+      /* ── Responsive ──────────────────────────────────────── */
+      @media (max-width: 1200px) {
+        .stat-strip { grid-template-columns: repeat(2, 1fr); }
       }
 
       @media (max-width: 1024px) {
-        .header {
-          flex-direction: column;
-          align-items: stretch;
-        }
-
-        .header-left {
-          flex-direction: column;
-        }
-
-        .month-year-selector {
-          flex-wrap: wrap;
-        }
-
-        .stats-grid {
-          grid-template-columns: repeat(2, 1fr);
-        }
-
-        .call-header-info {
-          grid-template-columns: repeat(2, 1fr);
-        }
+        .topbar { flex-wrap: wrap; height: auto; padding: 0.75rem 1.25rem; }
+        .call-header-info { grid-template-columns: repeat(2, 1fr); }
       }
 
       @media (max-width: 768px) {
-        .container {
-          padding: 1rem;
-        }
+        .sidebar { display: none; }
+        .main { margin-left: 0; }
+        .content { padding: 1rem; }
+        .stat-strip { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+        .topbar { padding: 0.75rem 1rem; }
+        .detail-row { grid-template-columns: 1fr; gap: 0.25rem; }
+        .call-header { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+        .call-expand-icon { margin-left: 0; }
+        .call-header-info { width: 100%; }
+      }
 
-        .header {
-          padding: 1rem;
-          gap: 1rem;
-        }
-
-        .header h1 {
-          font-size: 1.3rem;
-        }
-
-        .stats-grid {
-          grid-template-columns: 1fr;
-          gap: 1rem;
-        }
-
-        .stat-card {
-          padding: 1.25rem;
-        }
-
-        .stat-value {
-          font-size: 1.75rem;
-        }
-
-        .call-history-section {
-          padding: 1rem;
-        }
-
-        .call-header {
-          padding: 0.75rem;
-          flex-direction: column;
-          align-items: flex-start;
-        }
-
-        .call-header-info {
-          width: 100%;
-          grid-template-columns: 1fr;
-          gap: 0.5rem;
-          margin-bottom: 0.75rem;
-        }
-
-        .call-expand-icon {
-          align-self: flex-start;
-          margin-left: 0;
-        }
-
-        .detail-row {
-          grid-template-columns: 1fr;
-          gap: 0.5rem;
-        }
-
-        .month-year-selector {
-          width: 100%;
-        }
-
-        .selector-group {
-          flex: 1;
-        }
-
-        .selector-input {
-          width: 100%;
-        }
+      @media (max-width: 480px) {
+        .stat-strip { grid-template-columns: 1fr; }
       }
     </style>
   </head>
   <body>
-    <div class="header">
-      <div class="header-left">
-        <button class="back-btn" onclick="goBack()">← Back to Dashboard</button>
-        <h1>Call Statistics</h1>
-      </div>
-      <div class="month-year-selector">
-        <div class="selector-group">
-          <label class="selector-label">Month</label>
-          <select
-            class="selector-input"
-            id="monthSelector"
-            onchange="updateStats()"
-          >
-            <option value="1">January</option>
-            <option value="2">February</option>
-            <option value="3">March</option>
-            <option value="4">April</option>
-            <option value="5">May</option>
-            <option value="6">June</option>
-            <option value="7">July</option>
-            <option value="8">August</option>
-            <option value="9">September</option>
-            <option value="10">October</option>
-            <option value="11">November</option>
-            <option value="12">December</option>
-          </select>
-        </div>
-        <div class="selector-group">
-          <label class="selector-label">Year</label>
-          <select
-            class="selector-input"
-            id="yearSelector"
-            onchange="updateStats()"
-          >
-            <option value="2024">2024</option>
-            <option value="2025">2025</option>
-            <option value="2026">2026</option>
-            <option value="2027">2027</option>
-          </select>
-        </div>
-      </div>
-    </div>
 
-    <div class="container">
-      <!-- Stats Cards -->
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">Call Count</div>
-          <div class="stat-value" id="callCountValue">0</div>
-          <div class="stat-unit">calls this month</div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-label">Total Cost</div>
-          <div class="stat-value" id="totalCostValue">$0.00</div>
-          <div class="stat-unit">USD</div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-label">Total Minutes</div>
-          <div class="stat-value" id="totalMinutesValue">0</div>
-          <div class="stat-unit">minutes</div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-label">Average Minutes</div>
-          <div class="stat-value" id="averageMinutesValue">0</div>
-          <div class="stat-unit">per call</div>
-        </div>
+    <!-- ── Sidebar ─────────────────────────────────────────── -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-icon">Y</div>
+        <span class="brand-name">YurrAI</span>
       </div>
 
-      <!-- Call History Section -->
-      <div class="call-history-section">
-        <div class="section-header">
-          <h2 class="section-title">Call History</h2>
-          <p class="section-subtitle">Detailed view of all calls this month</p>
+      <nav class="sidebar-nav">
+        <a class="nav-item" href="/dashboard.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </a>
+        <a class="nav-item is-active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.16 6.16l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92v2z"/></svg>
+          Call Stats
+        </a>
+        <a class="nav-item" href="/manage.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          Staff &amp; Treatments
+        </a>
+      </nav>
+
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-status">
+        <span class="pulse-dot"></span>
+        All systems operational
+      </div>
+    </aside>
+
+    <!-- ── Main ────────────────────────────────────────────── -->
+    <div class="main">
+
+      <!-- Topbar -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <a class="back-btn" href="/dashboard.html">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Back
+          </a>
+          <h1 class="page-title">Call Statistics</h1>
+        </div>
+        <div class="topbar-right">
+          <div class="selector-group">
+            <label class="selector-label">Month</label>
+            <select class="selector-input" id="monthSelector" onchange="updateStats()">
+              <option value="1">January</option>
+              <option value="2">February</option>
+              <option value="3">March</option>
+              <option value="4">April</option>
+              <option value="5">May</option>
+              <option value="6">June</option>
+              <option value="7">July</option>
+              <option value="8">August</option>
+              <option value="9">September</option>
+              <option value="10">October</option>
+              <option value="11">November</option>
+              <option value="12">December</option>
+            </select>
+          </div>
+          <div class="selector-group">
+            <label class="selector-label">Year</label>
+            <select class="selector-input" id="yearSelector" onchange="updateStats()">
+              <option value="2024">2024</option>
+              <option value="2025">2025</option>
+              <option value="2026">2026</option>
+              <option value="2027">2027</option>
+            </select>
+          </div>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <div class="content">
+
+        <!-- Stat strip -->
+        <div class="stat-strip">
+          <div class="stat-tile" style="--tile-accent: #6366f1; --tile-icon-bg: rgba(99,102,241,0.1);">
+            <div class="tile-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </div>
+            <div class="tile-bottom">
+              <div class="tile-val" id="callCountValue">0</div>
+              <div class="tile-lbl">Calls This Month</div>
+            </div>
+          </div>
+
+          <div class="stat-tile" style="--tile-accent: #22c55e; --tile-icon-bg: rgba(34,197,94,0.1);">
+            <div class="tile-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+            </div>
+            <div class="tile-bottom">
+              <div class="tile-val" id="totalCostValue">$0.00</div>
+              <div class="tile-lbl">Total Cost (USD)</div>
+            </div>
+          </div>
+
+          <div class="stat-tile" style="--tile-accent: #f97316; --tile-icon-bg: rgba(249,115,22,0.1);">
+            <div class="tile-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div class="tile-bottom">
+              <div class="tile-val" id="totalMinutesValue">0</div>
+              <div class="tile-lbl">Total Minutes</div>
+            </div>
+          </div>
+
+          <div class="stat-tile" style="--tile-accent: #0ea5e9; --tile-icon-bg: rgba(14,165,233,0.1);">
+            <div class="tile-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+            </div>
+            <div class="tile-bottom">
+              <div class="tile-val" id="averageMinutesValue">0</div>
+              <div class="tile-lbl">Avg Min / Call</div>
+            </div>
+          </div>
         </div>
 
-        <div id="callsList"></div>
-      </div>
-    </div>
+        <!-- Call history -->
+        <div class="history-section">
+          <div class="section-head">
+            <h2 class="section-title">Call History</h2>
+            <p class="section-subtitle">All calls for the selected month, most recent first</p>
+          </div>
+          <div id="callsList"></div>
+        </div>
+
+      </div><!-- /content -->
+    </div><!-- /main -->
 
     <script>
-      // Set current month and year on page load
       function initializeDateSelectors() {
         const now = new Date();
         document.getElementById("monthSelector").value = now.getMonth() + 1;
-        document.getElementById("yearSelector").value = now.getFullYear();
+        document.getElementById("yearSelector").value  = now.getFullYear();
       }
 
-      // Format date to readable format
       function formatDate(isoDate) {
         if (!isoDate) return "N/A";
-        const date = new Date(isoDate);
-        return date.toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
+        return new Date(isoDate).toLocaleDateString("en-US", {
+          month:"short", day:"numeric", year:"numeric",
+          hour:"2-digit", minute:"2-digit"
         });
       }
 
-      // Format transcript with proper newline handling
       function formatTranscript(transcript) {
         if (!transcript) return "No transcript available";
-        // Replace \n with actual line breaks and HTML escape
-        return transcript
-          .split("\\n")
-          .map((line) => escapeHtml(line))
-          .join("\n");
+        return transcript.split("\\n").map(l => escapeHtml(l)).join("\n");
       }
 
-      // Escape HTML special characters
       function escapeHtml(text) {
-        const div = document.createElement("div");
-        div.textContent = text;
-        return div.innerHTML;
+        const d = document.createElement("div");
+        d.textContent = text;
+        return d.innerHTML;
       }
 
-      // Format currency
       function formatCurrency(amount) {
         if (!amount) return "$0.00";
         return "$" + parseFloat(amount).toFixed(2);
       }
 
-      // Toggle call details
-      function toggleCallDetails(callIndex) {
-        const detailsElement = document.getElementById(
-          `call-details-${callIndex}`,
-        );
-        const iconElement = document.getElementById(`call-icon-${callIndex}`);
-
-        detailsElement.classList.toggle("expanded");
-        iconElement.classList.toggle("expanded");
+      function toggleCallDetails(index) {
+        document.getElementById(`call-details-${index}`).classList.toggle("expanded");
+        document.getElementById(`call-icon-${index}`).classList.toggle("expanded");
       }
 
-      // Render call item
       function renderCallItem(call, index) {
-        const startedAt = formatDate(call.startedAt);
-        const duration = call.durationMinutes
-          ? `${call.durationMinutes.toFixed(2)} min`
-          : "N/A";
-        const cost = formatCurrency(call.cost);
+        const started  = formatDate(call.startedAt);
+        const duration = call.durationMinutes ? `${call.durationMinutes.toFixed(2)} min` : "N/A";
+        const cost     = formatCurrency(call.cost);
+        const caller   = call.callerName || call.callerNumber || "Unknown";
 
         return `
           <div class="call-item">
             <div class="call-header" onclick="toggleCallDetails(${index})">
               <div class="call-header-info">
                 <div class="call-info-item">
-                  <div class="call-info-label">Date & Time</div>
-                  <div class="call-info-value">${startedAt}</div>
+                  <div class="call-info-label">Date &amp; Time</div>
+                  <div class="call-info-value">${started}</div>
                 </div>
                 <div class="call-info-item">
                   <div class="call-info-label">Duration</div>
@@ -623,267 +676,105 @@
                 </div>
                 <div class="call-info-item">
                   <div class="call-info-label">Caller</div>
-                  <div class="call-info-value">${call.callerName || call.callerNumber || "Unknown"}</div>
+                  <div class="call-info-value">${escapeHtml(caller)}</div>
                 </div>
               </div>
-              <div class="call-expand-icon" id="call-icon-${index}">▼</div>
+              <span class="call-expand-icon" id="call-icon-${index}">▼</span>
             </div>
             <div class="call-details" id="call-details-${index}">
-              ${
-                call.summary
-                  ? `
+              ${call.summary ? `
                 <div class="detail-section">
                   <div class="detail-section-title">Summary</div>
                   <div class="detail-content">${escapeHtml(call.summary)}</div>
-                </div>
-              `
-                  : ""
-              }
-
-              ${
-                call.transcript
-                  ? `
+                </div>` : ""}
+              ${call.transcript ? `
                 <div class="detail-section">
                   <div class="detail-section-title">Transcript</div>
                   <div class="detail-content">${formatTranscript(call.transcript)}</div>
-                </div>
-              `
-                  : ""
-              }
-
+                </div>` : ""}
               <div class="detail-section">
                 <div class="detail-section-title">Details</div>
-                <div>
-                  ${
-                    call.callId
-                      ? `
-                    <div class="detail-row">
-                      <div class="detail-label">Call ID</div>
-                      <div class="detail-value">${escapeHtml(call.callId)}</div>
-                    </div>
-                  `
-                      : ""
-                  }
-                  ${
-                    call.callerNumber
-                      ? `
-                    <div class="detail-row">
-                      <div class="detail-label">Caller Number</div>
-                      <div class="detail-value">${escapeHtml(call.callerNumber)}</div>
-                    </div>
-                  `
-                      : ""
-                  }
-                  ${
-                    call.sipUri
-                      ? `
-                    <div class="detail-row">
-                      <div class="detail-label">SIP URI</div>
-                      <div class="detail-value">${escapeHtml(call.sipUri)}</div>
-                    </div>
-                  `
-                      : ""
-                  }
-                  ${
-                    call.assistantId
-                      ? `
-                    <div class="detail-row">
-                      <div class="detail-label">Assistant ID</div>
-                      <div class="detail-value">${escapeHtml(call.assistantId)}</div>
-                    </div>
-                  `
-                      : ""
-                  }
-                  ${
-                    call.phoneNumberId
-                      ? `
-                    <div class="detail-row">
-                      <div class="detail-label">Phone Number ID</div>
-                      <div class="detail-value">${escapeHtml(call.phoneNumberId)}</div>
-                    </div>
-                  `
-                      : ""
-                  }
-                  ${
-                    call.endedReason
-                      ? `
-                    <div class="detail-row">
-                      <div class="detail-label">Ended Reason</div>
-                      <div class="detail-value">${escapeHtml(call.endedReason)}</div>
-                    </div>
-                  `
-                      : ""
-                  }
-                  ${
-                    call.durationSeconds
-                      ? `
-                    <div class="detail-row">
-                      <div class="detail-label">Duration (seconds)</div>
-                      <div class="detail-value">${call.durationSeconds}</div>
-                    </div>
-                  `
-                      : ""
-                  }
-                  ${
-                    call.endedAt
-                      ? `
-                    <div class="detail-row">
-                      <div class="detail-label">Ended At</div>
-                      <div class="detail-value">${formatDate(call.endedAt)}</div>
-                    </div>
-                  `
-                      : ""
-                  }
-                </div>
+                ${call.callId        ? `<div class="detail-row"><div class="detail-label">Call ID</div><div class="detail-value">${escapeHtml(call.callId)}</div></div>` : ""}
+                ${call.callerNumber  ? `<div class="detail-row"><div class="detail-label">Caller Number</div><div class="detail-value">${escapeHtml(call.callerNumber)}</div></div>` : ""}
+                ${call.sipUri        ? `<div class="detail-row"><div class="detail-label">SIP URI</div><div class="detail-value">${escapeHtml(call.sipUri)}</div></div>` : ""}
+                ${call.assistantId   ? `<div class="detail-row"><div class="detail-label">Assistant ID</div><div class="detail-value">${escapeHtml(call.assistantId)}</div></div>` : ""}
+                ${call.phoneNumberId ? `<div class="detail-row"><div class="detail-label">Phone Number ID</div><div class="detail-value">${escapeHtml(call.phoneNumberId)}</div></div>` : ""}
+                ${call.endedReason   ? `<div class="detail-row"><div class="detail-label">Ended Reason</div><div class="detail-value">${escapeHtml(call.endedReason)}</div></div>` : ""}
+                ${call.durationSeconds ? `<div class="detail-row"><div class="detail-label">Duration (sec)</div><div class="detail-value">${call.durationSeconds}</div></div>` : ""}
+                ${call.endedAt       ? `<div class="detail-row"><div class="detail-label">Ended At</div><div class="detail-value">${formatDate(call.endedAt)}</div></div>` : ""}
               </div>
-
-              ${
-                call.recordingUrl || call.stereoRecordingUrl
-                  ? `
+              ${call.recordingUrl || call.stereoRecordingUrl ? `
                 <div class="detail-section">
                   <div class="detail-section-title">Recording</div>
-                  <div>
-                    ${
-                      call.recordingUrl
-                        ? `
-                      <div class="detail-row">
-                        <div class="detail-label">Recording</div>
-                        <div class="detail-value">
-                          <a href="${call.recordingUrl}" target="_blank" class="recording-link">Download Recording</a>
-                        </div>
-                      </div>
-                    `
-                        : ""
-                    }
-                    ${
-                      call.stereoRecordingUrl
-                        ? `
-                      <div class="detail-row">
-                        <div class="detail-label">Stereo Recording</div>
-                        <div class="detail-value">
-                          <a href="${call.stereoRecordingUrl}" target="_blank" class="recording-link">Download Stereo Recording</a>
-                        </div>
-                      </div>
-                    `
-                        : ""
-                    }
-                  </div>
-                </div>
-              `
-                  : ""
-              }
+                  ${call.recordingUrl       ? `<div class="detail-row"><div class="detail-label">Recording</div><div class="detail-value"><a href="${call.recordingUrl}" target="_blank" class="recording-link">Download</a></div></div>` : ""}
+                  ${call.stereoRecordingUrl ? `<div class="detail-row"><div class="detail-label">Stereo</div><div class="detail-value"><a href="${call.stereoRecordingUrl}" target="_blank" class="recording-link">Download Stereo</a></div></div>` : ""}
+                </div>` : ""}
             </div>
-          </div>
-        `;
+          </div>`;
       }
 
-      // Filter calls by month and year
       function filterCallsByMonthYear(calls, month, year) {
-        return calls.filter((call) => {
-          if (!call.startedAt) return false;
-          const date = new Date(call.startedAt);
-          return (
-            date.getMonth() + 1 === parseInt(month) &&
-            date.getFullYear() === parseInt(year)
-          );
+        return calls.filter(c => {
+          if (!c.startedAt) return false;
+          const d = new Date(c.startedAt);
+          return d.getMonth() + 1 === parseInt(month) && d.getFullYear() === parseInt(year);
         });
       }
 
-      // Calculate stats from calls
       function calculateStats(calls) {
-        let totalCost = 0;
-        let totalMinutes = 0;
-
-        calls.forEach((call) => {
-          if (call.cost) totalCost += call.cost;
-          if (call.durationMinutes) totalMinutes += call.durationMinutes;
+        let totalCost = 0, totalMinutes = 0;
+        calls.forEach(c => {
+          if (c.cost) totalCost += c.cost;
+          if (c.durationMinutes) totalMinutes += c.durationMinutes;
         });
-
-        const averageMinutes =
-          calls.length > 0 ? totalMinutes / calls.length : 0;
-
+        const avg = calls.length > 0 ? totalMinutes / calls.length : 0;
         return {
           callCount: calls.length,
           totalCost: Math.round(totalCost * 100) / 100,
           totalMinutes: Math.round(totalMinutes * 100) / 100,
-          averageMinutes: Math.round(averageMinutes * 100) / 100,
+          averageMinutes: Math.round(avg * 100) / 100,
         };
       }
 
-      // Fetch and update stats
       async function updateStats() {
-        const month = document.getElementById("monthSelector").value;
-        const year = document.getElementById("yearSelector").value;
+        const month    = document.getElementById("monthSelector").value;
+        const year     = document.getElementById("yearSelector").value;
         const callsList = document.getElementById("callsList");
 
+        callsList.innerHTML = `<div class="loading-state"><div class="spinner"></div> Loading call data…</div>`;
+
+        const authCredentials = sessionStorage.getItem("authCredentials");
+        if (!authCredentials) {
+          callsList.innerHTML = `<div class="no-calls">Authentication required. Please <a href="/admin/login" style="color:#818cf8">log in</a>.</div>`;
+          return;
+        }
+
         try {
-          callsList.innerHTML = `<div class="loading-state"><div class="spinner"></div> Loading call data...</div>`;
-
-          const authCredentials = sessionStorage.getItem("authCredentials");
-          if (!authCredentials) {
-            callsList.innerHTML = `<div class="no-calls-message">Authentication required. Please log in again.</div>`;
-            return;
-          }
-
-          const response = await fetch("/api/get/calls", {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: authCredentials,
-            },
+          const res  = await fetch("/api/get/calls", {
+            headers: { "Content-Type":"application/json", Authorization: authCredentials }
           });
+          const data = await res.json();
 
-          const data = await response.json();
+          if (!data.success) { callsList.innerHTML = `<div class="no-calls">Error loading call data.</div>`; return; }
 
-          if (!data.success) {
-            callsList.innerHTML = `<div class="no-calls-message">Error loading call data</div>`;
-            return;
-          }
+          const filtered = filterCallsByMonthYear(data.calls, month, year)
+            .sort((a, b) => new Date(b.startedAt||0) - new Date(a.startedAt||0));
 
-          // Filter calls by selected month and year
-          const filteredCalls = filterCallsByMonthYear(
-            data.calls,
-            month,
-            year,
-          ).sort((a, b) => {
-            const dateA = new Date(a.startedAt || 0).getTime();
-            const dateB = new Date(b.startedAt || 0).getTime();
-            return dateB - dateA; // Sort descending (most recent first)
-          });
+          const stats = calculateStats(filtered);
+          document.getElementById("callCountValue").textContent      = stats.callCount;
+          document.getElementById("totalCostValue").textContent      = formatCurrency(stats.totalCost);
+          document.getElementById("totalMinutesValue").textContent   = stats.totalMinutes.toFixed(2);
+          document.getElementById("averageMinutesValue").textContent = stats.averageMinutes.toFixed(2);
 
-          // Calculate stats
-          const stats = calculateStats(filteredCalls);
-
-          // Update stat cards
-          document.getElementById("callCountValue").textContent =
-            stats.callCount;
-          document.getElementById("totalCostValue").textContent =
-            formatCurrency(stats.totalCost);
-          document.getElementById("totalMinutesValue").textContent =
-            stats.totalMinutes.toFixed(2);
-          document.getElementById("averageMinutesValue").textContent =
-            stats.averageMinutes.toFixed(2);
-
-          // Render calls
-          if (!filteredCalls || filteredCalls.length === 0) {
-            callsList.innerHTML = `<div class="no-calls-message">No calls found for this month</div>`;
-          } else {
-            callsList.innerHTML = filteredCalls
-              .map((call, index) => renderCallItem(call, index))
-              .join("");
-          }
-        } catch (error) {
-          console.error("Error fetching call stats:", error);
-          callsList.innerHTML = `<div class="no-calls-message">Failed to load call data</div>`;
+          callsList.innerHTML = filtered.length
+            ? filtered.map((c, i) => renderCallItem(c, i)).join("")
+            : `<div class="no-calls">No calls found for this period.</div>`;
+        } catch (e) {
+          console.error(e);
+          callsList.innerHTML = `<div class="no-calls">Failed to load call data.</div>`;
         }
       }
 
-      // Go back to dashboard
-      function goBack() {
-        window.location.href = "/dashboard.html";
-      }
-
-      // Initialize on page load
       window.addEventListener("DOMContentLoaded", () => {
         initializeDateSelectors();
         updateStats();

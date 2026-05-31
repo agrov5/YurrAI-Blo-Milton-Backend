@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Staff &amp; Treatments — Blo Milton</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&display=swap" rel="stylesheet" />
+    <style>
+      *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+      :root {
+        --bg:        #07090f;
+        --surface:   #0c0f1d;
+        --surface2:  #131728;
+        --border:    rgba(255,255,255,0.08);
+        --border-hi: rgba(255,255,255,0.18);
+        --text:      #eef3ff;
+        --muted:     #6d7a9f;
+        --accent:    #6366f1;
+        --purple:    #7c3aed;
+        --green:     #22c55e;
+        --green-dim: rgba(34,197,94,0.12);
+        --sidebar-w: 224px;
+        --topbar-h:  64px;
+        --radius-sm: 10px;
+        --radius:    16px;
+        --radius-lg: 22px;
+      }
+
+      body {
+        font-family: "Inter", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        display: flex;
+        overflow-x: hidden;
+      }
+
+      /* ── Sidebar ─────────────────────────────────────────── */
+      .sidebar {
+        width: var(--sidebar-w);
+        min-height: 100vh;
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        display: flex; flex-direction: column;
+        position: fixed; left: 0; top: 0;
+        z-index: 100; padding: 0 0 1.5rem;
+      }
+
+      .sidebar-brand {
+        display: flex; align-items: center; gap: 0.65rem;
+        padding: 1.25rem 1.25rem 0; height: var(--topbar-h);
+      }
+
+      .brand-icon {
+        width: 32px; height: 32px; border-radius: 8px;
+        background: linear-gradient(135deg, var(--accent) 0%, var(--purple) 100%);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.95rem; font-weight: 700; color: #fff; flex-shrink: 0;
+        box-shadow: 0 4px 14px rgba(99,102,241,0.35);
+      }
+
+      .brand-name { font-size: 1.05rem; font-weight: 700; letter-spacing: 0.02em; color: var(--text); }
+
+      .sidebar-nav { padding: 1.5rem 0.75rem 1rem; display: flex; flex-direction: column; gap: 2px; flex: 1; }
+
+      .nav-item {
+        display: flex; align-items: center; gap: 0.7rem;
+        padding: 0.6rem 0.75rem; border-radius: var(--radius-sm);
+        color: var(--muted); text-decoration: none;
+        font-size: 0.875rem; font-weight: 500;
+        transition: background 0.18s, color 0.18s;
+      }
+      .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+      .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+      .nav-item.is-active { background: rgba(99,102,241,0.12); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.2); }
+
+      .sidebar-divider { margin: 0.75rem 1rem; height: 1px; background: var(--border); }
+
+      .sidebar-status {
+        display: flex; align-items: center; gap: 0.55rem;
+        padding: 0 1.25rem; font-size: 0.78rem; color: var(--muted);
+      }
+
+      .pulse-dot {
+        width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0;
+        animation: pulse-anim 2.4s ease-in-out infinite;
+      }
+      @keyframes pulse-anim { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+
+      /* ── Main ────────────────────────────────────────────── */
+      .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+      /* ── Topbar ──────────────────────────────────────────── */
+      .topbar {
+        height: var(--topbar-h);
+        border-bottom: 1px solid var(--border);
+        background: rgba(7,9,15,0.85); backdrop-filter: blur(16px);
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 0 2rem; position: sticky; top: 0; z-index: 50;
+      }
+
+      .topbar-left { display: flex; align-items: center; gap: 1.25rem; }
+      .page-title { font-size: 1.05rem; font-weight: 600; color: var(--text); letter-spacing: 0.01em; }
+
+      .back-btn {
+        display: flex; align-items: center; gap: 0.4rem;
+        background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+        color: var(--muted); padding: 0.4rem 0.9rem; border-radius: 999px;
+        cursor: pointer; font-size: 0.78rem; font-weight: 500; font-family: inherit;
+        transition: background 0.2s, color 0.2s, border-color 0.2s; text-decoration: none;
+      }
+      .back-btn:hover { background: rgba(255,255,255,0.1); color: var(--text); border-color: var(--border-hi); }
+
+      /* ── Content ─────────────────────────────────────────── */
+      .content { padding: 2rem; max-width: 1320px; width: 100%; }
+
+      /* ── Section blocks ──────────────────────────────────── */
+      .section-block {
+        background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+        padding: 1.5rem; margin-bottom: 1.25rem; transition: border-color 0.22s;
+      }
+      .section-block:hover { border-color: var(--border-hi); }
+
+      .section-head {
+        display: flex; justify-content: space-between; align-items: flex-start;
+        border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 1.25rem; gap: 1rem;
+      }
+
+      .section-head-left h2 { font-size: 0.95rem; font-weight: 600; color: var(--text); margin-bottom: 0.15rem; }
+      .section-head-left p  { font-size: 0.8rem; color: var(--muted); }
+
+      .badge-strip { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+
+      .badge {
+        background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+        border-radius: 999px; padding: 0.2rem 0.65rem;
+        font-size: 0.75rem; color: var(--muted); font-weight: 500;
+      }
+      .badge.accent { background: rgba(99,102,241,0.1); border-color: rgba(99,102,241,0.22); color: #a5b4fc; }
+
+      /* ── Search / inputs ─────────────────────────────────── */
+      .search-input, .field {
+        width: 100%; padding: 0.6rem 0.85rem;
+        background: var(--surface2); border: 1px solid var(--border);
+        border-radius: var(--radius-sm); color: var(--text);
+        font-size: 0.875rem; font-family: inherit; outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+      .search-input { margin-bottom: 0.9rem; }
+      .search-input:focus, .field:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+      .search-input::placeholder, .field::placeholder { color: rgba(255,255,255,0.22); }
+      .field:disabled { opacity: 0.35; cursor: not-allowed; }
+
+      .select-field {
+        width: 100%; padding: 0.6rem 0.85rem;
+        background: var(--surface2); border: 1px solid var(--border);
+        border-radius: var(--radius-sm); color: var(--text);
+        font-size: 0.875rem; font-family: inherit; outline: none;
+        cursor: pointer; appearance: none; margin-bottom: 1rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+      .select-field:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+      .select-field option { background: #131728; color: var(--text); }
+
+      /* ── Treatments list ─────────────────────────────────── */
+      .treatments-list {
+        max-height: 400px; overflow-y: auto;
+        border: 1px solid var(--border); border-radius: var(--radius);
+        background: rgba(0,0,0,0.15);
+      }
+
+      .treatment-item {
+        display: flex; align-items: center; gap: 0.75rem;
+        padding: 0.75rem 1rem; border-bottom: 1px solid var(--border);
+        transition: background 0.15s; cursor: pointer;
+      }
+      .treatment-item:last-child { border-bottom: none; }
+      .treatment-item:hover { background: rgba(255,255,255,0.04); }
+      .treatment-item.removing { opacity: 0.4; pointer-events: none; }
+
+      .treatment-checkbox { width: 15px; height: 15px; cursor: pointer; accent-color: var(--accent); flex-shrink: 0; }
+
+      .treatment-name {
+        font-size: 0.875rem; font-weight: 500; color: var(--text);
+        flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+
+      .treatment-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
+      .tag { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 999px; font-size: 0.72rem; font-weight: 500; }
+      .tag-category { background: rgba(99,102,241,0.12); color: #a5b4fc; }
+      .tag-duration  { background: rgba(250,204,21,0.12); color: #fde68a; }
+
+      .list-empty, .list-loading {
+        text-align: center; padding: 2.5rem; color: var(--muted); font-size: 0.875rem;
+      }
+
+      .treatments-note {
+        margin-top: 1rem; padding: 0.85rem 1rem;
+        background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+        border-radius: var(--radius-sm); font-size: 0.8rem; color: var(--muted); line-height: 1.6;
+      }
+
+      /* ── Aliases ─────────────────────────────────────────── */
+      .input-row { display: flex; gap: 0.65rem; margin-bottom: 0.9rem; }
+
+      .btn-add {
+        background: linear-gradient(135deg, var(--accent) 0%, var(--purple) 100%);
+        color: #fff; border: none; padding: 0.6rem 1.2rem; border-radius: var(--radius-sm);
+        font-size: 0.875rem; font-weight: 600; font-family: inherit; cursor: pointer;
+        white-space: nowrap; transition: opacity 0.2s, transform 0.2s;
+        box-shadow: 0 6px 18px rgba(99,102,241,0.22);
+      }
+      .btn-add:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+      .btn-add:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
+
+      .alias-tags {
+        display: flex; flex-wrap: wrap; gap: 0.5rem; min-height: 40px; padding: 0.6rem;
+        border: 1px solid var(--border); border-radius: var(--radius-sm);
+        background: rgba(0,0,0,0.15); margin-bottom: 0.75rem;
+        align-items: flex-start; align-content: flex-start;
+      }
+
+      .alias-empty { color: rgba(255,255,255,0.22); font-size: 0.8rem; align-self: center; }
+
+      .alias-tag {
+        display: inline-flex; align-items: center; gap: 0.35rem;
+        background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.28);
+        color: #c7d2fe; padding: 0.25rem 0.6rem; border-radius: 999px;
+        font-size: 0.8rem; font-weight: 500;
+      }
+
+      .alias-remove {
+        background: none; border: none; color: rgba(255,180,180,0.5);
+        cursor: pointer; font-size: 0.85rem; line-height: 1; padding: 0;
+        display: flex; align-items: center; transition: color 0.15s;
+      }
+      .alias-remove:hover { color: #f87171; }
+
+      .feedback { font-size: 0.8rem; color: #86efac; min-height: 1em; }
+      .feedback.error { color: #fca5a5; }
+
+      /* ── Responsive ──────────────────────────────────────── */
+      @media (max-width: 768px) {
+        .sidebar { display: none; }
+        .main { margin-left: 0; }
+        .content { padding: 1rem; }
+        .topbar { padding: 0 1rem; }
+      }
+    </style>
+  </head>
+  <body>
+
+    <!-- ── Sidebar ─────────────────────────────────────────── -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-icon">Y</div>
+        <span class="brand-name">YurrAI</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a class="nav-item" href="/dashboard.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </a>
+        <a class="nav-item" href="/call-stats.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.16 6.16l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92v2z"/></svg>
+          Call Stats
+        </a>
+        <a class="nav-item is-active" href="/manage.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          Staff &amp; Treatments
+        </a>
+      </nav>
+
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-status">
+        <span class="pulse-dot"></span>
+        All systems operational
+      </div>
+    </aside>
+
+    <!-- ── Main ────────────────────────────────────────────── -->
+    <div class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <a class="back-btn" href="/dashboard.html">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Back
+          </a>
+          <h1 class="page-title">Staff &amp; Treatments</h1>
+        </div>
+      </header>
+
+      <div class="content">
+
+        <!-- Treatments Manager -->
+        <section class="section-block">
+          <div class="section-head">
+            <div class="section-head-left">
+              <h2>Treatments Manager</h2>
+              <p>Uncheck a treatment to remove it from the database</p>
+            </div>
+            <div class="badge-strip">
+              <span class="badge accent" id="treatments-active-count">— active</span>
+              <span class="badge" id="treatments-total-count">— total</span>
+            </div>
+          </div>
+
+          <input
+            class="search-input"
+            type="text"
+            id="treatments-search"
+            placeholder="Search treatments…"
+            oninput="treatmentsApplyFilter()"
+          />
+
+          <div class="treatments-list" id="treatments-list">
+            <div class="list-loading">Loading treatments…</div>
+          </div>
+
+          <div class="treatments-note">
+            Unchecking a treatment removes it immediately. To restore, go to the Dashboard and click <strong>Repopulate Local Data</strong> — it re-fetches all treatments from the remote source.
+          </div>
+        </section>
+
+        <!-- Employee Alias Manager -->
+        <section class="section-block">
+          <div class="section-head">
+            <div class="section-head-left">
+              <h2>Employee Alias Manager</h2>
+              <p>View, add, or remove alias names for each employee</p>
+            </div>
+          </div>
+
+          <select
+            class="select-field"
+            id="aliases-employee-select"
+            onchange="aliasesOnEmployeeChange()"
+          >
+            <option value="">— Select an employee —</option>
+          </select>
+
+          <div class="alias-tags" id="aliases-tags">
+            <span class="alias-empty">Select an employee above to see their aliases</span>
+          </div>
+
+          <div class="input-row">
+            <input
+              class="field"
+              type="text"
+              id="aliases-new-input"
+              placeholder="New alias name…"
+              disabled
+              onkeydown="if(event.key==='Enter') aliasesAdd();"
+            />
+            <button class="btn-add" id="aliases-add-btn" onclick="aliasesAdd()" disabled>
+              Add Alias
+            </button>
+          </div>
+
+          <div class="feedback" id="aliases-feedback"></div>
+        </section>
+
+      </div>
+    </div>
+
+    <script>
+      let authCredentials  = "";
+      let treatmentsAll    = [];
+      let aliasesEmployees = [];
+      let aliasesCurrentId = null;
+      let aliasesCurrentList = [];
+
+      window.addEventListener("load", function () {
+        authCredentials = sessionStorage.getItem("authCredentials");
+        if (!authCredentials) { window.location.href = "/admin/login"; return; }
+        fetch("/api/get/auth-test", { headers: { Authorization: authCredentials } })
+          .then(r => { if (!r.ok) logout(); else { treatmentsLoad(); aliasesLoad(); } })
+          .catch(() => logout());
+      });
+
+      function logout() { sessionStorage.removeItem("authCredentials"); window.location.href = "/admin/login"; }
+
+      function escHtml(s) {
+        return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+      }
+
+      // ── Treatments ───────────────────────────────────────────
+      async function treatmentsLoad() {
+        const listEl = document.getElementById("treatments-list");
+        listEl.innerHTML = '<div class="list-loading">Loading treatments…</div>';
+        try {
+          const res  = await fetch("/admin/treatments", { headers: { Authorization: authCredentials } });
+          const data = await res.json();
+          if (!data.ok) throw new Error(data.error || "Failed");
+          treatmentsAll = data.treatments || [];
+          treatmentsUpdateCounts();
+          treatmentsApplyFilter();
+        } catch (e) {
+          listEl.innerHTML = `<div class="list-empty">Error: ${escHtml(e.message)}</div>`;
+        }
+      }
+
+      function treatmentsUpdateCounts() {
+        document.getElementById("treatments-total-count").textContent  = treatmentsAll.length + " total";
+        document.getElementById("treatments-active-count").textContent = treatmentsAll.length + " active";
+      }
+
+      function treatmentsApplyFilter() {
+        const q = document.getElementById("treatments-search").value.toLowerCase().trim();
+        treatmentsRender(q ? treatmentsAll.filter(t => (t.TreatmentName||"").toLowerCase().includes(q)) : treatmentsAll);
+      }
+
+      function treatmentsRender(list) {
+        const el = document.getElementById("treatments-list");
+        if (!list.length) { el.innerHTML = '<div class="list-empty">No treatments found</div>'; return; }
+        el.innerHTML = list.map(t => {
+          const name     = t.TreatmentName || "Unnamed";
+          const category = t.Category?.Name || "";
+          const duration = t.TotalDuration ? t.TotalDuration + " min" : "";
+          return `<div class="treatment-item" id="treatment-item-${t.ID}" onclick="treatmentToggle(event,${t.ID})">
+            <input class="treatment-checkbox" type="checkbox" id="treatment-cb-${t.ID}" checked onclick="treatmentToggle(event,${t.ID})" />
+            <span class="treatment-name">${escHtml(name)}</span>
+            <div class="treatment-tags">
+              ${category ? `<span class="tag tag-category">${escHtml(category)}</span>` : ""}
+              ${duration ? `<span class="tag tag-duration">${escHtml(duration)}</span>`  : ""}
+            </div>
+          </div>`;
+        }).join("");
+      }
+
+      async function treatmentToggle(event, id) {
+        event.stopPropagation();
+        const cb   = document.getElementById("treatment-cb-" + id);
+        const item = document.getElementById("treatment-item-" + id);
+        if (cb.checked) return;
+        const name = item.querySelector(".treatment-name").textContent;
+        if (!confirm(`Remove "${name}" from the database?\n\nRestore via Repopulate Local Data on the Dashboard.`)) { cb.checked = true; return; }
+        item.classList.add("removing");
+        try {
+          const res  = await fetch(`/admin/treatments/${id}`, { method:"DELETE", headers:{ Authorization:authCredentials } });
+          const data = await res.json();
+          if (!data.ok) throw new Error(data.error || "Delete failed");
+          treatmentsAll = treatmentsAll.filter(t => t.ID !== id);
+          treatmentsUpdateCounts();
+          treatmentsApplyFilter();
+        } catch (e) {
+          alert("Failed to remove: " + e.message);
+          cb.checked = true;
+          item.classList.remove("removing");
+        }
+      }
+
+      // ── Aliases ──────────────────────────────────────────────
+      async function aliasesLoad() {
+        try {
+          const res  = await fetch("/admin/employees", { headers: { Authorization: authCredentials } });
+          const data = await res.json();
+          if (!data.ok) throw new Error(data.error || "Failed");
+          aliasesEmployees = data.employees || [];
+          const sel = document.getElementById("aliases-employee-select");
+          sel.innerHTML = '<option value="">— Select an employee —</option>';
+          aliasesEmployees.forEach(emp => {
+            const opt = document.createElement("option");
+            opt.value = emp.ID;
+            opt.textContent = emp.DisplayName || `${emp.FirstName} ${emp.LastName||""}`.trim();
+            sel.appendChild(opt);
+          });
+        } catch (e) {
+          setFeedback("Error loading employees: " + e.message, true);
+        }
+      }
+
+      function aliasesOnEmployeeChange() {
+        const sel = document.getElementById("aliases-employee-select");
+        aliasesCurrentId = sel.value ? Number(sel.value) : null;
+        setFeedback("");
+        const input = document.getElementById("aliases-new-input");
+        const btn   = document.getElementById("aliases-add-btn");
+        if (!aliasesCurrentId) {
+          aliasesCurrentList = []; aliasesRenderTags();
+          input.disabled = btn.disabled = true; return;
+        }
+        const emp = aliasesEmployees.find(e => e.ID === aliasesCurrentId);
+        aliasesCurrentList = emp ? [...(emp.AliasNames||[])] : [];
+        aliasesRenderTags();
+        input.disabled = btn.disabled = false;
+        input.focus();
+      }
+
+      function aliasesRenderTags() {
+        const c = document.getElementById("aliases-tags");
+        if (!aliasesCurrentId) { c.innerHTML = '<span class="alias-empty">Select an employee above to see their aliases</span>'; return; }
+        if (!aliasesCurrentList.length) { c.innerHTML = '<span class="alias-empty">No aliases yet — add one below</span>'; return; }
+        c.innerHTML = aliasesCurrentList.map(a =>
+          `<span class="alias-tag">${escHtml(a)}<button class="alias-remove" title="Remove" onclick="aliasesRemove(${JSON.stringify(a)})">✕</button></span>`
+        ).join("");
+      }
+
+      async function aliasesAdd() {
+        const input = document.getElementById("aliases-new-input");
+        const alias = input.value.trim();
+        if (!alias) { setFeedback("Enter an alias name.", true); return; }
+        if (!aliasesCurrentId) return;
+        setFeedback("");
+        const btn = document.getElementById("aliases-add-btn");
+        btn.disabled = input.disabled = true;
+        try {
+          const res  = await fetch(`/admin/employees/${aliasesCurrentId}/aliases`, {
+            method:"POST", headers:{ Authorization:authCredentials, "Content-Type":"application/json" },
+            body: JSON.stringify({ alias })
+          });
+          const data = await res.json();
+          if (!data.ok) throw new Error(data.error || "Failed");
+          aliasesCurrentList = data.aliases;
+          const emp = aliasesEmployees.find(e => e.ID === aliasesCurrentId);
+          if (emp) emp.AliasNames = data.aliases;
+          aliasesRenderTags();
+          input.value = "";
+          setFeedback(`Added "${alias}".`);
+        } catch (e) {
+          setFeedback(e.message, true);
+        } finally {
+          btn.disabled = input.disabled = false;
+          input.focus();
+        }
+      }
+
+      async function aliasesRemove(alias) {
+        if (!aliasesCurrentId) return;
+        if (!confirm(`Remove alias "${alias}" from this employee?`)) return;
+        setFeedback("");
+        try {
+          const res  = await fetch(`/admin/employees/${aliasesCurrentId}/aliases`, {
+            method:"DELETE", headers:{ Authorization:authCredentials, "Content-Type":"application/json" },
+            body: JSON.stringify({ alias })
+          });
+          const data = await res.json();
+          if (!data.ok) throw new Error(data.error || "Failed");
+          aliasesCurrentList = data.aliases;
+          const emp = aliasesEmployees.find(e => e.ID === aliasesCurrentId);
+          if (emp) emp.AliasNames = data.aliases;
+          aliasesRenderTags();
+          setFeedback(`Removed "${alias}".`);
+        } catch (e) {
+          setFeedback(e.message, true);
+        }
+      }
+
+      function setFeedback(msg, isErr = false) {
+        const el = document.getElementById("aliases-feedback");
+        el.textContent = msg;
+        el.className = isErr ? "feedback error" : "feedback";
+      }
+    </script>
+  </body>
+</html>
