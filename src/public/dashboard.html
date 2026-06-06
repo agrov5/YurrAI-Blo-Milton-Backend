@@ -250,6 +250,67 @@
       @media (max-width: 480px) {
         .stat-strip { grid-template-columns: 1fr; }
       }
+
+      /* ── Confirm Modal ───────────────────────────────────── */
+      .modal-backdrop {
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.65);
+        backdrop-filter: blur(6px);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 999;
+        opacity: 0; pointer-events: none;
+        transition: opacity 0.2s;
+      }
+      .modal-backdrop.visible { opacity: 1; pointer-events: all; }
+
+      .modal {
+        background: var(--surface);
+        border: 1px solid var(--border-hi);
+        border-radius: var(--radius-lg);
+        padding: 2rem;
+        max-width: 380px;
+        width: calc(100% - 2rem);
+        box-shadow: 0 32px 80px rgba(0,0,0,0.55);
+        transform: translateY(12px) scale(0.97);
+        transition: transform 0.22s, opacity 0.22s;
+        opacity: 0;
+      }
+      .modal-backdrop.visible .modal { transform: translateY(0) scale(1); opacity: 1; }
+
+      .modal-icon {
+        width: 44px; height: 44px; border-radius: 12px;
+        background: rgba(249,115,22,0.12);
+        border: 1px solid rgba(249,115,22,0.25);
+        display: flex; align-items: center; justify-content: center;
+        margin-bottom: 1.1rem;
+      }
+      .modal-icon svg { width: 22px; height: 22px; }
+
+      .modal-title { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 0.5rem; }
+      .modal-body  { font-size: 0.85rem; color: var(--muted); line-height: 1.6; margin-bottom: 1.5rem; }
+
+      .modal-actions { display: flex; gap: 0.65rem; }
+
+      .btn-cancel {
+        flex: 1; padding: 0.65rem 1rem;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid var(--border-hi);
+        color: var(--muted); border-radius: var(--radius-sm);
+        font-size: 0.875rem; font-weight: 600; font-family: inherit;
+        cursor: pointer; transition: background 0.18s, color 0.18s;
+      }
+      .btn-cancel:hover { background: rgba(255,255,255,0.09); color: var(--text); }
+
+      .btn-confirm {
+        flex: 1; padding: 0.65rem 1rem;
+        background: linear-gradient(135deg, #f97316 0%, #ef4444 100%);
+        border: none; border-radius: var(--radius-sm);
+        color: #fff; font-size: 0.875rem; font-weight: 600; font-family: inherit;
+        cursor: pointer;
+        box-shadow: 0 6px 18px rgba(249,115,22,0.28);
+        transition: opacity 0.18s, transform 0.18s;
+      }
+      .btn-confirm:hover { opacity: 0.88; transform: translateY(-1px); }
     </style>
   </head>
   <body>
@@ -379,6 +440,26 @@
       </div>
     </div>
 
+    <!-- ── Confirm modal ──────────────────────────────────── -->
+    <div class="modal-backdrop" id="confirm-backdrop">
+      <div class="modal">
+        <div class="modal-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div class="modal-title">Repopulate Local Data?</div>
+        <div class="modal-body">
+          This will refresh the local database with the latest treatments, employees, and rooms from the remote source. Existing data will be updated or added — nothing will be deleted.
+        </div>
+        <div class="modal-actions">
+          <button class="btn-cancel" onclick="closeConfirm()">Cancel</button>
+          <button class="btn-confirm" onclick="confirmRepopulate()">Yes, Repopulate</button>
+        </div>
+      </div>
+    </div>
+
     <script>
       let authCredentials = "";
       const zohoHardcodedName   = "Bijal Patel";
@@ -445,7 +526,18 @@
           document.getElementById("stat-employees-count").textContent = (eRes.value.employees || []).length;
       }
 
-      async function repopulateData() {
+      function repopulateData() {
+        document.getElementById("success-message").style.display = "none";
+        document.getElementById("error-message").style.display   = "none";
+        document.getElementById("confirm-backdrop").classList.add("visible");
+      }
+
+      function closeConfirm() {
+        document.getElementById("confirm-backdrop").classList.remove("visible");
+      }
+
+      async function confirmRepopulate() {
+        closeConfirm();
         const btn = document.getElementById("repopulate-btn");
         const ok  = document.getElementById("success-message");
         const err = document.getElementById("error-message");
@@ -463,6 +555,10 @@
           btn.disabled = false; btn.textContent = "Repopulate Local Data";
         }
       }
+
+      document.getElementById("confirm-backdrop").addEventListener("click", function (e) {
+        if (e.target === this) closeConfirm();
+      });
     </script>
 
     <script type="text/javascript">

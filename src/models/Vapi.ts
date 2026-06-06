@@ -32,6 +32,7 @@ export interface ExtractedVapiCallSummary {
   callDate?: string | null;
   startTime?: string | null;
   endTime?: string | null;
+  tags?: string[];
 }
 
 export interface VapiWebhookBody {
@@ -103,6 +104,7 @@ const VapiCallSchema = new Schema<VapiCallDocument>(
     callDate: { type: String, required: false, default: null },
     startTime: { type: String, required: false, default: null },
     endTime: { type: String, required: false, default: null },
+    tags: { type: [String], required: false, default: [] },
     // full parsed summary for reference/searching
     callSummary: { type: Schema.Types.Mixed, required: false, default: null },
   },

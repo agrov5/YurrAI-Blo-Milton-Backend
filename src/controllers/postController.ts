@@ -28,6 +28,7 @@ import {
   VapiWebhookBody,
   VapiCallModel,
 } from "../models/Vapi";
+import { GoogleGenAI } from "@google/genai";
 
 
 // Helper function
@@ -426,12 +427,12 @@ export const vapiCallDataWebhook = async (req: Request, res: Response) => {
     const summary = extractEndOfCallData(body);
     const savedCall = await VapiCallModel.create(summary);
 
-    console.log(
-      "Received VAPI call data webhook:",
-      summary,
-      "saved to",
-      savedCall._id,
-    );
+    console.log("Received VAPI call data webhook, saved to", savedCall._id);
+
+    // Auto-tag in the background — don't block the webhook response
+    geminiTagCall(savedCall.summary, savedCall.transcript)
+      .then((tags) => VapiCallModel.findByIdAndUpdate(savedCall._id, { tags }))
+      .catch((err) => console.error("Auto-tag failed for call", savedCall._id, err));
 
     res.status(200).json({
       success: true,
@@ -449,6 +450,104 @@ export const vapiCallDataWebhook = async (req: Request, res: Response) => {
   }
 };
 
+
+const PREDEFINED_TAGS = [
+  "Appointment Booked",
+  "Appointment Canceled",
+  "Appointment Rescheduled",
+  "FAQ",
+  "Message sent to Admin",
+];
+
+async function geminiTagCall(summary: string | null | undefined, transcript: string | null | undefined): Promise<string[]> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("Gemini API key not configured");
+
+  const ai = new GoogleGenAI({ apiKey });
+
+  const prompt = `You are analyzing a phone call from a beauty salon (Blo Blowout Bar). Based on the call summary and transcript below, determine which of these tags apply:
+
+Available tags:
+- "Appointment Booked": A new appointment was booked during the call
+- "Appointment Canceled": An appointment was canceled during the call
+- "Appointment Rescheduled": An appointment was rescheduled during the call
+- "FAQ": The call was primarily answering frequently asked questions about services, pricing, hours, etc.
+- "Message sent to Admin": A message was relayed or sent to the admin/staff during the call
+
+Call Summary: ${summary || "N/A"}
+Call Transcript: ${transcript ? transcript.substring(0, 3000) : "N/A"}
+
+Respond ONLY with a valid JSON array of applicable tag strings from the list above. Example: ["Appointment Booked", "FAQ"]
+If no tags apply, respond with: []`;
+
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash-lite",
+    contents: prompt,
+  });
+
+  const rawText = response.text?.trim() ?? "[]";
+  const jsonMatch = rawText.match(/\[[\s\S]*?\]/);
+  const parsed: string[] = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+  return parsed.filter((t) => PREDEFINED_TAGS.includes(t));
+}
+
+export const updateCallTags = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { tags } = req.body as { tags: string[] };
+
+    if (!Array.isArray(tags)) {
+      return res.status(400).json({ success: false, message: "tags must be an array" });
+    }
+
+    const sanitized = tags.map((t) => String(t).trim()).filter(Boolean);
+    const call = await VapiCallModel.findByIdAndUpdate(
+      id,
+      { tags: sanitized },
+      { new: true },
+    );
+
+    if (!call) {
+      return res.status(404).json({ success: false, message: "Call not found" });
+    }
+
+    res.json({ success: true, tags: call.tags });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to update tags",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+export const autoTagCall = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const call = await VapiCallModel.findById(id);
+
+    if (!call) {
+      return res.status(404).json({ success: false, message: "Call not found" });
+    }
+
+    const validTags = await geminiTagCall(call.summary, call.transcript);
+
+    const updated = await VapiCallModel.findByIdAndUpdate(
+      id,
+      { tags: validTags },
+      { new: true },
+    );
+
+    res.json({ success: true, tags: updated?.tags ?? validTags });
+  } catch (error) {
+    console.error("Auto-tag error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to auto-tag call",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
 
 export const getVapiCostByMonth = async (req: Request, res: Response) => {
   const body: { month: string; year: string } = req.body;

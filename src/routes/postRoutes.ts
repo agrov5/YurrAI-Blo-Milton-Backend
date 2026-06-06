@@ -12,6 +12,8 @@ import {
   getCustomerOrders,
   vapiCallDataWebhook,
   getVapiCostByMonth,
+  updateCallTags,
+  autoTagCall,
 } from "../controllers/postController";
 import {
   sendMessageToAdminController,
@@ -39,7 +41,9 @@ postRouter.post("/generate-cc-link", postGenerateCCLink);
 
 postRouter.post('/get-customer-orders', getCustomerOrders)
 
-postRouter.post("/vapi/webhook", vapiCallDataWebhook); 
+postRouter.post("/vapi/webhook", vapiCallDataWebhook);
 postRouter.post("/calls/costByMonth/", getVapiCostByMonth);
+postRouter.patch("/calls/:id/tags", updateCallTags);
+postRouter.post("/calls/:id/auto-tag", autoTagCall);
 export default postRouter;
 
