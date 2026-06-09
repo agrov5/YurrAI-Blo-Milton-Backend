@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
     <style>
       *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -620,6 +621,90 @@
       @media (max-width: 480px) {
         .stat-strip { grid-template-columns: 1fr; }
       }
+
+      /* ── Search bar ──────────────────────────────────────────── */
+      .search-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: flex-end;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.25rem;
+      }
+      .search-field { display: flex; flex-direction: column; gap: 0.3rem; flex: 1; min-width: 140px; }
+      .search-label { font-size: 0.7rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+      .search-input {
+        background: var(--surface2); border: 1px solid var(--border);
+        color: var(--text); padding: 0.45rem 0.75rem; border-radius: var(--radius-sm);
+        font-size: 0.82rem; font-family: inherit; outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+      .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+      .search-input::placeholder { color: var(--muted); }
+      .search-clear-btn {
+        padding: 0.45rem 1rem; border-radius: var(--radius-sm);
+        background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+        color: var(--muted); font-size: 0.78rem; font-weight: 500; font-family: inherit;
+        cursor: pointer; transition: background 0.18s, color 0.18s;
+        align-self: flex-end;
+        white-space: nowrap;
+      }
+      .search-clear-btn:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+      .search-count { font-size: 0.75rem; color: var(--muted); align-self: flex-end; white-space: nowrap; }
+
+      /* ── Chart card ──────────────────────────────────────────── */
+      .chart-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 2rem;
+        margin-bottom: 1.25rem;
+        transition: border-color 0.22s;
+        align-items: start;
+      }
+      .chart-card:hover { border-color: var(--border-hi); }
+
+      .chart-canvas-wrap {
+        position: relative;
+        width: 140px; height: 140px;
+        flex-shrink: 0;
+      }
+      .chart-center-label {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+      }
+      .chart-center-total { font-size: 1.5rem; font-weight: 700; color: var(--text); line-height: 1; }
+      .chart-center-sub   { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 0.2rem; }
+
+      .chart-right { min-width: 0; }
+      .chart-headline { font-size: 0.78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.75rem; }
+      .chart-legend { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.45rem 1.5rem; }
+      .chart-legend-row { display: flex; align-items: center; gap: 0.55rem; min-width: 0; }
+      .legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+      .legend-label { color: var(--muted); font-size: 0.78rem; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .legend-right { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
+      .legend-val  { color: var(--text); font-weight: 600; font-size: 0.82rem; }
+      .legend-pct  { color: var(--muted); font-size: 0.72rem; min-width: 36px; text-align: right; }
+
+      @media (max-width: 768px) {
+        .chart-card { grid-template-columns: 1fr; gap: 1.25rem; }
+        .chart-canvas-wrap { width: 120px; height: 120px; margin: 0 auto; }
+        .chart-legend { grid-template-columns: 1fr 1fr; }
+      }
+      @media (max-width: 480px) {
+        .chart-legend { grid-template-columns: 1fr; }
+      }
     </style>
   </head>
   <body>
@@ -741,6 +826,43 @@
           </div>
         </div>
 
+        <!-- Search / filter bar -->
+        <div class="search-bar">
+          <div class="search-field">
+            <span class="search-label">Filter by Day</span>
+            <input class="search-input" type="date" id="filterDate" oninput="applyFilters()" />
+          </div>
+          <div class="search-field" style="min-width:110px;max-width:130px;">
+            <span class="search-label">From Time</span>
+            <input class="search-input" type="time" id="filterTimeFrom" oninput="applyFilters()" />
+          </div>
+          <div class="search-field" style="min-width:110px;max-width:130px;">
+            <span class="search-label">To Time</span>
+            <input class="search-input" type="time" id="filterTimeTo" oninput="applyFilters()" />
+          </div>
+          <div class="search-field">
+            <span class="search-label">Call ID</span>
+            <input class="search-input" type="text" id="filterCallId" placeholder="Search call ID…" oninput="applyFilters()" />
+          </div>
+          <button class="search-clear-btn" onclick="clearFilters()">Clear</button>
+          <span class="search-count" id="searchCount"></span>
+        </div>
+
+        <!-- Call breakdown chart -->
+        <div class="chart-card">
+          <div class="chart-canvas-wrap">
+            <canvas id="bookingPieChart"></canvas>
+            <div class="chart-center-label">
+              <span class="chart-center-total" id="chartTotal">—</span>
+              <span class="chart-center-sub">calls</span>
+            </div>
+          </div>
+          <div class="chart-right">
+            <div class="chart-headline" id="chartHeadline">Call Breakdown</div>
+            <div id="chartLegend" class="chart-legend"></div>
+          </div>
+        </div>
+
         <!-- Call history -->
         <div class="history-section">
           <div class="section-head">
@@ -795,6 +917,7 @@
         "Appointment Rescheduled",
         "FAQ",
         "Message sent to Admin",
+        "Inconclusive",
       ];
 
       // Keyed by call._id string — live tag state
@@ -816,14 +939,7 @@
           <div class="tag-manager">
             <div class="tag-manager-title">Manage Tags</div>
             <div class="predefined-tags" id="predefined-${callId}">${predefinedHtml}</div>
-            <div class="custom-tag-row">
-              <input class="tag-input" id="tag-input-${callId}" type="text" placeholder="Custom tag…" maxlength="40"
-                     onkeydown="if(event.key==='Enter') addCustomTag('${callId}')">
-              <button class="tag-add-btn" onclick="addCustomTag('${callId}')">+ Add</button>
-              <button class="tag-autotag-btn" id="autotag-btn-${callId}" onclick="runAutoTag('${callId}')">
-                ✦ Auto-tag
-              </button>
-            </div>
+
             <div class="tag-save-status" id="tag-status-${callId}"></div>
           </div>`;
       }
@@ -879,58 +995,8 @@
         saveTags(callId);
       }
 
-      function addCustomTag(callId) {
-        const input = document.getElementById(`tag-input-${callId}`);
-        const val = input.value.trim();
-        if (!val) return;
-        const current = new Set(getActiveTags(callId));
-        if (current.has(val)) { input.value = ""; return; }
-        current.add(val);
-        callTagState[callId] = Array.from(current);
-        input.value = "";
-        const chipRow = document.getElementById(`tag-chips-${callId}`);
-        if (chipRow) chipRow.innerHTML = renderTagChips(callId, callTagState[callId]);
-        saveTags(callId);
-      }
 
-      async function runAutoTag(callId) {
-        const btn = document.getElementById(`autotag-btn-${callId}`);
-        const statusEl = document.getElementById(`tag-status-${callId}`);
-        const auth = sessionStorage.getItem("authCredentials");
-        if (!auth || !btn) return;
-        btn.disabled = true;
-        btn.textContent = "Tagging…";
-        if (statusEl) { statusEl.textContent = "Running Gemini auto-tag…"; statusEl.className = "tag-save-status"; }
-        try {
-          const res = await fetch(`/api/post/calls/${callId}/auto-tag`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: auth },
-          });
-          const data = await res.json();
-          if (data.success) {
-            callTagState[callId] = data.tags || [];
-            const chipRow = document.getElementById(`tag-chips-${callId}`);
-            if (chipRow) chipRow.innerHTML = renderTagChips(callId, callTagState[callId]);
-            // Refresh predefined buttons
-            const predefinedContainer = document.getElementById(`predefined-${callId}`);
-            if (predefinedContainer) {
-              const active = new Set(callTagState[callId]);
-              predefinedContainer.querySelectorAll(".tag-toggle-btn").forEach(b => {
-                const tag = b.textContent.trim();
-                b.classList.toggle("active", active.has(tag));
-              });
-            }
-            if (statusEl) { statusEl.textContent = `Auto-tagged: ${data.tags.length} tag(s) applied`; statusEl.className = "tag-save-status ok"; setTimeout(() => { statusEl.textContent = ""; statusEl.className = "tag-save-status"; }, 3000); }
-          } else {
-            if (statusEl) { statusEl.textContent = data.message || "Auto-tag failed"; statusEl.className = "tag-save-status err"; }
-          }
-        } catch {
-          if (statusEl) { statusEl.textContent = "Auto-tag failed"; statusEl.className = "tag-save-status err"; }
-        } finally {
-          btn.disabled = false;
-          btn.textContent = "✦ Auto-tag";
-        }
-      }
+
 
       function renderCallItem(call, index) {
         const started  = formatDate(call.startedAt);
@@ -1028,6 +1094,155 @@
         };
       }
 
+      // ── Module-level state ──────────────────────────────────────
+      let allMonthCalls = [];
+      let pieChart = null;
+
+      // ── Pie chart ────────────────────────────────────────────────
+      const TAG_COLORS = {
+        "Appointment Booked":      "#22c55e",
+        "Appointment Canceled":    "#ef4444",
+        "Appointment Rescheduled": "#f97316",
+        "FAQ":                     "#0ea5e9",
+        "Message sent to Admin":   "#7c3aed",
+        "Inconclusive":            "#6d7a9f",
+        "No Tags":                 "rgba(255,255,255,0.18)",
+      };
+
+      function renderPieChart(calls) {
+        const total = calls.length;
+        document.getElementById("chartTotal").textContent = total;
+
+        // Count tag occurrences; a call with multiple tags counts toward each
+        const counts = {};
+        PREDEFINED_TAGS.forEach(t => { counts[t] = 0; });
+        counts["No Tags"] = 0;
+
+        calls.forEach(c => {
+          if (!c.tags || c.tags.length === 0) {
+            counts["No Tags"]++;
+          } else {
+            c.tags.forEach(t => { if (counts[t] !== undefined) counts[t]++; });
+          }
+        });
+
+        const entries = [...PREDEFINED_TAGS, "No Tags"]
+          .map(label => ({ label, count: counts[label] || 0, color: TAG_COLORS[label] || "#6366f1" }))
+          .filter(e => e.count > 0);
+
+        const isEmpty = entries.length === 0;
+        // Denominator: use total calls for pct so percentages are meaningful
+        const denom = total || 1;
+
+        // Render legend with count + percentage
+        const legendEl = document.getElementById("chartLegend");
+        legendEl.innerHTML = isEmpty
+          ? `<span style="font-size:0.78rem;color:var(--muted);">No calls this period.</span>`
+          : entries.map(e => {
+              const pct = Math.round((e.count / denom) * 100);
+              return `
+              <div class="chart-legend-row">
+                <span class="legend-dot" style="background:${e.color};"></span>
+                <span class="legend-label">${escapeHtml(e.label)}</span>
+                <span class="legend-right">
+                  <span class="legend-val">${e.count}</span>
+                  <span class="legend-pct">${pct}%</span>
+                </span>
+              </div>`;
+            }).join("");
+
+        // Render chart
+        const ctx = document.getElementById("bookingPieChart").getContext("2d");
+        if (pieChart) pieChart.destroy();
+        pieChart = new Chart(ctx, {
+          type: "doughnut",
+          data: {
+            labels: isEmpty ? ["No data"] : entries.map(e => e.label),
+            datasets: [{
+              data:            isEmpty ? [1] : entries.map(e => e.count),
+              backgroundColor: isEmpty ? ["rgba(255,255,255,0.08)"] : entries.map(e => e.color),
+              borderWidth: 0,
+              hoverOffset: 6,
+            }],
+          },
+          options: {
+            cutout: "68%",
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                enabled: !isEmpty,
+                callbacks: {
+                  label: ctx => {
+                    const pct = Math.round((ctx.parsed / denom) * 100);
+                    return ` ${ctx.label}: ${ctx.parsed} (${pct}%)`;
+                  },
+                },
+              },
+            },
+            animation: { duration: 400 },
+          },
+        });
+      }
+
+      // ── Search / filter ──────────────────────────────────────────
+      function applyFilters() {
+        const dateVal     = document.getElementById("filterDate").value;
+        const timeFrom    = document.getElementById("filterTimeFrom").value;
+        const timeTo      = document.getElementById("filterTimeTo").value;
+        const callIdQ     = document.getElementById("filterCallId").value.trim().toLowerCase();
+
+        let filtered = allMonthCalls;
+
+        if (dateVal) {
+          filtered = filtered.filter(c => {
+            if (!c.startedAt) return false;
+            const d = new Date(c.startedAt);
+            const y = d.getFullYear(), mo = String(d.getMonth()+1).padStart(2,"0"), dy = String(d.getDate()).padStart(2,"0");
+            return `${y}-${mo}-${dy}` === dateVal;
+          });
+        }
+
+        if (timeFrom || timeTo) {
+          filtered = filtered.filter(c => {
+            if (!c.startedAt) return false;
+            const d = new Date(c.startedAt);
+            const hhmm = `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+            if (timeFrom && hhmm < timeFrom) return false;
+            if (timeTo   && hhmm > timeTo)   return false;
+            return true;
+          });
+        }
+
+        if (callIdQ) {
+          filtered = filtered.filter(c =>
+            (c.callId   && c.callId.toLowerCase().includes(callIdQ)) ||
+            (c._id      && c._id.toLowerCase().includes(callIdQ))
+          );
+        }
+
+        const countEl = document.getElementById("searchCount");
+        const hasFilter = dateVal || timeFrom || timeTo || callIdQ;
+        countEl.textContent = hasFilter ? `${filtered.length} of ${allMonthCalls.length} calls` : "";
+
+        // Update chart headline to reflect filtered vs full state
+        const headlineEl = document.getElementById("chartHeadline");
+        if (headlineEl) headlineEl.textContent = hasFilter ? "Call Breakdown (filtered)" : "Call Breakdown";
+
+        renderPieChart(filtered);
+
+        document.getElementById("callsList").innerHTML = filtered.length
+          ? filtered.map((c, i) => renderCallItem(c, i)).join("")
+          : `<div class="no-calls">No calls match the current filters.</div>`;
+      }
+
+      function clearFilters() {
+        document.getElementById("filterDate").value    = "";
+        document.getElementById("filterTimeFrom").value = "";
+        document.getElementById("filterTimeTo").value   = "";
+        document.getElementById("filterCallId").value   = "";
+        applyFilters();
+      }
+
       async function updateStats() {
         const month    = document.getElementById("monthSelector").value;
         const year     = document.getElementById("yearSelector").value;
@@ -1049,17 +1264,26 @@
 
           if (!data.success) { callsList.innerHTML = `<div class="no-calls">Error loading call data.</div>`; return; }
 
-          const filtered = filterCallsByMonthYear(data.calls, month, year)
+          allMonthCalls = filterCallsByMonthYear(data.calls, month, year)
             .sort((a, b) => new Date(b.startedAt||0) - new Date(a.startedAt||0));
 
-          const stats = calculateStats(filtered);
+          const stats = calculateStats(allMonthCalls);
           document.getElementById("callCountValue").textContent      = stats.callCount;
           document.getElementById("totalCostValue").textContent      = formatCurrency(stats.totalCost);
           document.getElementById("totalMinutesValue").textContent   = stats.totalMinutes.toFixed(2);
           document.getElementById("averageMinutesValue").textContent = stats.averageMinutes.toFixed(2);
 
-          callsList.innerHTML = filtered.length
-            ? filtered.map((c, i) => renderCallItem(c, i)).join("")
+          renderPieChart(allMonthCalls);
+
+          // Reset search filters and render
+          document.getElementById("filterDate").value     = "";
+          document.getElementById("filterTimeFrom").value = "";
+          document.getElementById("filterTimeTo").value   = "";
+          document.getElementById("filterCallId").value   = "";
+          document.getElementById("searchCount").textContent = "";
+
+          callsList.innerHTML = allMonthCalls.length
+            ? allMonthCalls.map((c, i) => renderCallItem(c, i)).join("")
             : `<div class="no-calls">No calls found for this period.</div>`;
         } catch (e) {
           console.error(e);

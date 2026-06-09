@@ -28,6 +28,8 @@ import {
   VapiWebhookBody,
   VapiCallModel,
 } from "../models/Vapi";
+import { getSettings } from "../models/Settings";
+import { sendMessageToAdmin, sendMessageMMS } from "../util/phone_util";
 import { GoogleGenAI } from "@google/genai";
 
 
@@ -432,7 +434,28 @@ export const vapiCallDataWebhook = async (req: Request, res: Response) => {
     // Auto-tag in the background — don't block the webhook response
     geminiTagCall(savedCall.summary, savedCall.transcript)
       .then((tags) => VapiCallModel.findByIdAndUpdate(savedCall._id, { tags }))
-      .catch((err) => console.error("Auto-tag failed for call", savedCall._id, err));
+      .catch((err) => {
+        console.error("Auto-tag failed for call", savedCall._id, err);
+        VapiCallModel.findByIdAndUpdate(savedCall._id, { tags: ["Inconclusive"] })
+          .catch((e) => console.error("Inconclusive fallback failed", savedCall._id, e));
+      });
+
+    // Short-call alert — fire-and-forget
+    const durSec =
+      savedCall.durationSeconds ??
+      (savedCall.durationMinutes != null ? savedCall.durationMinutes * 60 : null);
+    if (durSec != null) {
+      getSettings()
+        .then((settings) => {
+          if (durSec < settings.shortCallThresholdSeconds) {
+            const caller = savedCall.callerName || savedCall.callerNumber || "Unknown";
+            const msg =
+              `${caller} (${savedCall.callerNumber || "Unknown"}) lasted only ${Math.round(durSec)}s`
+            return sendMessageToAdmin(msg, "SMS");
+          }
+        })
+        .catch((err) => console.error("Short-call alert failed for call", savedCall._id, err));
+    }
 
     res.status(200).json({
       success: true,
@@ -457,6 +480,7 @@ const PREDEFINED_TAGS = [
   "Appointment Rescheduled",
   "FAQ",
   "Message sent to Admin",
+  "Inconclusive",
 ];
 
 async function geminiTagCall(summary: string | null | undefined, transcript: string | null | undefined): Promise<string[]> {
@@ -473,12 +497,13 @@ Available tags:
 - "Appointment Rescheduled": An appointment was rescheduled during the call
 - "FAQ": The call was primarily answering frequently asked questions about services, pricing, hours, etc.
 - "Message sent to Admin": A message was relayed or sent to the admin/staff during the call
+- "Inconclusive": It's unclear what the main purpose of the call was, or it doesn't fit any other tags
 
 Call Summary: ${summary || "N/A"}
 Call Transcript: ${transcript ? transcript.substring(0, 3000) : "N/A"}
 
 Respond ONLY with a valid JSON array of applicable tag strings from the list above. Example: ["Appointment Booked", "FAQ"]
-If no tags apply, respond with: []`;
+If none of the specific tags apply, respond with: ["Inconclusive"]`;
 
   const response = await ai.models.generateContent({
     model: "gemini-2.5-flash-lite",
@@ -486,10 +511,48 @@ If no tags apply, respond with: []`;
   });
 
   const rawText = response.text?.trim() ?? "[]";
+  console.log("[geminiTagCall] raw response text:", rawText);
   const jsonMatch = rawText.match(/\[[\s\S]*?\]/);
   const parsed: string[] = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
-  return parsed.filter((t) => PREDEFINED_TAGS.includes(t));
+  const valid = parsed.filter((t) => PREDEFINED_TAGS.includes(t));
+  const result = valid.length > 0 ? valid : ["Inconclusive"];
+  console.log("[geminiTagCall] tags assigned:", result);
+  return result;
 }
+
+export const sendCCLinkToCustomer = async (req: Request, res: Response) => {
+  try {
+    const { customerId, phone, firstName } = req.body as {
+      customerId?: number;
+      phone?: string;
+      firstName?: string;
+    };
+
+    if (!customerId || typeof customerId !== "number") {
+      return res.status(400).json({ success: false, message: "customerId (number) is required" });
+    }
+    if (!phone?.trim()) {
+      return res.status(400).json({ success: false, message: "phone is required" });
+    }
+
+    const url = generateCCWidgetURL(customerId);
+    const name = (firstName || "there").trim();
+    const message =
+      `Dear ${name}, you have an upcoming appointment at Blo Milton that requires a credit card on file. ` +
+      `Please complete your booking by providing your payment details using the following link: ${url}`;
+
+    await sendMessageMMS(phone.trim(), message);
+
+    res.json({ success: true, sentMessage: message, sentTo: phone.trim() });
+  } catch (error) {
+    console.error("send-cc-link error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to send CC link",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
 
 export const updateCallTags = async (req: Request, res: Response) => {
   try {
@@ -521,33 +584,6 @@ export const updateCallTags = async (req: Request, res: Response) => {
   }
 };
 
-export const autoTagCall = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const call = await VapiCallModel.findById(id);
-
-    if (!call) {
-      return res.status(404).json({ success: false, message: "Call not found" });
-    }
-
-    const validTags = await geminiTagCall(call.summary, call.transcript);
-
-    const updated = await VapiCallModel.findByIdAndUpdate(
-      id,
-      { tags: validTags },
-      { new: true },
-    );
-
-    res.json({ success: true, tags: updated?.tags ?? validTags });
-  } catch (error) {
-    console.error("Auto-tag error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to auto-tag call",
-      error: error instanceof Error ? error.message : "Unknown error",
-    });
-  }
-};
 
 export const getVapiCostByMonth = async (req: Request, res: Response) => {
   const body: { month: string; year: string } = req.body;

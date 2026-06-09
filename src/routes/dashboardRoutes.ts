@@ -8,6 +8,8 @@ import {
   deleteTreatmentFromDB,
 } from "../controllers/treatmentController";
 import { EmployeeModel } from "../models/Employee";
+import { getSettings } from "../models/Settings";
+import { VapiCallModel } from "../models/Vapi";
 
 const router = Router();
 
@@ -134,6 +136,49 @@ router.delete("/employees/:id/aliases", authMiddleware, async (req: Request, res
     res.json({ ok: true, aliases: employee.AliasNames });
   } catch (err) {
     res.status(500).json({ ok: false, error: "Failed to remove alias" });
+  }
+});
+
+// ── Settings API (protected) ──────────────────────────────────────────────────
+
+router.get("/settings", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const settings = await getSettings();
+    res.json({ ok: true, settings: { shortCallThresholdSeconds: settings.shortCallThresholdSeconds } });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: "Failed to load settings" });
+  }
+});
+
+router.patch("/settings", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { shortCallThresholdSeconds } = req.body as { shortCallThresholdSeconds?: number };
+    const val = Number(shortCallThresholdSeconds);
+    if (isNaN(val) || val < 0) {
+      res.status(400).json({ ok: false, error: "shortCallThresholdSeconds must be a non-negative number" });
+      return;
+    }
+    const settings = await getSettings();
+    settings.shortCallThresholdSeconds = val;
+    await settings.save();
+    res.json({ ok: true, settings: { shortCallThresholdSeconds: settings.shortCallThresholdSeconds } });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: "Failed to save settings" });
+  }
+});
+
+// ── Call backfill (protected) ─────────────────────────────────────────────────
+
+router.post("/calls/backfill-inconclusive", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const result = await VapiCallModel.updateMany(
+      { $or: [{ tags: { $exists: false } }, { tags: { $size: 0 } }] },
+      { $set: { tags: ["Inconclusive"] } }
+    );
+    res.json({ ok: true, updated: result.modifiedCount });
+  } catch (err) {
+    console.error("Backfill inconclusive failed:", err);
+    res.status(500).json({ ok: false, error: "Backfill failed" });
   }
 });
 

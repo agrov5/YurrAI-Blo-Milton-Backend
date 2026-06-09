@@ -238,8 +238,45 @@
       @keyframes spin { to { transform: rotate(360deg); } }
 
       /* ── Responsive ──────────────────────────────────────── */
+      /* Hamburger button */
+      .hamburger-btn {
+        display: none;
+        align-items: center; justify-content: center;
+        width: 36px; height: 36px; border-radius: var(--radius-sm);
+        background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+        color: var(--muted); cursor: pointer;
+        transition: background 0.18s, color 0.18s;
+        flex-shrink: 0;
+      }
+      .hamburger-btn:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+      .hamburger-btn svg { width: 18px; height: 18px; }
+
+      .sidebar-overlay {
+        display: none;
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.55);
+        backdrop-filter: blur(4px);
+        z-index: 99;
+        opacity: 0;
+        transition: opacity 0.25s;
+        pointer-events: none;
+      }
+      .sidebar-overlay.visible { opacity: 1; pointer-events: all; }
+
+      /* Stat strip: 4 columns on wide screens */
+      .stat-strip { grid-template-columns: repeat(4, 1fr); }
+
+      @media (max-width: 1100px) {
+        .stat-strip { grid-template-columns: repeat(2, 1fr); }
+      }
       @media (max-width: 768px) {
-        .sidebar { display: none; }
+        .hamburger-btn { display: flex; }
+        .sidebar {
+          transform: translateX(-100%);
+          transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+        }
+        .sidebar.sidebar-open { transform: translateX(0); }
+        .sidebar-overlay { display: block; }
         .main { margin-left: 0; }
         .content { padding: 1rem; }
         .stat-strip { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
@@ -315,8 +352,10 @@
   </head>
   <body>
 
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
     <!-- ── Sidebar ─────────────────────────────────────────── -->
-    <aside class="sidebar">
+    <aside class="sidebar" id="sidebar">
       <div class="sidebar-brand">
         <div class="brand-icon">Y</div>
         <span class="brand-name">YurrAI</span>
@@ -348,6 +387,9 @@
     <div class="main">
       <header class="topbar">
         <div class="topbar-left">
+          <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Toggle menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
           <h1 class="page-title">Dashboard</h1>
           <div class="topbar-badge">
             <span class="badge-dot"></span>
@@ -437,6 +479,43 @@
           </div>
 
         </div>
+
+        <!-- Settings + CC Link cards -->
+        <div class="card-row" style="margin-top:1.25rem;">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Call Settings</div>
+              <div class="card-subtitle">Configure AI call behaviour</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Short-call threshold (seconds)</label>
+              <input class="form-input" type="number" id="short-call-threshold" min="0" max="3600" placeholder="30" />
+            </div>
+            <button class="btn-primary" id="save-settings-btn" onclick="saveSettings()">Save Settings</button>
+            <button class="btn-secondary" id="backfill-btn" onclick="backfillInconclusive()" style="margin-top:0.5rem;">Tag Untagged Calls as Inconclusive</button>
+            <div id="settings-msg" class="msg msg-success"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Send CC Link</div>
+              <div class="card-subtitle">Look up a customer and send them a credit card link</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">First Name</label>
+              <input class="form-input" type="text" id="cc-first-name" placeholder="Jane" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Phone Number</label>
+              <input class="form-input" type="tel" id="cc-phone" placeholder="+1 416 555 0100" />
+            </div>
+            <div id="cc-customer-found" style="display:none; padding:0.6rem 0.85rem; background:rgba(34,197,94,0.08); border:1px solid rgba(34,197,94,0.2); border-radius:var(--radius-sm); margin-bottom:0.9rem; font-size:0.82rem; color:#86efac;"></div>
+            <button class="btn-primary" id="cc-find-btn" onclick="findCustomerForCC()">Find Customer</button>
+            <button class="btn-primary btn-orange" id="cc-send-btn" style="display:none; margin-top:0.55rem;" onclick="sendCCLink()">Send CC Link via SMS</button>
+            <div id="cc-msg" class="msg msg-success"></div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -461,7 +540,19 @@
     </div>
 
     <script>
-      let authCredentials = "";
+      function toggleSidebar() {
+        const sidebar = document.getElementById("sidebar");
+        const overlay = document.getElementById("sidebar-overlay");
+        const isOpen = sidebar.classList.toggle("sidebar-open");
+        overlay.classList.toggle("visible", isOpen);
+      }
+
+      function closeSidebar() {
+        document.getElementById("sidebar").classList.remove("sidebar-open");
+        document.getElementById("sidebar-overlay").classList.remove("visible");
+      }
+
+            let authCredentials = "";
       const zohoHardcodedName   = "Bijal Patel";
       const zohoHardcodedMailId = "bijal@blomedry.com";
       const zohoBaseUrl         = "https://calendar.zoho.com/eventreq/zz080112308e7a876686e756ec062dec68f649128461b60bfb7a1b8bb4c85f04ee55f11eb6c4aa91e80ae10528e8a78a8a43aabd10";
@@ -506,7 +597,7 @@
         authCredentials = sessionStorage.getItem("authCredentials");
         if (!authCredentials) { window.location.href = "/admin/login"; return; }
         fetch("/api/get/auth-test", { headers: { Authorization: authCredentials } })
-          .then(r => { if (!r.ok) logout(); else loadCounts(); })
+          .then(r => { if (!r.ok) logout(); else { loadCounts(); loadSettings(); } })
           .catch(() => logout());
       });
 
@@ -559,6 +650,152 @@
       document.getElementById("confirm-backdrop").addEventListener("click", function (e) {
         if (e.target === this) closeConfirm();
       });
+      // ── CC Link ──────────────────────────────────────────────────
+      let ccCustomerId = null;
+      let ccCustomerPhone = null;
+      let ccFirstName = "";
+
+      async function findCustomerForCC() {
+        const firstName = document.getElementById("cc-first-name").value.trim();
+        const phone     = document.getElementById("cc-phone").value.trim();
+        const msgEl     = document.getElementById("cc-msg");
+        const foundEl   = document.getElementById("cc-customer-found");
+        const sendBtn   = document.getElementById("cc-send-btn");
+        const findBtn   = document.getElementById("cc-find-btn");
+        msgEl.style.display = "none";
+        foundEl.style.display = "none";
+        sendBtn.style.display = "none";
+        ccCustomerId = null; ccCustomerPhone = null; ccFirstName = "";
+
+        if (!firstName || !phone) {
+          msgEl.textContent = "Please enter both first name and phone number.";
+          msgEl.className = "msg msg-error"; msgEl.style.display = "block"; return;
+        }
+
+        findBtn.disabled = true;
+        findBtn.innerHTML = '<span class="spinner"></span> Searching…';
+        try {
+          const res = await fetch("/api/post/customer", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: authCredentials },
+            body: JSON.stringify({ firstName, phone }),
+          });
+          const data = await res.json();
+          if (data.success && data.customer) {
+            const c = data.customer;
+            ccCustomerId    = c.CustomerID;
+            ccCustomerPhone = c.Customer?.CellPhone || c.Customer?.HomePhone || phone;
+            ccFirstName     = c.Customer?.FirstName || firstName;
+            const fullName  = `${c.Customer?.FirstName || ""} ${c.Customer?.LastName || ""}`.trim() || firstName;
+            foundEl.textContent = `Found: ${fullName} (ID ${ccCustomerId}) — will send to ${ccCustomerPhone}`;
+            foundEl.style.display = "block";
+            sendBtn.style.display = "block";
+          } else {
+            msgEl.textContent = data.message || "Customer not found.";
+            msgEl.className = "msg msg-error"; msgEl.style.display = "block";
+          }
+        } catch {
+          msgEl.textContent = "Search failed. Please try again.";
+          msgEl.className = "msg msg-error"; msgEl.style.display = "block";
+        } finally {
+          findBtn.disabled = false; findBtn.textContent = "Find Customer";
+        }
+      }
+
+      async function sendCCLink() {
+        const msgEl   = document.getElementById("cc-msg");
+        const sendBtn = document.getElementById("cc-send-btn");
+        msgEl.style.display = "none";
+        if (!ccCustomerId || !ccCustomerPhone) return;
+
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = '<span class="spinner"></span> Sending…';
+        try {
+          const res = await fetch("/api/post/send-cc-link", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: authCredentials },
+            body: JSON.stringify({ customerId: ccCustomerId, phone: ccCustomerPhone, firstName: ccFirstName }),
+          });
+          const data = await res.json();
+          if (data.success) {
+            msgEl.textContent = "Message sent.";
+            msgEl.className = "msg msg-success";
+            msgEl.style.display = "block";
+          } else {
+            throw new Error(data.error || "Failed to send");
+          }
+        } catch (err) {
+          msgEl.textContent = err.message || "Failed to send CC link.";
+          msgEl.className = "msg msg-error"; msgEl.style.display = "block";
+        } finally {
+          sendBtn.disabled = false; sendBtn.textContent = "Send CC Link via SMS";
+        }
+      }
+
+      async function loadSettings() {
+        try {
+          const res = await fetch("/admin/settings", { headers: { Authorization: authCredentials } });
+          const data = await res.json();
+          if (data.ok) {
+            document.getElementById("short-call-threshold").value = data.settings.shortCallThresholdSeconds;
+          }
+        } catch {}
+      }
+
+      async function saveSettings() {
+        const btn = document.getElementById("save-settings-btn");
+        const msgEl = document.getElementById("settings-msg");
+        msgEl.style.display = "none";
+        const val = parseInt(document.getElementById("short-call-threshold").value, 10);
+        if (isNaN(val) || val < 0) {
+          msgEl.textContent = "Please enter a valid number of seconds.";
+          msgEl.className = "msg msg-error"; msgEl.style.display = "block"; return;
+        }
+        btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Saving…';
+        try {
+          const res = await fetch("/admin/settings", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json", Authorization: authCredentials },
+            body: JSON.stringify({ shortCallThresholdSeconds: val }),
+          });
+          const data = await res.json();
+          if (data.ok) {
+            msgEl.textContent = "Settings saved!"; msgEl.className = "msg msg-success"; msgEl.style.display = "block";
+          } else {
+            msgEl.textContent = data.error || "Failed to save."; msgEl.className = "msg msg-error"; msgEl.style.display = "block";
+          }
+        } catch {
+          msgEl.textContent = "Failed to save settings."; msgEl.className = "msg msg-error"; msgEl.style.display = "block";
+        } finally {
+          btn.disabled = false; btn.textContent = "Save Settings";
+        }
+      }
+
+      async function backfillInconclusive() {
+        const btn = document.getElementById("backfill-btn");
+        const msgEl = document.getElementById("settings-msg");
+        msgEl.style.display = "none";
+        btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Running…';
+        try {
+          const res = await fetch("/admin/calls/backfill-inconclusive", {
+            method: "POST",
+            headers: { Authorization: authCredentials },
+          });
+          const data = await res.json();
+          if (data.ok) {
+            msgEl.textContent = `Backfill done — ${data.updated} call(s) updated.`;
+            msgEl.className = "msg msg-success"; msgEl.style.display = "block";
+          } else {
+            msgEl.textContent = data.error || "Backfill failed.";
+            msgEl.className = "msg msg-error"; msgEl.style.display = "block";
+          }
+        } catch {
+          msgEl.textContent = "Backfill request failed.";
+          msgEl.className = "msg msg-error"; msgEl.style.display = "block";
+        } finally {
+          btn.disabled = false; btn.textContent = "Tag Untagged Calls as Inconclusive";
+        }
+      }
     </script>
 
     <script type="text/javascript">
