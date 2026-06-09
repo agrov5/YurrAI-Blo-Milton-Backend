@@ -3,158 +3,202 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Admin Login - Blo Milton Backend</title>
+    <title>Admin Login — Blo Milton</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
     <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
+      *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
       body {
-        font-family: "Arial", sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
+        font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+        background: #F1F5F9;
+        min-height: 100dvh;
         display: flex;
         align-items: center;
         justify-content: center;
+        padding: 1.5rem;
       }
 
-      .login-container {
-        background: white;
-        padding: 2rem;
-        border-radius: 10px;
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+      .login-card {
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 20px 60px rgba(0,0,0,0.07);
+        border: 1px solid #E2E8F0;
         width: 100%;
-        max-width: 400px;
+        max-width: 420px;
+        padding: 2.5rem;
       }
 
-      .login-header {
-        text-align: center;
+      .brand-mark {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
         margin-bottom: 2rem;
       }
 
-      .login-header h1 {
-        color: #333;
-        font-size: 2rem;
-        margin-bottom: 0.5rem;
+      .brand-icon {
+        width: 34px; height: 34px;
+        border-radius: 9px;
+        background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.9rem; font-weight: 700; color: #fff;
+        flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(79,70,229,0.28);
       }
 
-      .login-header p {
-        color: #666;
-        font-size: 0.9rem;
+      .brand-name {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0F172A;
+        letter-spacing: -0.01em;
+      }
+
+      .login-heading {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #0F172A;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.35rem;
+      }
+
+      .login-subheading {
+        font-size: 0.875rem;
+        color: #64748B;
+        margin-bottom: 2rem;
+        line-height: 1.5;
       }
 
       .form-group {
-        margin-bottom: 1.5rem;
+        margin-bottom: 1.1rem;
       }
 
       label {
         display: block;
-        margin-bottom: 0.5rem;
-        color: #333;
-        font-weight: 500;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.4rem;
+        letter-spacing: 0.01em;
       }
 
       input[type="text"],
       input[type="password"] {
         width: 100%;
-        padding: 0.75rem;
-        border: 2px solid #e1e5e9;
-        border-radius: 5px;
-        font-size: 1rem;
-        transition: border-color 0.3s;
+        padding: 0.65rem 0.9rem;
+        background: #F8FAFC;
+        border: 1px solid #E2E8F0;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        font-family: inherit;
+        color: #0F172A;
+        outline: none;
+        transition: border-color 0.18s, box-shadow 0.18s;
       }
 
       input[type="text"]:focus,
       input[type="password"]:focus {
-        outline: none;
-        border-color: #667eea;
+        border-color: #4F46E5;
+        box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+        background: #fff;
       }
+
+      input::placeholder { color: #94A3B8; }
 
       .login-btn {
         width: 100%;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
+        background: #4F46E5;
+        color: #fff;
         border: none;
         padding: 0.75rem;
-        font-size: 1rem;
-        border-radius: 5px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        font-family: inherit;
+        border-radius: 10px;
         cursor: pointer;
-        transition: transform 0.2s;
+        margin-top: 0.5rem;
+        transition: background 0.18s, transform 0.18s, box-shadow 0.18s;
+        box-shadow: 0 4px 14px rgba(79,70,229,0.22);
       }
 
       .login-btn:hover {
-        transform: translateY(-2px);
+        background: #4338CA;
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px rgba(79,70,229,0.28);
       }
 
+      .login-btn:active { transform: scale(0.98); }
+
       .login-btn:disabled {
-        background: #ccc;
+        background: #A5B4FC;
         cursor: not-allowed;
         transform: none;
+        box-shadow: none;
       }
 
       .error-message {
-        background: #f8d7da;
-        color: #721c24;
-        padding: 0.75rem;
-        border-radius: 5px;
+        background: rgba(220,38,38,0.06);
+        color: #DC2626;
+        border: 1px solid rgba(220,38,38,0.15);
+        padding: 0.7rem 0.9rem;
+        border-radius: 10px;
+        font-size: 0.82rem;
+        font-weight: 500;
         margin-bottom: 1rem;
         display: none;
       }
 
       .loading {
         display: none;
-        text-align: center;
-        margin-top: 1rem;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 0.85rem;
+        font-size: 0.82rem;
+        color: #64748B;
+        font-weight: 500;
       }
 
       .spinner {
-        border: 2px solid #f3f3f3;
-        border-top: 2px solid #667eea;
+        border: 2px solid #E2E8F0;
+        border-top-color: #4F46E5;
         border-radius: 50%;
-        width: 20px;
-        height: 20px;
-        animation: spin 1s linear infinite;
-        display: inline-block;
-        margin-right: 10px;
+        width: 16px; height: 16px;
+        animation: spin 0.75s linear infinite;
+        flex-shrink: 0;
       }
 
-      @keyframes spin {
-        0% {
-          transform: rotate(0deg);
-        }
-        100% {
-          transform: rotate(360deg);
-        }
-      }
+      @keyframes spin { to { transform: rotate(360deg); } }
     </style>
   </head>
   <body>
-    <div class="login-container">
-      <div class="login-header">
-        <h1>Admin Login</h1>
-        <p>Enter your credentials to access the dashboard</p>
+    <div class="login-card">
+      <div class="brand-mark">
+        <div class="brand-icon">Y</div>
+        <span class="brand-name">YurrAI</span>
       </div>
+
+      <h1 class="login-heading">Welcome back</h1>
+      <p class="login-subheading">Sign in to access the admin dashboard</p>
 
       <div id="error-message" class="error-message"></div>
 
       <form id="login-form">
         <div class="form-group">
-          <label for="username">Username:</label>
-          <input type="text" id="username" name="username" required />
+          <label for="username">Username</label>
+          <input type="text" id="username" name="username" placeholder="Enter username" required />
         </div>
 
         <div class="form-group">
-          <label for="password">Password:</label>
-          <input type="password" id="password" name="password" required />
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" placeholder="Enter password" required />
         </div>
 
-        <button type="submit" class="login-btn" id="login-btn">Login</button>
+        <button type="submit" class="login-btn" id="login-btn">Sign in</button>
 
         <div class="loading" id="loading">
           <div class="spinner"></div>
-          Authenticating...
+          Authenticating…
         </div>
       </form>
     </div>
@@ -169,62 +213,46 @@
           const password = document.getElementById("password").value.trim();
           const errorDiv = document.getElementById("error-message");
           const loginBtn = document.getElementById("login-btn");
-          const loading = document.getElementById("loading");
+          const loading  = document.getElementById("loading");
 
-          // Clear previous errors
           errorDiv.style.display = "none";
 
-          // Validate inputs
           if (!username || !password) {
             errorDiv.textContent = "Please enter both username and password.";
             errorDiv.style.display = "block";
             return;
           }
 
-          // Show loading state
           loginBtn.disabled = true;
-          loginBtn.textContent = "Logging in...";
-          loading.style.display = "block";
+          loginBtn.textContent = "Signing in…";
+          loading.style.display = "flex";
 
           try {
-            // Create Basic Auth header - format as username:password for the auth middleware
             const credentials = username + ":" + password;
-
             const response = await fetch("/api/get/auth-test", {
               method: "GET",
-              headers: {
-                Authorization: credentials,
-              },
+              headers: { Authorization: credentials },
             });
 
             if (response.ok) {
-              // Store credentials in sessionStorage for the dashboard
               sessionStorage.setItem("authCredentials", credentials);
-              console.log("Login successful");
-              // Redirect to dashboard
               window.location.href = "/admin/dashboard";
             } else {
-              console.log("Login failed");
               throw new Error("Invalid credentials");
             }
           } catch (error) {
-            console.error("Login error:", error);
-            errorDiv.textContent =
-              "Invalid username or password. Please try again.";
+            errorDiv.textContent = "Invalid username or password. Please try again.";
             errorDiv.style.display = "block";
           } finally {
-            // Reset loading state
             loginBtn.disabled = false;
-            loginBtn.textContent = "Login";
+            loginBtn.textContent = "Sign in";
             loading.style.display = "none";
           }
         });
 
-      // Check if already authenticated
       window.addEventListener("load", function () {
         const credentials = sessionStorage.getItem("authCredentials");
         if (credentials) {
-          // Verify credentials are still valid
           fetch("/api/get/auth-test", {
             headers: { Authorization: credentials },
           }).then((response) => {
