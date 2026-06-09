@@ -54,7 +54,8 @@ getRouter.get("/logs", getRequestLogs);
 getRouter.get("/health", (req, res) => {
   res.status(200).json({
     status: "OK",
-    timestamp: convertISOtoFriendly(new Date().toISOString()),
+    today_date: convertISOtoFriendly(new Date().toISOString()),
+    today_date_system: new Date().toISOString().slice(0, 10),
     service: "Blo Milton Backend API",
     locationID: process.env.LOCATION_ID,
   });
