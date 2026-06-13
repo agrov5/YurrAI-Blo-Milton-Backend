@@ -475,11 +475,33 @@ export const vapiCallDataWebhook = async (req: Request, res: Response) => {
 
 
 const PREDEFINED_TAGS = [
+  // Primary intent
+  "New Appointment Request",
+  "Reschedule Request",
+  "Cancel Request",
+  "Pricing Question",
+  "Hours / Location / Directions",
+  "Service Question",
+  "Existing Appointment Question",
+  "Wrong Department / Not a Client",
+  // Resolution
   "Appointment Booked",
-  "Appointment Canceled",
   "Appointment Rescheduled",
-  "FAQ",
+  "Appointment Canceled",
+  "FAQ Resolved",
+  "FAQ Not Resolved",
+  "Message Taken / Callback Requested",
   "Message sent to Admin",
+  "Caller Declined Further Service",
+  // Failure modes
+  "Hangup During Intake",
+  "Silent / No Response",
+  "Couldn't Collect Required Info",
+  "No Availability / No Suitable Times",
+  "Out of Scope Request",
+  "Language Barrier",
+  "Tool / Calendar Error",
+  "Bad Audio / Couldn't Understand",
   "Inconclusive",
 ];
 
@@ -489,21 +511,47 @@ async function geminiTagCall(summary: string | null | undefined, transcript: str
 
   const ai = new GoogleGenAI({ apiKey });
 
-  const prompt = `You are analyzing a phone call from a beauty salon (Blo Blowout Bar). Based on the call summary and transcript below, determine which of these tags apply:
+  const prompt = `You are analyzing a phone call from a beauty salon (Blo Blowout Bar). Based on the call summary and transcript below, assign the most relevant tags from the list.
 
-Available tags:
-- "Appointment Booked": A new appointment was booked during the call
-- "Appointment Canceled": An appointment was canceled during the call
-- "Appointment Rescheduled": An appointment was rescheduled during the call
-- "FAQ": The call was primarily answering frequently asked questions about services, pricing, hours, etc.
-- "Message sent to Admin": A message was relayed or sent to the admin/staff during the call
-- "Inconclusive": It's unclear what the main purpose of the call was, or it doesn't fit any other tags
+Tags are grouped into three categories — assign one or more from each relevant category:
+
+PRIMARY INTENT (why did they call?):
+- "New Appointment Request": Caller wanted to book a new appointment
+- "Reschedule Request": Caller wanted to move an existing appointment (use even if it failed)
+- "Cancel Request": Caller wanted to cancel an appointment (use even if it failed)
+- "Pricing Question": Caller asked about pricing or insurance
+- "Hours / Location / Directions": Caller asked about hours, address, or how to get there
+- "Service Question": Caller asked what services are offered, prep instructions, etc.
+- "Existing Appointment Question": Caller asked to confirm details of an existing appointment
+- "Wrong Department / Not a Client": Spam, vendor, sales, or clearly wrong number
+
+RESOLUTION (what actually happened?):
+- "Appointment Booked": A new appointment was successfully booked
+- "Appointment Rescheduled": An existing appointment was successfully rescheduled
+- "Appointment Canceled": An appointment was successfully canceled
+- "FAQ Resolved": A question was asked and fully answered
+- "FAQ Not Resolved": A question was asked but could not be fully answered
+- "Message Taken / Callback Requested": A message was taken or a callback was promised
+- "Message sent to Admin": A message was relayed or sent to the admin/staff
+- "Caller Declined Further Service": Caller chose not to proceed after receiving info
+
+FAILURE MODES (if something went wrong):
+- "Hangup During Intake": Caller hung up before the interaction was complete
+- "Silent / No Response": No audible response from the caller
+- "Couldn't Collect Required Info": Needed info (name, contact, etc.) was not obtained
+- "No Availability / No Suitable Times": No appointment slots matched the caller's needs
+- "Out of Scope Request": Request was outside what the salon handles (billing dispute, emergency, etc.)
+- "Language Barrier": Communication failed due to language
+- "Tool / Calendar Error": A booking system or integration error occurred
+- "Bad Audio / Couldn't Understand": Call quality prevented understanding
+- "Inconclusive": None of the above apply, or the call purpose is completely unclear
 
 Call Summary: ${summary || "N/A"}
 Call Transcript: ${transcript ? transcript.substring(0, 3000) : "N/A"}
 
-Respond ONLY with a valid JSON array of applicable tag strings from the list above. Example: ["Appointment Booked", "FAQ"]
-If none of the specific tags apply, respond with: ["Inconclusive"]`;
+Respond ONLY with a valid JSON array of applicable tag strings exactly as written above.
+Example: ["New Appointment Request", "Appointment Booked"]
+Use "Inconclusive" only if truly nothing else fits.`;
 
   const response = await ai.models.generateContent({
     model: "gemini-2.5-flash-lite",

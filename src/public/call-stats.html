@@ -524,11 +524,21 @@
         margin-bottom: 0.75rem;
       }
 
+      .tag-group {
+        margin-bottom: 0.85rem;
+      }
+      .tag-group-label {
+        font-size: 0.6rem;
+        color: #CBD5E1;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 700;
+        margin-bottom: 0.4rem;
+      }
       .predefined-tags {
         display: flex;
         flex-wrap: wrap;
         gap: 0.45rem;
-        margin-bottom: 0.85rem;
       }
 
       .custom-tag-row {
@@ -889,6 +899,10 @@
             <span class="search-label">Call ID</span>
             <input class="search-input" type="text" id="filterCallId" placeholder="Search call ID…" oninput="applyFilters()" />
           </div>
+          <div class="search-field">
+            <span class="search-label">Caller</span>
+            <input class="search-input" type="text" id="filterCaller" placeholder="Name or number…" oninput="applyFilters()" />
+          </div>
           <button class="search-clear-btn" onclick="clearFilters()">Clear</button>
           <span class="search-count" id="searchCount"></span>
         </div>
@@ -956,14 +970,49 @@
         document.getElementById(`call-icon-${index}`).classList.toggle("expanded");
       }
 
-      const PREDEFINED_TAGS = [
-        "Appointment Booked",
-        "Appointment Canceled",
-        "Appointment Rescheduled",
-        "FAQ",
-        "Message sent to Admin",
-        "Inconclusive",
+      const PREDEFINED_TAG_GROUPS = [
+        {
+          label: "Primary Intent",
+          tags: [
+            "New Appointment Request",
+            "Reschedule Request",
+            "Cancel Request",
+            "Pricing Question",
+            "Hours / Location / Directions",
+            "Service Question",
+            "Existing Appointment Question",
+            "Wrong Department / Not a Client",
+          ],
+        },
+        {
+          label: "Resolution",
+          tags: [
+            "Appointment Booked",
+            "Appointment Rescheduled",
+            "Appointment Canceled",
+            "FAQ Resolved",
+            "FAQ Not Resolved",
+            "Message Taken / Callback Requested",
+            "Message sent to Admin",
+            "Caller Declined Further Service",
+          ],
+        },
+        {
+          label: "Failure Modes",
+          tags: [
+            "Hangup During Intake",
+            "Silent / No Response",
+            "Couldn't Collect Required Info",
+            "No Availability / No Suitable Times",
+            "Out of Scope Request",
+            "Language Barrier",
+            "Tool / Calendar Error",
+            "Bad Audio / Couldn't Understand",
+            "Inconclusive",
+          ],
+        },
       ];
+      const PREDEFINED_TAGS = PREDEFINED_TAG_GROUPS.flatMap(g => g.tags);
 
       const callTagState = {};
 
@@ -974,15 +1023,22 @@
 
       function renderTagManager(callId, tags) {
         const active = new Set(tags || []);
-        const predefinedHtml = PREDEFINED_TAGS.map(t => `
-          <button class="tag-toggle-btn ${active.has(t) ? "active" : ""}"
-                  onclick="togglePredefinedTag('${callId}', this, ${JSON.stringify(t)})">${escapeHtml(t)}</button>
-        `).join("");
+        const groupsHtml = PREDEFINED_TAG_GROUPS.map(group => {
+          const btns = group.tags.map(t => `
+            <button class="tag-toggle-btn ${active.has(t) ? "active" : ""}"
+                    onclick="togglePredefinedTag('${callId}', this, ${JSON.stringify(t)})">${escapeHtml(t)}</button>
+          `).join("");
+          return `
+            <div class="tag-group">
+              <div class="tag-group-label">${escapeHtml(group.label)}</div>
+              <div class="predefined-tags" id="predefined-${callId}-${group.label.replace(/\s+/g,"-")}">${btns}</div>
+            </div>`;
+        }).join("");
 
         return `
           <div class="tag-manager">
             <div class="tag-manager-title">Manage Tags</div>
-            <div class="predefined-tags" id="predefined-${callId}">${predefinedHtml}</div>
+            <div id="predefined-${callId}">${groupsHtml}</div>
             <div class="tag-save-status" id="tag-status-${callId}"></div>
           </div>`;
       }
@@ -1135,13 +1191,35 @@
       let pieChart = null;
 
       const TAG_COLORS = {
-        "Appointment Booked":      "#16A34A",
-        "Appointment Canceled":    "#DC2626",
-        "Appointment Rescheduled": "#EA580C",
-        "FAQ":                     "#0284C7",
-        "Message sent to Admin":   "#7C3AED",
-        "Inconclusive":            "#94A3B8",
-        "No Tags":                 "#E2E8F0",
+        // Primary Intent
+        "New Appointment Request":          "#0EA5E9",
+        "Reschedule Request":               "#6366F1",
+        "Cancel Request":                   "#F43F5E",
+        "Pricing Question":                 "#8B5CF6",
+        "Hours / Location / Directions":    "#14B8A6",
+        "Service Question":                 "#3B82F6",
+        "Existing Appointment Question":    "#06B6D4",
+        "Wrong Department / Not a Client":  "#64748B",
+        // Resolution
+        "Appointment Booked":               "#16A34A",
+        "Appointment Rescheduled":          "#EA580C",
+        "Appointment Canceled":             "#DC2626",
+        "FAQ Resolved":                     "#0284C7",
+        "FAQ Not Resolved":                 "#7DD3FC",
+        "Message Taken / Callback Requested": "#A855F7",
+        "Message sent to Admin":            "#7C3AED",
+        "Caller Declined Further Service":  "#F97316",
+        // Failure Modes
+        "Hangup During Intake":             "#EF4444",
+        "Silent / No Response":             "#9CA3AF",
+        "Couldn't Collect Required Info":   "#F59E0B",
+        "No Availability / No Suitable Times": "#78716C",
+        "Out of Scope Request":             "#6B7280",
+        "Language Barrier":                 "#D97706",
+        "Tool / Calendar Error":            "#EC4899",
+        "Bad Audio / Couldn't Understand":  "#A1A1AA",
+        "Inconclusive":                     "#94A3B8",
+        "No Tags":                          "#E2E8F0",
       };
 
       function renderPieChart(calls) {
@@ -1221,6 +1299,7 @@
         const timeFrom    = document.getElementById("filterTimeFrom").value;
         const timeTo      = document.getElementById("filterTimeTo").value;
         const callIdQ     = document.getElementById("filterCallId").value.trim().toLowerCase();
+        const callerQ     = document.getElementById("filterCaller").value.trim().toLowerCase();
 
         let filtered = allMonthCalls;
 
@@ -1251,8 +1330,15 @@
           );
         }
 
+        if (callerQ) {
+          filtered = filtered.filter(c =>
+            (c.callerName   && c.callerName.toLowerCase().includes(callerQ)) ||
+            (c.callerNumber && c.callerNumber.toLowerCase().includes(callerQ))
+          );
+        }
+
         const countEl = document.getElementById("searchCount");
-        const hasFilter = dateVal || timeFrom || timeTo || callIdQ;
+        const hasFilter = dateVal || timeFrom || timeTo || callIdQ || callerQ;
         countEl.textContent = hasFilter ? `${filtered.length} of ${allMonthCalls.length} calls` : "";
 
         const headlineEl = document.getElementById("chartHeadline");
@@ -1270,6 +1356,7 @@
         document.getElementById("filterTimeFrom").value = "";
         document.getElementById("filterTimeTo").value   = "";
         document.getElementById("filterCallId").value   = "";
+        document.getElementById("filterCaller").value   = "";
         applyFilters();
       }
 
@@ -1309,6 +1396,7 @@
           document.getElementById("filterTimeFrom").value = "";
           document.getElementById("filterTimeTo").value   = "";
           document.getElementById("filterCallId").value   = "";
+          document.getElementById("filterCaller").value   = "";
           document.getElementById("searchCount").textContent = "";
 
           callsList.innerHTML = allMonthCalls.length
