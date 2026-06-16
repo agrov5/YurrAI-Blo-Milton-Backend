@@ -217,18 +217,18 @@ export const postCancelAppointment = async (req: Request, res: Response) => {
 export const getCustomer = async (req: Request, res: Response) => {
   const body: { firstName: string; phone: string } = req.body;
   try {
-    if (!body.firstName || !body.phone) {
+    if (!body.phone) {
       return res.status(400).json({
         success: false,
-        message: "First name and phone number are required",
+        message: "Phone number is required",
       });
     }
 
-    const customer = await checkCustomerExists(body.firstName, body.phone);
+    const customer = await checkCustomerExists(body.phone, false);
     if (customer) {
       res.status(200).json({
         success: true,
-        message: "Customer found",
+        message: "Customer(s) found",
         locationID: locationID,
         customer: customer,
       });

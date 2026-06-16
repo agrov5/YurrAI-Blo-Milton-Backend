@@ -325,8 +325,9 @@ export const findAvailableTimes = async (options: {
 };
 
 export const checkCustomerExists = async (
-  firstName: string,
   phone: string,
+  firstNameRequiredFlag = true,
+  firstName?: string,
 ): Promise<ExistingCustomer | null> => {
   try {
     const accessToken = await getAccessToken();
@@ -344,9 +345,14 @@ export const checkCustomerExists = async (
         },
       },
     );
-    return response.data.Customers && response.data.Customers.length > 0
-      ? response.data.Customers[0]
-      : null;
+
+    if (firstNameRequiredFlag) {
+      return response.data.Customers && response.data.Customers.length > 0
+        ? response.data.Customers[0]
+        : null;
+    } else {
+      return response.data.Customers;
+    }
   } catch (error) {
     console.error("Error creating appointment:", error);
     throw error;
@@ -854,7 +860,7 @@ export const createAppointment = async (
       treatmentName: appointment.treatmentName,
       employeeId: namedEmployeeId || undefined,
     }),
-    checkCustomerExists(appointment.firstName, cleanedPhone),
+    checkCustomerExists(cleanedPhone, true, appointment.firstName),
   ]);
 
   if (!availableDates || availableDates.length === 0) {
