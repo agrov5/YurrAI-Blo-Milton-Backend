@@ -375,7 +375,7 @@ export const getCustomer = async (req: Request, res: Response) => {
       });
     }
 
-    const customer = await checkCustomerExists(body.firstName, body.phone);
+    const customer = await checkCustomerExists(body.phone, true, body.firstName);
     if (customer) {
       res.status(200).json({
         success: true,

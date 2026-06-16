@@ -224,18 +224,19 @@ export const getCustomer = async (req: Request, res: Response) => {
       });
     }
 
-    const customer = await checkCustomerExists(body.phone, false);
-    if (customer) {
+    const result = await checkCustomerExists(body.phone, false);
+    if (result) {
+      const multiple = result.length > 1;
       res.status(200).json({
         success: true,
-        message: "Customer(s) found",
+        message: multiple ? "Multiple customers found" : "Customer found",
         locationID: locationID,
-        customer: customer,
+        ...(multiple ? { customers: result } : { customer: result[0] }),
       });
     } else {
       res.status(404).json({
         success: false,
-        message: `Customer '${body.firstName}' with phone ${body.phone} not found`,
+        message: `Customer with phone ${body.phone} not found`,
       });
     }
   } catch (error) {

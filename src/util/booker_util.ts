@@ -324,11 +324,13 @@ export const findAvailableTimes = async (options: {
   }
 };
 
-export const checkCustomerExists = async (
+export async function checkCustomerExists(phone: string, firstNameRequiredFlag: true, firstName?: string): Promise<ExistingCustomer | null>;
+export async function checkCustomerExists(phone: string, firstNameRequiredFlag: false, firstName?: string): Promise<ExistingCustomer[] | null>;
+export async function checkCustomerExists(
   phone: string,
   firstNameRequiredFlag = true,
   firstName?: string,
-): Promise<ExistingCustomer | null> => {
+): Promise<ExistingCustomer | ExistingCustomer[] | null> {
   try {
     const accessToken = await getAccessToken();
     const response = await axios.post(
@@ -351,13 +353,14 @@ export const checkCustomerExists = async (
         ? response.data.Customers[0]
         : null;
     } else {
-      return response.data.Customers;
+      const customers: ExistingCustomer[] = response.data.Customers ?? [];
+      return customers.length > 0 ? customers : null;
     }
   } catch (error) {
     console.error("Error creating appointment:", error);
     throw error;
   }
-};
+}
 
 export const generateCCWidgetURL = (customerId: number): string => {
   const baseUrl = process.env.PRODUCTION_URL || "http://localhost:3000";
