@@ -6,260 +6,265 @@
     <title>Admin Login — Blo Milton</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <style>
       *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-      body {
-        font-family: "Plus Jakarta Sans", system-ui, sans-serif;
-        background: #F1F5F9;
-        min-height: 100dvh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 1.5rem;
+      :root {
+        --bg:        #050505;
+        --surface:   #0e0e0e;
+        --surface-2: #161616;
+        --border:    rgba(255,255,255,0.08);
+        --border-hi: rgba(255,255,255,0.14);
+        --text:      #f2f2f2;
+        --text-2:    #c8c8c8;
+        --muted:     #7a7a7a;
+        --muted-2:   #4a4a4a;
+        --green:     #22c55e;
+        --red:       #f87171;
+        --red-dim:   rgba(239,68,68,0.1);
+        --r:         8px;
+        --r-lg:      12px;
+        --r-xl:      16px;
       }
 
-      .login-card {
-        background: #fff;
-        border-radius: 20px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 20px 60px rgba(0,0,0,0.07);
-        border: 1px solid #E2E8F0;
-        width: 100%;
-        max-width: 420px;
-        padding: 2.5rem;
+      body {
+        font-family: "Figtree", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100dvh;
+        display: flex; align-items: center; justify-content: center;
+        padding: 1.5rem;
+        -webkit-font-smoothing: antialiased;
+        position: relative;
+      }
+
+      /* dot-grid background */
+      body::before {
+        content: "";
+        position: fixed; inset: 0;
+        background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.035) 1px, transparent 0);
+        background-size: 24px 24px;
+        pointer-events: none; z-index: 0;
+      }
+
+      /* top-center ambient glow */
+      body::after {
+        content: "";
+        position: fixed; top: -180px; left: 50%; transform: translateX(-50%);
+        width: 700px; height: 500px;
+        background: radial-gradient(circle, rgba(255,255,255,0.025) 0%, transparent 65%);
+        pointer-events: none; z-index: 0;
+      }
+
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-xl);
+        box-shadow: 0 0 0 1px rgba(255,255,255,0.03),
+                    0 24px 64px rgba(0,0,0,0.6);
+        width: 100%; max-width: 400px;
+        padding: 2.25rem;
+        position: relative; z-index: 1;
+      }
+
+      /* Brand */
+      .brand {
+        display: flex; align-items: center; gap: 0.6rem;
+        margin-bottom: 2rem;
       }
 
       .brand-mark {
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-        margin-bottom: 2rem;
-      }
-
-      .brand-icon {
-        width: 34px; height: 34px;
-        border-radius: 9px;
-        background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
-        display: flex; align-items: center; justify-content: center;
-        font-size: 0.9rem; font-weight: 700; color: #fff;
+        width: 28px; height: 28px; border-radius: 7px;
+        background: #fff; display: flex; align-items: center; justify-content: center;
         flex-shrink: 0;
-        box-shadow: 0 4px 12px rgba(79,70,229,0.28);
       }
+      .brand-mark svg { width: 16px; height: 16px; }
 
       .brand-name {
-        font-size: 1rem;
-        font-weight: 700;
-        color: #0F172A;
-        letter-spacing: -0.01em;
+        font-size: 0.9rem; font-weight: 700;
+        color: var(--text); letter-spacing: -0.01em;
       }
 
-      .login-heading {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #0F172A;
-        letter-spacing: -0.02em;
-        margin-bottom: 0.35rem;
+      /* Heading */
+      .heading {
+        font-size: 1.4rem; font-weight: 700;
+        color: var(--text); letter-spacing: -0.025em;
+        margin-bottom: 0.3rem;
       }
 
-      .login-subheading {
-        font-size: 0.875rem;
-        color: #64748B;
-        margin-bottom: 2rem;
-        line-height: 1.5;
+      .subheading {
+        font-size: 0.825rem; color: var(--muted); line-height: 1.5;
+        margin-bottom: 1.875rem;
       }
 
-      .form-group {
-        margin-bottom: 1.1rem;
-      }
+      /* shadcn Input */
+      .fg { margin-bottom: 1rem; }
 
       label {
         display: block;
-        font-size: 0.8rem;
-        font-weight: 600;
-        color: #374151;
-        margin-bottom: 0.4rem;
-        letter-spacing: 0.01em;
+        font-size: 0.73rem; font-weight: 600;
+        color: var(--text-2); margin-bottom: 0.32rem; letter-spacing: 0.01em;
       }
 
-      input[type="text"],
-      input[type="password"] {
+      input.fi {
         width: 100%;
-        padding: 0.65rem 0.9rem;
-        background: #F8FAFC;
-        border: 1px solid #E2E8F0;
-        border-radius: 10px;
-        font-size: 0.9rem;
-        font-family: inherit;
-        color: #0F172A;
+        padding: 0.56rem 0.875rem;
+        background: transparent;
+        border: 1px solid var(--border);
+        border-radius: var(--r);
+        color: var(--text); font-size: 0.875rem; font-family: inherit;
         outline: none;
-        transition: border-color 0.18s, box-shadow 0.18s;
+        transition: border-color 0.14s, box-shadow 0.14s;
+      }
+      input.fi:focus {
+        border-color: rgba(255,255,255,0.3);
+        box-shadow: 0 0 0 3px rgba(255,255,255,0.04);
+      }
+      input.fi::placeholder { color: var(--muted-2); }
+
+      /* Error alert */
+      .err-alert {
+        padding: 0.6rem 0.85rem;
+        background: var(--red-dim); color: var(--red);
+        border: 1px solid rgba(239,68,68,0.2);
+        border-radius: var(--r); font-size: 0.8rem; font-weight: 500;
+        margin-bottom: 1rem; display: none; line-height: 1.45;
       }
 
-      input[type="text"]:focus,
-      input[type="password"]:focus {
-        border-color: #4F46E5;
-        box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
-        background: #fff;
-      }
-
-      input::placeholder { color: #94A3B8; }
-
-      .login-btn {
+      /* Submit button */
+      .btn-submit {
         width: 100%;
-        background: #4F46E5;
-        color: #fff;
-        border: none;
-        padding: 0.75rem;
-        font-size: 0.9rem;
-        font-weight: 600;
-        font-family: inherit;
-        border-radius: 10px;
-        cursor: pointer;
-        margin-top: 0.5rem;
-        transition: background 0.18s, transform 0.18s, box-shadow 0.18s;
-        box-shadow: 0 4px 14px rgba(79,70,229,0.22);
+        padding: 0.65rem 1rem;
+        background: #f2f2f2; color: #0a0a0a;
+        border: none; border-radius: var(--r);
+        font-size: 0.875rem; font-weight: 700; font-family: inherit;
+        cursor: pointer; margin-top: 0.375rem;
+        transition: background 0.14s, transform 0.1s;
+        display: flex; align-items: center; justify-content: center; gap: 0.4rem;
       }
+      .btn-submit:hover { background: #e0e0e0; }
+      .btn-submit:active { transform: scale(0.985); }
+      .btn-submit:disabled { opacity: 0.38; cursor: not-allowed; transform: none; }
 
-      .login-btn:hover {
-        background: #4338CA;
-        transform: translateY(-1px);
-        box-shadow: 0 8px 20px rgba(79,70,229,0.28);
-      }
-
-      .login-btn:active { transform: scale(0.98); }
-
-      .login-btn:disabled {
-        background: #A5B4FC;
-        cursor: not-allowed;
-        transform: none;
-        box-shadow: none;
-      }
-
-      .error-message {
-        background: rgba(220,38,38,0.06);
-        color: #DC2626;
-        border: 1px solid rgba(220,38,38,0.15);
-        padding: 0.7rem 0.9rem;
-        border-radius: 10px;
-        font-size: 0.82rem;
-        font-weight: 500;
-        margin-bottom: 1rem;
-        display: none;
-      }
-
-      .loading {
-        display: none;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        margin-top: 0.85rem;
-        font-size: 0.82rem;
-        color: #64748B;
-        font-weight: 500;
-      }
-
-      .spinner {
-        border: 2px solid #E2E8F0;
-        border-top-color: #4F46E5;
+      /* Spinner */
+      .spin {
+        width: 13px; height: 13px;
+        border: 2px solid rgba(10,10,10,0.2);
+        border-top-color: #0a0a0a;
         border-radius: 50%;
-        width: 16px; height: 16px;
-        animation: spin 0.75s linear infinite;
+        animation: spinning 0.65s linear infinite;
         flex-shrink: 0;
       }
+      @keyframes spinning { to { transform: rotate(360deg); } }
 
-      @keyframes spin { to { transform: rotate(360deg); } }
+      /* Footer text */
+      .footer-note {
+        margin-top: 1.5rem; text-align: center;
+        font-size: 0.72rem; color: var(--muted);
+      }
+
+      .status-row {
+        display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+        margin-top: 0.875rem;
+        font-size: 0.72rem; color: var(--muted);
+      }
+
+      .status-dot {
+        width: 5px; height: 5px; border-radius: 50%; background: var(--green);
+        animation: pulse-dot 2.5s ease-in-out infinite;
+      }
+      @keyframes pulse-dot {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50%       { opacity: 0.3; transform: scale(0.6); }
+      }
+
+      /* Divider */
+      .divider {
+        height: 1px; background: var(--border);
+        margin: 1.5rem 0;
+      }
     </style>
   </head>
   <body>
-    <div class="login-card">
-      <div class="brand-mark">
-        <div class="brand-icon">Y</div>
-        <span class="brand-name">YurrAI</span>
+    <div class="card">
+      <div class="brand">
+        <div class="brand-mark">
+          <svg viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M7.5 1C7.5 1 3 4.5 3 8.5C3 11.538 5.462 14 8.5 14C11.538 14 14 11.538 14 8.5C14 4.5 7.5 1 7.5 1Z" fill="#09090b"/>
+            <path d="M7.5 5.5C7.5 5.5 5.5 7.5 5.5 10" stroke="white" stroke-width="1.25" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="brand-name">Blo Milton</span>
       </div>
 
-      <h1 class="login-heading">Welcome back</h1>
-      <p class="login-subheading">Sign in to access the admin dashboard</p>
+      <h1 class="heading">Welcome back</h1>
+      <p class="subheading">Sign in to access the admin dashboard</p>
 
-      <div id="error-message" class="error-message"></div>
+      <div id="error-msg" class="err-alert"></div>
 
       <form id="login-form">
-        <div class="form-group">
+        <div class="fg">
           <label for="username">Username</label>
-          <input type="text" id="username" name="username" placeholder="Enter username" required />
+          <input class="fi" type="text" id="username" name="username" placeholder="Enter username" autocomplete="username" required />
         </div>
-
-        <div class="form-group">
+        <div class="fg">
           <label for="password">Password</label>
-          <input type="password" id="password" name="password" placeholder="Enter password" required />
+          <input class="fi" type="password" id="password" name="password" placeholder="Enter password" autocomplete="current-password" required />
         </div>
-
-        <button type="submit" class="login-btn" id="login-btn">Sign in</button>
-
-        <div class="loading" id="loading">
-          <div class="spinner"></div>
-          Authenticating…
-        </div>
+        <button type="submit" class="btn-submit" id="login-btn">Sign in</button>
       </form>
+
+      <div class="divider"></div>
+
+      <div class="status-row">
+        <span class="status-dot"></span>
+        All systems operational
+      </div>
     </div>
 
     <script>
-      document
-        .getElementById("login-form")
-        .addEventListener("submit", async function (e) {
-          e.preventDefault();
+      document.getElementById('login-form').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+        const errEl    = document.getElementById('error-msg');
+        const btn      = document.getElementById('login-btn');
+        errEl.style.display = 'none';
 
-          const username = document.getElementById("username").value.trim();
-          const password = document.getElementById("password").value.trim();
-          const errorDiv = document.getElementById("error-message");
-          const loginBtn = document.getElementById("login-btn");
-          const loading  = document.getElementById("loading");
+        if (!username || !password) {
+          errEl.textContent = 'Please enter both username and password.';
+          errEl.style.display = 'block'; return;
+        }
 
-          errorDiv.style.display = "none";
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spin"></span> Signing in…';
 
-          if (!username || !password) {
-            errorDiv.textContent = "Please enter both username and password.";
-            errorDiv.style.display = "block";
-            return;
-          }
-
-          loginBtn.disabled = true;
-          loginBtn.textContent = "Signing in…";
-          loading.style.display = "flex";
-
-          try {
-            const credentials = username + ":" + password;
-            const response = await fetch("/api/get/auth-test", {
-              method: "GET",
-              headers: { Authorization: credentials },
-            });
-
-            if (response.ok) {
-              sessionStorage.setItem("authCredentials", credentials);
-              window.location.href = "/admin/dashboard";
-            } else {
-              throw new Error("Invalid credentials");
-            }
-          } catch (error) {
-            errorDiv.textContent = "Invalid username or password. Please try again.";
-            errorDiv.style.display = "block";
-          } finally {
-            loginBtn.disabled = false;
-            loginBtn.textContent = "Sign in";
-            loading.style.display = "none";
-          }
-        });
-
-      window.addEventListener("load", function () {
-        const credentials = sessionStorage.getItem("authCredentials");
-        if (credentials) {
-          fetch("/api/get/auth-test", {
-            headers: { Authorization: credentials },
-          }).then((response) => {
-            if (response.ok) {
-              window.location.href = "/admin/dashboard";
-            }
+        try {
+          const credentials = username + ':' + password;
+          const res = await fetch('/api/get/auth-test', {
+            method: 'GET', headers: { Authorization: credentials }
           });
+          if (res.ok) {
+            sessionStorage.setItem('authCredentials', credentials);
+            window.location.href = '/admin/dashboard';
+          } else {
+            throw new Error('Invalid credentials');
+          }
+        } catch {
+          errEl.textContent = 'Invalid username or password. Please try again.';
+          errEl.style.display = 'block';
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Sign in';
+        }
+      });
+
+      window.addEventListener('load', function () {
+        const creds = sessionStorage.getItem('authCredentials');
+        if (creds) {
+          fetch('/api/get/auth-test', { headers: { Authorization: creds } })
+            .then(r => { if (r.ok) window.location.href = '/admin/dashboard'; });
         }
       });
     </script>

@@ -6,606 +6,370 @@
     <title>Dashboard — Blo Milton</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <style>
       *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
       :root {
-        --bg:        #F8FAFC;
-        --surface:   #FFFFFF;
-        --surface2:  #F1F5F9;
-        --border:    #E2E8F0;
-        --border-hi: #CBD5E1;
-        --text:      #0F172A;
-        --muted:     #64748B;
-        --accent:    #4F46E5;
-        --accent-light: rgba(79,70,229,0.08);
-        --green:     #16A34A;
-        --green-dim: rgba(22,163,74,0.1);
-        --orange:    #EA580C;
-        --sidebar-w: 228px;
-        --topbar-h:  64px;
-        --radius-sm: 10px;
-        --radius:    16px;
-        --radius-lg: 20px;
+        --bg:        #050505;
+        --surface:   #0e0e0e;
+        --surface-2: #161616;
+        --surface-3: #1c1c1c;
+        --border:    rgba(255,255,255,0.07);
+        --border-hi: rgba(255,255,255,0.13);
+        --text:      #f2f2f2;
+        --text-2:    #c8c8c8;
+        --muted:     #787878;
+        --muted-2:   #4a4a4a;
+
+        --green:      #22c55e;
+        --green-dim:  rgba(34,197,94,0.1);
+        --green-bdr:  rgba(34,197,94,0.2);
+        --red:        #f87171;
+        --red-dim:    rgba(239,68,68,0.1);
+        --red-bdr:    rgba(239,68,68,0.2);
+        --orange:     #fb923c;
+        --orange-dim: rgba(249,115,22,0.1);
+        --orange-bdr: rgba(249,115,22,0.2);
+        --blue:       #60a5fa;
+        --blue-dim:   rgba(96,165,250,0.1);
+        --violet:     #a78bfa;
+        --violet-dim: rgba(167,139,250,0.1);
+
+        --sidebar-w: 240px;
+        --hdr-h:     56px;
+        --r-sm: 6px;
+        --r:    8px;
+        --r-md: 10px;
+        --r-lg: 12px;
+        --r-xl: 16px;
       }
 
       body {
-        font-family: "Plus Jakarta Sans", system-ui, sans-serif;
-        background: var(--bg);
-        color: var(--text);
-        min-height: 100dvh;
-        display: flex;
-        overflow-x: hidden;
+        font-family: "Figtree", system-ui, sans-serif;
+        background: var(--bg); color: var(--text);
+        min-height: 100dvh; display: flex; overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
       }
 
-      /* ── Sidebar ─────────────────────────────────────────── */
+      body::before {
+        content: "";
+        position: fixed; inset: 0;
+        background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.028) 1px, transparent 0);
+        background-size: 24px 24px;
+        pointer-events: none; z-index: 0;
+      }
+
+      /* ── Sidebar ─────────────────────────────── */
       .sidebar {
-        width: var(--sidebar-w);
-        min-height: 100vh;
-        background: var(--surface);
-        border-right: 1px solid var(--border);
-        display: flex;
-        flex-direction: column;
-        position: fixed;
-        left: 0; top: 0;
-        z-index: 100;
-        padding: 0 0 1.5rem;
-        box-shadow: 1px 0 0 var(--border);
+        width: var(--sidebar-w); min-height: 100vh;
+        background: #000; border-right: 1px solid var(--border);
+        display: flex; flex-direction: column;
+        position: fixed; left: 0; top: 0; z-index: 100;
       }
 
       .sidebar-brand {
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-        padding: 1.25rem 1.25rem 0;
-        height: var(--topbar-h);
+        display: flex; align-items: center; gap: 0.625rem;
+        padding: 0 1.125rem; height: var(--hdr-h);
+        border-bottom: 1px solid var(--border);
       }
-
-      .brand-icon {
-        width: 30px; height: 30px;
-        border-radius: 8px;
-        background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
-        display: flex; align-items: center; justify-content: center;
-        font-size: 0.85rem; font-weight: 700; color: #fff;
-        flex-shrink: 0;
-        box-shadow: 0 3px 10px rgba(79,70,229,0.28);
+      .brand-mark {
+        width: 26px; height: 26px; border-radius: var(--r-sm);
+        background: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
       }
+      .brand-mark svg { width: 15px; height: 15px; }
+      .brand-name { font-size: 0.875rem; font-weight: 700; color: #f2f2f2; letter-spacing: -0.01em; }
 
-      .brand-name {
-        font-size: 1rem;
-        font-weight: 700;
-        letter-spacing: -0.01em;
-        color: var(--text);
-      }
+      .sidebar-nav { padding: 1rem 0.75rem; display: flex; flex-direction: column; gap: 2px; flex: 1; }
 
-      .sidebar-nav {
-        padding: 1.25rem 0.75rem 1rem;
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-        flex: 1;
+      .nav-section-label {
+        font-size: 0.62rem; font-weight: 600; color: var(--muted-2);
+        letter-spacing: 0.07em; text-transform: uppercase;
+        padding: 0.5rem 0.5rem 0.25rem;
       }
 
       .nav-item {
-        display: flex; align-items: center; gap: 0.65rem;
-        padding: 0.58rem 0.75rem;
-        border-radius: var(--radius-sm);
-        color: var(--muted);
-        text-decoration: none;
-        font-size: 0.86rem;
-        font-weight: 500;
-        transition: background 0.15s, color 0.15s;
+        display: flex; align-items: center; gap: 0.6rem;
+        padding: 0.46rem 0.625rem; border-radius: var(--r-sm);
+        color: var(--muted); text-decoration: none;
+        font-size: 0.83rem; font-weight: 500;
+        transition: background 0.14s, color 0.14s;
         border: 1px solid transparent;
       }
+      .nav-item svg { width: 14px; height: 14px; flex-shrink: 0; }
+      .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+      .nav-item.active { background: rgba(255,255,255,0.08); color: var(--text); border-color: rgba(255,255,255,0.06); }
 
-      .nav-item svg { width: 15px; height: 15px; flex-shrink: 0; }
-
-      .nav-item:hover {
-        background: var(--bg);
-        color: var(--text);
-        border-color: var(--border);
-      }
-
-      .nav-item.is-active {
-        background: var(--accent-light);
-        color: var(--accent);
-        border-color: rgba(79,70,229,0.18);
-        font-weight: 600;
-      }
-
-      .sidebar-divider { margin: 0.75rem 1rem; height: 1px; background: var(--border); }
-
-      .sidebar-status {
+      .sidebar-footer {
+        padding: 0.875rem 1.125rem; border-top: 1px solid var(--border);
         display: flex; align-items: center; gap: 0.5rem;
-        padding: 0 1.25rem;
-        font-size: 0.75rem;
-        color: var(--muted);
+        font-size: 0.72rem; color: var(--muted-2);
       }
-
-      .pulse-dot {
-        width: 7px; height: 7px;
-        border-radius: 50%;
-        background: var(--green);
-        flex-shrink: 0;
-        animation: pulse-anim 2.4s ease-in-out infinite;
+      .status-dot {
+        width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0;
+        animation: pulse-dot 2.5s ease-in-out infinite;
       }
+      @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(.6)} }
 
-      @keyframes pulse-anim {
-        0%, 100% { opacity: 1; transform: scale(1); }
-        50%       { opacity: 0.45; transform: scale(0.75); }
-      }
+      /* ── Main ────────────────────────────────── */
+      .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100dvh; position: relative; z-index: 1; }
 
-      /* ── Main ────────────────────────────────────────────── */
-      .main {
-        margin-left: var(--sidebar-w);
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        min-height: 100vh;
-      }
-
-      /* ── Topbar ──────────────────────────────────────────── */
       .topbar {
-        height: var(--topbar-h);
-        border-bottom: 1px solid var(--border);
-        background: rgba(255,255,255,0.92);
-        backdrop-filter: blur(16px);
+        height: var(--hdr-h); border-bottom: 1px solid var(--border);
+        background: rgba(5,5,5,0.9); backdrop-filter: blur(12px);
         display: flex; align-items: center; justify-content: space-between;
-        padding: 0 2rem;
-        position: sticky; top: 0; z-index: 50;
+        padding: 0 1.75rem; position: sticky; top: 0; z-index: 50;
       }
-
-      .topbar-left { display: flex; align-items: center; gap: 1rem; }
-
-      .page-title {
-        font-size: 0.95rem;
-        font-weight: 600;
-        color: var(--text);
-        letter-spacing: -0.01em;
+      .topbar-left { display: flex; align-items: center; gap: 0.75rem; }
+      .breadcrumb { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: var(--muted); }
+      .breadcrumb-sep { color: var(--muted-2); }
+      .breadcrumb-active { font-weight: 600; color: var(--text); }
+      .topbar-right { display: flex; align-items: center; gap: 0.5rem; }
+      .date-badge {
+        font-size: 0.73rem; font-weight: 500; color: var(--muted);
+        padding: 0.28rem 0.7rem; background: var(--surface);
+        border: 1px solid var(--border); border-radius: 999px;
       }
-
-      .topbar-badge {
-        display: flex; align-items: center; gap: 0.4rem;
-        background: var(--green-dim);
-        border: 1px solid rgba(22,163,74,0.2);
-        border-radius: 999px;
-        padding: 0.22rem 0.7rem;
-        font-size: 0.72rem;
-        color: #15803D;
-        font-weight: 600;
+      .btn-ghost {
+        display: inline-flex; align-items: center; gap: 0.375rem;
+        background: transparent; border: 1px solid var(--border);
+        color: var(--muted); padding: 0.34rem 0.75rem; border-radius: var(--r);
+        cursor: pointer; font-size: 0.775rem; font-weight: 500; font-family: inherit;
+        transition: background 0.14s, color 0.14s, border-color 0.14s;
       }
+      .btn-ghost svg { width: 13px; height: 13px; }
+      .btn-ghost:hover { background: var(--surface-2); color: var(--text); border-color: var(--border-hi); }
 
-      .badge-dot {
-        width: 6px; height: 6px;
-        border-radius: 50%;
-        background: var(--green);
+      .hamburger {
+        display: none; align-items: center; justify-content: center;
+        width: 32px; height: 32px; background: transparent;
+        border: 1px solid var(--border); border-radius: var(--r-sm);
+        color: var(--muted); cursor: pointer; transition: background 0.14s, color 0.14s;
       }
-
-      .topbar-right { display: flex; align-items: center; gap: 0.65rem; }
-
-      .topbar-date { font-size: 0.78rem; color: var(--muted); font-weight: 500; }
-
-      .logout-btn {
-        background: var(--bg);
-        border: 1px solid var(--border);
-        color: var(--muted);
-        padding: 0.38rem 0.9rem;
-        border-radius: 999px;
-        cursor: pointer;
-        font-size: 0.78rem;
-        font-weight: 600;
-        font-family: inherit;
-        transition: background 0.15s, color 0.15s, border-color 0.15s;
-      }
-      .logout-btn:hover {
-        background: var(--surface2);
-        color: var(--text);
-        border-color: var(--border-hi);
-      }
-
-      /* ── Content ─────────────────────────────────────────── */
-      .content { padding: 2rem; max-width: 1320px; width: 100%; }
-
-      /* ── Stat strip ──────────────────────────────────────── */
-      .stat-strip {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 0.875rem;
-        margin-bottom: 1.75rem;
-      }
-
-      .stat-tile {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 1.25rem 1.4rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-        transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
-        position: relative;
-        overflow: hidden;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.03);
-      }
-
-      .stat-tile::before {
-        content: "";
-        position: absolute;
-        inset: 0 0 auto 0;
-        height: 2px;
-        background: var(--tile-accent, var(--accent));
-        opacity: 0.75;
-        border-radius: 999px 999px 0 0;
-      }
-
-      .stat-tile:hover {
-        border-color: var(--border-hi);
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(0,0,0,0.06);
-      }
-
-      .stat-tile.clickable { cursor: pointer; }
-      .stat-tile.clickable:hover .tile-val { color: var(--accent); }
-
-      .tile-icon {
-        width: 30px; height: 30px;
-        border-radius: 8px;
-        display: flex; align-items: center; justify-content: center;
-        background: var(--tile-icon-bg, var(--accent-light));
-        flex-shrink: 0;
-      }
-      .tile-icon svg { width: 15px; height: 15px; }
-
-      .tile-bottom { display: flex; flex-direction: column; gap: 0.15rem; }
-
-      .tile-val {
-        font-size: 1.7rem;
-        font-weight: 700;
-        color: var(--text);
-        line-height: 1;
-        letter-spacing: -0.02em;
-        transition: color 0.15s;
-        font-variant-numeric: tabular-nums;
-      }
-
-      .tile-lbl {
-        font-size: 0.74rem;
-        color: var(--muted);
-        font-weight: 500;
-        letter-spacing: 0.02em;
-        margin-top: 0.15rem;
-      }
-
-      /* ── Card grid ───────────────────────────────────────── */
-      .card-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-      }
-
-      .card {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-lg);
-        padding: 1.5rem;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.03);
-        transition: border-color 0.2s, box-shadow 0.2s;
-      }
-
-      .card:hover {
-        border-color: var(--border-hi);
-        box-shadow: 0 6px 20px rgba(0,0,0,0.05);
-      }
-
-      .card-header {
-        padding-bottom: 1rem;
-        margin-bottom: 1.25rem;
-        border-bottom: 1px solid var(--border);
-      }
-
-      .card-title {
-        font-size: 0.9rem;
-        font-weight: 700;
-        color: var(--text);
-        margin-bottom: 0.2rem;
-        letter-spacing: -0.01em;
-      }
-
-      .card-subtitle { font-size: 0.78rem; color: var(--muted); }
-
-      .card-text {
-        font-size: 0.8rem;
-        color: var(--muted);
-        line-height: 1.65;
-        margin-top: 0.85rem;
-      }
-
-      /* ── Buttons ─────────────────────────────────────────── */
-      .btn-primary {
-        display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem;
-        background: var(--accent);
-        color: #fff;
-        border: none;
-        padding: 0.68rem 1.4rem;
-        border-radius: var(--radius-sm);
-        font-size: 0.86rem;
-        font-weight: 600;
-        font-family: inherit;
-        cursor: pointer;
-        width: 100%;
-        transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
-        box-shadow: 0 3px 10px rgba(79,70,229,0.2);
-      }
-
-      .btn-primary:hover {
-        background: #4338CA;
-        transform: translateY(-1px);
-        box-shadow: 0 6px 16px rgba(79,70,229,0.26);
-      }
-
-      .btn-primary:active { transform: scale(0.98); }
-
-      .btn-primary:disabled {
-        opacity: 0.45;
-        cursor: not-allowed;
-        transform: none;
-        box-shadow: none;
-      }
-
-      .btn-orange {
-        background: var(--orange);
-        box-shadow: 0 3px 10px rgba(234,88,12,0.2);
-      }
-      .btn-orange:hover {
-        background: #C2410C;
-        box-shadow: 0 6px 16px rgba(234,88,12,0.26);
-      }
-
-      .btn-secondary {
-        display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        color: var(--muted);
-        padding: 0.68rem 1.4rem;
-        border-radius: var(--radius-sm);
-        font-size: 0.86rem;
-        font-weight: 600;
-        font-family: inherit;
-        cursor: pointer;
-        width: 100%;
-        transition: background 0.15s, color 0.15s, border-color 0.15s;
-      }
-      .btn-secondary:hover {
-        background: var(--surface2);
-        color: var(--text);
-        border-color: var(--border-hi);
-      }
-      .btn-secondary:disabled { opacity: 0.45; cursor: not-allowed; }
-
-      /* ── Messages ────────────────────────────────────────── */
-      .msg {
-        padding: 0.7rem 0.9rem;
-        border-radius: var(--radius-sm);
-        font-size: 0.82rem;
-        font-weight: 500;
-        display: none;
-        margin-top: 0.75rem;
-      }
-
-      .msg-success {
-        background: rgba(22,163,74,0.08);
-        color: #15803D;
-        border: 1px solid rgba(22,163,74,0.2);
-      }
-
-      .msg-error {
-        background: rgba(220,38,38,0.06);
-        color: #DC2626;
-        border: 1px solid rgba(220,38,38,0.15);
-      }
-
-      /* ── Form ────────────────────────────────────────────── */
-      .form-group { margin-bottom: 0.9rem; }
-
-      .form-label {
-        display: block;
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: #374151;
-        letter-spacing: 0.02em;
-        text-transform: uppercase;
-        margin-bottom: 0.38rem;
-      }
-
-      .form-input, .form-textarea {
-        width: 100%;
-        padding: 0.6rem 0.85rem;
-        background: var(--bg);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-sm);
-        color: var(--text);
-        font-size: 0.875rem;
-        font-family: inherit;
-        outline: none;
-        transition: border-color 0.18s, box-shadow 0.18s, background 0.15s;
-      }
-
-      .form-input:focus, .form-textarea:focus {
-        border-color: var(--accent);
-        box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
-        background: #fff;
-      }
-
-      .form-input::placeholder, .form-textarea::placeholder { color: #94A3B8; }
-      .form-textarea { resize: vertical; min-height: 80px; }
-
-      .spinner {
-        width: 13px; height: 13px;
-        border: 2px solid rgba(255,255,255,0.3);
-        border-top-color: #fff;
-        border-radius: 50%;
-        animation: spin 0.7s linear infinite;
-        display: inline-block;
-      }
-
-      @keyframes spin { to { transform: rotate(360deg); } }
-
-      /* ── Responsive ──────────────────────────────────────── */
-      .hamburger-btn {
-        display: none;
-        align-items: center; justify-content: center;
-        width: 34px; height: 34px;
-        border-radius: var(--radius-sm);
-        background: var(--bg);
-        border: 1px solid var(--border);
-        color: var(--muted);
-        cursor: pointer;
-        transition: background 0.15s, color 0.15s;
-        flex-shrink: 0;
-      }
-      .hamburger-btn:hover { background: var(--surface2); color: var(--text); }
-      .hamburger-btn svg { width: 17px; height: 17px; }
+      .hamburger svg { width: 16px; height: 16px; }
+      .hamburger:hover { background: var(--surface-2); color: var(--text); }
 
       .sidebar-overlay {
-        display: none;
-        position: fixed; inset: 0;
-        background: rgba(15,23,42,0.4);
-        backdrop-filter: blur(4px);
-        z-index: 99;
-        opacity: 0;
-        transition: opacity 0.25s;
-        pointer-events: none;
+        display: none; position: fixed; inset: 0;
+        background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+        z-index: 99; opacity: 0; transition: opacity 0.25s; pointer-events: none;
       }
       .sidebar-overlay.visible { opacity: 1; pointer-events: all; }
 
-      @media (max-width: 1100px) {
-        .stat-strip { grid-template-columns: repeat(2, 1fr); }
+      /* ── Content ─────────────────────────────── */
+      .content { padding: 1.75rem; max-width: 1280px; display: flex; flex-direction: column; gap: 1.25rem; }
+
+      /* ── shadcn Badge ────────────────────────── */
+      .badge {
+        display: inline-flex; align-items: center; gap: 0.25rem;
+        padding: 0.18rem 0.55rem; border-radius: 999px;
+        font-size: 0.68rem; font-weight: 600; border: 1px solid transparent;
+        line-height: 1.4; white-space: nowrap;
+      }
+      .badge-default     { background: #f2f2f2; color: #0a0a0a; }
+      .badge-secondary   { background: var(--surface-2); color: var(--muted); border-color: var(--border); }
+      .badge-success     { background: var(--green-dim); color: #4ade80; border-color: var(--green-bdr); }
+      .badge-destructive { background: var(--red-dim);   color: var(--red);   border-color: var(--red-bdr); }
+      .badge-warning     { background: var(--orange-dim);color: var(--orange);border-color: var(--orange-bdr); }
+      .badge-outline     { background: transparent; color: var(--muted); border-color: var(--border-hi); }
+      .badge-dot         { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+      /* ── Stat strip ──────────────────────────── */
+      .stat-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.875rem; }
+
+      .stat-card {
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--r-lg); padding: 1.125rem 1.25rem;
+        display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+        transition: border-color 0.18s; position: relative; z-index: 1;
+      }
+      .stat-card.clickable { cursor: pointer; }
+      .stat-card:hover { border-color: var(--border-hi); }
+
+      .stat-left { display: flex; flex-direction: column; gap: 0.65rem; }
+      .stat-label { font-size: 0.72rem; font-weight: 600; color: var(--muted); letter-spacing: 0.01em; }
+      .stat-val {
+        font-size: 1.55rem; font-weight: 700; color: var(--text);
+        line-height: 1; letter-spacing: -0.025em; font-variant-numeric: tabular-nums;
       }
 
+      .stat-icon {
+        width: 32px; height: 32px; border-radius: var(--r-md);
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        border: 1px solid var(--border);
+      }
+      .stat-icon svg { width: 14px; height: 14px; }
+      .stat-icon.green  { background: var(--green-dim);  color: #4ade80; }
+      .stat-icon.blue   { background: var(--blue-dim);   color: var(--blue); }
+      .stat-icon.violet { background: var(--violet-dim); color: var(--violet); }
+
+      /* ── Main grid ───────────────────────────── */
+      .main-grid { display: grid; grid-template-columns: 5fr 7fr; gap: 1rem; align-items: start; }
+      .col { display: flex; flex-direction: column; gap: 1rem; }
+
+      /* ── Card ────────────────────────────────── */
+      .card {
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--r-xl); overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+        transition: border-color 0.18s; position: relative; z-index: 1;
+      }
+      .card:hover { border-color: var(--border-hi); }
+      .card-hd {
+        padding: 1rem 1.25rem 0.875rem; border-bottom: 1px solid var(--border);
+        display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem;
+      }
+      .card-title { font-size: 0.875rem; font-weight: 700; color: var(--text); letter-spacing: -0.01em; }
+      .card-desc  { font-size: 0.76rem; color: var(--muted); margin-top: 0.18rem; }
+      .card-ico {
+        width: 30px; height: 30px; border-radius: var(--r-sm);
+        background: var(--surface-2); border: 1px solid var(--border);
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--muted);
+      }
+      .card-ico svg { width: 13px; height: 13px; }
+      .card-body { padding: 1.125rem 1.25rem; }
+      .card-foot {
+        padding: 0.65rem 1.25rem; background: var(--surface-2); border-top: 1px solid var(--border);
+        font-size: 0.72rem; color: var(--muted); line-height: 1.6;
+      }
+
+      /* ── shadcn Input ────────────────────────── */
+      .fg { margin-bottom: 0.8rem; }
+      .fg:last-child { margin-bottom: 0; }
+      label.lbl { display: block; font-size: 0.72rem; font-weight: 600; color: var(--text-2); margin-bottom: 0.28rem; letter-spacing: 0.01em; }
+      .fi {
+        width: 100%; padding: 0.535rem 0.75rem;
+        background: transparent; border: 1px solid var(--border);
+        border-radius: var(--r); color: var(--text);
+        font-size: 0.845rem; font-family: inherit; outline: none;
+        transition: border-color 0.14s, box-shadow 0.14s;
+      }
+      .fi:focus { border-color: rgba(255,255,255,0.3); box-shadow: 0 0 0 3px rgba(255,255,255,0.04); }
+      .fi::placeholder { color: var(--muted-2); }
+      textarea.fi { resize: vertical; min-height: 68px; }
+
+      .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+
+      /* ── shadcn Slider ───────────────────────── */
+      .slider-wrap { display: flex; flex-direction: column; gap: 0.75rem; }
+      .slider-header { display: flex; justify-content: space-between; align-items: center; }
+
+      input[type="range"].slider {
+        -webkit-appearance: none; appearance: none;
+        width: 100%; height: 4px;
+        background: linear-gradient(to right, rgba(242,242,242,0.6) 0%, rgba(242,242,242,0.6) var(--pct, 10%), var(--surface-3) var(--pct, 10%));
+        border-radius: 2px; outline: none; cursor: pointer;
+        transition: background 0.05s;
+      }
+      input[type="range"].slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 16px; height: 16px; margin-top: 0;
+        background: #f2f2f2; border-radius: 50%;
+        cursor: pointer; border: 2px solid var(--bg);
+        box-shadow: 0 0 0 2px rgba(242,242,242,0.18);
+        transition: box-shadow 0.15s;
+      }
+      input[type="range"].slider::-webkit-slider-thumb:hover { box-shadow: 0 0 0 4px rgba(242,242,242,0.22); }
+      input[type="range"].slider::-moz-range-thumb {
+        width: 16px; height: 16px; background: #f2f2f2;
+        border-radius: 50%; cursor: pointer; border: 2px solid var(--bg);
+      }
+      input[type="range"].slider::-moz-range-track { height: 4px; background: var(--surface-3); border-radius: 2px; }
+      .slider-markers { display: flex; justify-content: space-between; font-size: 0.61rem; color: var(--muted-2); }
+
+      /* ── Buttons ─────────────────────────────── */
+      .btn {
+        display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+        padding: 0.565rem 1rem; border-radius: var(--r);
+        font-size: 0.83rem; font-weight: 600; font-family: inherit; cursor: pointer;
+        width: 100%; border: 1px solid transparent;
+        transition: background 0.14s, transform 0.1s, border-color 0.14s, color 0.14s;
+      }
+      .btn:active:not(:disabled) { transform: scale(0.985); }
+      .btn:disabled { opacity: 0.38; cursor: not-allowed; }
+      .btn-primary  { background: #f2f2f2; color: #0a0a0a; }
+      .btn-primary:hover:not(:disabled)  { background: #e0e0e0; }
+      .btn-outline  { background: transparent; border-color: var(--border-hi); color: var(--text-2); }
+      .btn-outline:hover:not(:disabled)  { background: var(--surface-2); color: var(--text); }
+      .btn-orange   { background: var(--orange-dim); border-color: var(--orange-bdr); color: var(--orange); }
+      .btn-orange:hover:not(:disabled)   { background: rgba(249,115,22,0.18); }
+      .btn-success  { background: var(--green-dim);  border-color: var(--green-bdr);  color: #4ade80; }
+      .btn-success:hover:not(:disabled)  { background: rgba(34,197,94,0.18); }
+      .btn + .btn   { margin-top: 0.5rem; }
+
+      /* ── Alert messages ──────────────────────── */
+      .alert { padding: 0.55rem 0.8rem; border-radius: var(--r-sm); font-size: 0.78rem; font-weight: 500; display: none; margin-top: 0.6rem; line-height: 1.45; border: 1px solid transparent; }
+      .alert-ok  { background: var(--green-dim); color: #4ade80; border-color: var(--green-bdr); }
+      .alert-err { background: var(--red-dim);   color: var(--red);   border-color: var(--red-bdr); }
+
+      .customer-found { display: none; padding: 0.55rem 0.8rem; background: var(--green-dim); color: #4ade80; border: 1px solid var(--green-bdr); border-radius: var(--r-sm); font-size: 0.78rem; line-height: 1.45; margin-bottom: 0.8rem; }
+
+      /* ── Spinner ─────────────────────────────── */
+      .spin { width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.12); border-top-color: currentColor; border-radius: 50%; animation: spinning 0.65s linear infinite; flex-shrink: 0; }
+      .spin.dk { border-color: rgba(10,10,10,0.15); border-top-color: currentColor; }
+      @keyframes spinning { to { transform: rotate(360deg); } }
+
+      /* ── shadcn Alert Dialog ─────────────────── */
+      .alert-overlay {
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.85); backdrop-filter: blur(4px);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 999; opacity: 0; pointer-events: none;
+        transition: opacity 0.2s;
+      }
+      .alert-overlay.show { opacity: 1; pointer-events: all; }
+      .alert-dialog {
+        background: var(--surface);
+        border: 1px solid var(--border-hi);
+        border-radius: var(--r-xl); padding: 1.625rem;
+        max-width: 420px; width: calc(100% - 2rem);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04);
+        transform: scale(0.96) translateY(6px); opacity: 0;
+        transition: transform 0.22s cubic-bezier(0.16,1,0.3,1), opacity 0.22s;
+      }
+      .alert-overlay.show .alert-dialog { transform: scale(1) translateY(0); opacity: 1; }
+      .alert-dialog-header { margin-bottom: 1.25rem; }
+      .alert-dialog-title { font-size: 0.95rem; font-weight: 700; color: var(--text); letter-spacing: -0.01em; margin-bottom: 0.4rem; }
+      .alert-dialog-desc  { font-size: 0.8rem; color: var(--muted); line-height: 1.65; }
+      .alert-dialog-footer { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1.5rem; }
+      .alert-dialog-footer .btn { flex: 0 0 auto; width: auto; min-width: 80px; }
+
+      /* ── Responsive ──────────────────────────── */
+      @media (max-width: 1024px) { .main-grid { grid-template-columns: 1fr; } .stat-strip { grid-template-columns: repeat(3,1fr); } }
       @media (max-width: 768px) {
-        .hamburger-btn { display: flex; }
-        .sidebar {
-          transform: translateX(-100%);
-          transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
-        }
-        .sidebar.sidebar-open { transform: translateX(0); }
+        .hamburger { display: flex; }
+        .sidebar { transform: translateX(-100%); transition: transform 0.27s cubic-bezier(0.4,0,0.2,1); }
+        .sidebar.open { transform: translateX(0); }
         .sidebar-overlay { display: block; }
         .main { margin-left: 0; }
         .content { padding: 1rem; }
         .stat-strip { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
-        .card-row { grid-template-columns: 1fr; }
         .topbar { padding: 0 1rem; }
-        .topbar-date { display: none; }
+        .date-badge { display: none; }
       }
-
-      @media (max-width: 480px) {
-        .stat-strip { grid-template-columns: 1fr; }
-      }
-
-      /* ── Confirm Modal ───────────────────────────────────── */
-      .modal-backdrop {
-        position: fixed; inset: 0;
-        background: rgba(15,23,42,0.45);
-        backdrop-filter: blur(6px);
-        display: flex; align-items: center; justify-content: center;
-        z-index: 999;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.2s;
-      }
-      .modal-backdrop.visible { opacity: 1; pointer-events: all; }
-
-      .modal {
-        background: var(--surface);
-        border: 1px solid var(--border-hi);
-        border-radius: var(--radius-lg);
-        padding: 2rem;
-        max-width: 380px;
-        width: calc(100% - 2rem);
-        box-shadow: 0 16px 60px rgba(15,23,42,0.14);
-        transform: translateY(10px) scale(0.98);
-        transition: transform 0.22s, opacity 0.22s;
-        opacity: 0;
-      }
-      .modal-backdrop.visible .modal {
-        transform: translateY(0) scale(1);
-        opacity: 1;
-      }
-
-      .modal-icon {
-        width: 42px; height: 42px;
-        border-radius: 11px;
-        background: rgba(234,88,12,0.08);
-        border: 1px solid rgba(234,88,12,0.2);
-        display: flex; align-items: center; justify-content: center;
-        margin-bottom: 1.1rem;
-      }
-      .modal-icon svg { width: 20px; height: 20px; }
-
-      .modal-title {
-        font-size: 0.95rem;
-        font-weight: 700;
-        color: var(--text);
-        margin-bottom: 0.45rem;
-        letter-spacing: -0.01em;
-      }
-
-      .modal-body {
-        font-size: 0.83rem;
-        color: var(--muted);
-        line-height: 1.65;
-        margin-bottom: 1.5rem;
-      }
-
-      .modal-actions { display: flex; gap: 0.6rem; }
-
-      .btn-cancel {
-        flex: 1;
-        padding: 0.62rem 1rem;
-        background: var(--bg);
-        border: 1px solid var(--border-hi);
-        color: var(--muted);
-        border-radius: var(--radius-sm);
-        font-size: 0.86rem;
-        font-weight: 600;
-        font-family: inherit;
-        cursor: pointer;
-        transition: background 0.15s, color 0.15s;
-      }
-      .btn-cancel:hover { background: var(--surface2); color: var(--text); }
-
-      .btn-confirm {
-        flex: 1;
-        padding: 0.62rem 1rem;
-        background: var(--orange);
-        border: none;
-        border-radius: var(--radius-sm);
-        color: #fff;
-        font-size: 0.86rem;
-        font-weight: 600;
-        font-family: inherit;
-        cursor: pointer;
-        box-shadow: 0 3px 10px rgba(234,88,12,0.22);
-        transition: background 0.15s, transform 0.15s;
-      }
-      .btn-confirm:hover { background: #C2410C; transform: translateY(-1px); }
+      @media (max-width: 480px) { .stat-strip { grid-template-columns: 1fr; } .row-2 { grid-template-columns: 1fr; } }
     </style>
   </head>
   <body>
 
     <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 
-    <!-- ── Sidebar ─────────────────────────────────────────── -->
+    <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-brand">
-        <div class="brand-icon">Y</div>
-        <span class="brand-name">YurrAI</span>
+        <div class="brand-mark">
+          <svg viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M7.5 1C7.5 1 3 4.5 3 8.5C3 11.538 5.462 14 8.5 14C11.538 14 14 11.538 14 8.5C14 4.5 7.5 1 7.5 1Z" fill="#09090b"/>
+            <path d="M7.5 5.5C7.5 5.5 5.5 7.5 5.5 10" stroke="white" stroke-width="1.25" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="brand-name">Blo Milton</span>
       </div>
-
       <nav class="sidebar-nav">
-        <a class="nav-item is-active" href="/dashboard.html">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <div class="nav-section-label">Main</div>
+        <a class="nav-item active" href="/dashboard.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
           Dashboard
         </a>
         <a class="nav-item" href="/call-stats.html">
@@ -617,30 +381,31 @@
           Staff &amp; Treatments
         </a>
       </nav>
-
-      <div class="sidebar-divider"></div>
-      <div class="sidebar-status">
-        <span class="pulse-dot"></span>
+      <div class="sidebar-footer">
+        <span class="status-dot"></span>
         All systems operational
       </div>
     </aside>
 
-    <!-- ── Main ────────────────────────────────────────────── -->
+    <!-- Main -->
     <div class="main">
       <header class="topbar">
         <div class="topbar-left">
-          <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Toggle menu">
+          <button class="hamburger" onclick="toggleSidebar()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           </button>
-          <h1 class="page-title">Dashboard</h1>
-          <div class="topbar-badge">
-            <span class="badge-dot"></span>
-            <span id="topbar-date">Today</span>
+          <div class="breadcrumb">
+            <span>Blo Milton</span>
+            <span class="breadcrumb-sep">/</span>
+            <span class="breadcrumb-active">Dashboard</span>
           </div>
         </div>
         <div class="topbar-right">
-          <span class="topbar-date" id="topbar-date-str"></span>
-          <button class="logout-btn" onclick="logout()">Logout</button>
+          <span class="date-badge" id="date-badge"></span>
+          <button class="btn-ghost" onclick="logout()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Logout
+          </button>
         </div>
       </header>
 
@@ -648,396 +413,430 @@
 
         <!-- Stat strip -->
         <div class="stat-strip">
-
-          <div class="stat-tile" style="--tile-accent:#16A34A; --tile-icon-bg:rgba(22,163,74,0.08);">
-            <div class="tile-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+          <div class="stat-card">
+            <div class="stat-left">
+              <div class="stat-label">AI Status</div>
+              <div class="stat-val" style="font-size:0.95rem;">
+                <span class="badge badge-success"><span class="badge-dot"></span>Active</span>
+              </div>
             </div>
-            <div class="tile-bottom">
-              <div class="tile-val" style="font-size:1.1rem; color:#15803D;">Active</div>
-              <div class="tile-lbl">AI Status</div>
-            </div>
-          </div>
-
-          <div class="stat-tile clickable" style="--tile-accent:#4F46E5; --tile-icon-bg:rgba(79,70,229,0.08);" onclick="location.href='/manage.html'">
-            <div class="tile-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#4F46E5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><path d="M12 11h4M12 16h4M8 11h.01M8 16h.01"/></svg>
-            </div>
-            <div class="tile-bottom">
-              <div class="tile-val" id="stat-treatments-count">—</div>
-              <div class="tile-lbl">Active Treatments</div>
+            <div class="stat-icon green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
             </div>
           </div>
 
-          <div class="stat-tile clickable" style="--tile-accent:#0284C7; --tile-icon-bg:rgba(2,132,199,0.08);" onclick="location.href='/manage.html'">
-            <div class="tile-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#0284C7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          <div class="stat-card clickable" onclick="location.href='/manage.html'">
+            <div class="stat-left">
+              <div class="stat-label">Active Treatments</div>
+              <div class="stat-val" id="stat-treatments">—</div>
             </div>
-            <div class="tile-bottom">
-              <div class="tile-val" id="stat-employees-count">—</div>
-              <div class="tile-lbl">Employees</div>
+            <div class="stat-icon blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><path d="M12 11h4M12 16h4M8 11h.01M8 16h.01"/></svg>
             </div>
           </div>
 
+          <div class="stat-card clickable" onclick="location.href='/manage.html'">
+            <div class="stat-left">
+              <div class="stat-label">Employees</div>
+              <div class="stat-val" id="stat-employees">—</div>
+            </div>
+            <div class="stat-icon violet">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+            </div>
+          </div>
         </div>
 
-        <!-- Action cards -->
-        <div class="card-row">
+        <!-- Main grid -->
+        <div class="main-grid">
 
-          <div class="card">
-            <div class="card-header">
-              <div class="card-title">Admin Controls</div>
-              <div class="card-subtitle">System management &amp; data operations</div>
+          <!-- Left col -->
+          <div class="col">
+
+            <div class="card">
+              <div class="card-hd">
+                <div>
+                  <div class="card-title">Admin Controls</div>
+                  <div class="card-desc">System management &amp; data sync</div>
+                </div>
+                <div class="card-ico">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M4.93 4.93l1.41 1.41M20 12h2M2 12h2M12 20v2M12 2v2"/></svg>
+                </div>
+              </div>
+              <div class="card-body">
+                <button class="btn btn-primary" id="repopulate-btn" onclick="repopulateData()">Repopulate Local Data</button>
+                <div id="repopulate-ok"  class="alert alert-ok"></div>
+                <div id="repopulate-err" class="alert alert-err"></div>
+              </div>
+              <div class="card-foot">Refreshes the local database with the latest treatments, employees, and rooms from the remote source.</div>
             </div>
-            <button class="btn-primary" id="repopulate-btn" onclick="repopulateData()">
-              Repopulate Local Data
-            </button>
-            <div id="success-message" class="msg msg-success"></div>
-            <div id="error-message" class="msg msg-error"></div>
-            <p class="card-text">Refreshes the local database with the latest data from the remote source. Also restores any removed treatments.</p>
+
+            <div class="card">
+              <div class="card-hd">
+                <div>
+                  <div class="card-title">Call Settings</div>
+                  <div class="card-desc">Configure AI call behaviour</div>
+                </div>
+                <div class="card-ico">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.16 6.16l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92v2z"/></svg>
+                </div>
+              </div>
+              <div class="card-body">
+
+                <!-- shadcn Slider component -->
+                <div class="fg">
+                  <div class="slider-wrap">
+                    <div class="slider-header">
+                      <label class="lbl">Short-call threshold</label>
+                      <span class="badge badge-secondary" id="slider-display">—</span>
+                    </div>
+                    <input type="range" class="slider" id="short-call-slider"
+                           min="0" max="300" step="5" value="30"
+                           oninput="onSliderInput(this.value)" />
+                    <div class="slider-markers">
+                      <span>0s</span><span>1 min</span><span>2 min</span><span>3 min</span><span>4 min</span><span>5 min</span>
+                    </div>
+                  </div>
+                </div>
+
+                <button class="btn btn-primary" id="save-settings-btn" onclick="saveSettings()">Save Settings</button>
+                <button class="btn btn-outline" id="backfill-btn" onclick="backfillInconclusive()">Tag Untagged Calls as Inconclusive</button>
+                <div id="settings-msg" class="alert alert-ok"></div>
+              </div>
+            </div>
+
           </div>
 
-          <div class="card">
-            <div class="card-header">
-              <div class="card-title">Book a Meeting</div>
-              <div class="card-subtitle">Schedule time with Aryan</div>
+          <!-- Right col -->
+          <div class="col">
+
+            <div class="card">
+              <div class="card-hd">
+                <div>
+                  <div class="card-title">Book a Meeting</div>
+                  <div class="card-desc">Schedule time with Aryan</div>
+                </div>
+                <div class="card-ico">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="row-2" style="margin-bottom:0.8rem;">
+                  <div class="fg" style="margin-bottom:0;">
+                    <label class="lbl" for="zoho-date">Date</label>
+                    <input class="fi" type="date" id="zoho-date" />
+                  </div>
+                  <div class="fg" style="margin-bottom:0;">
+                    <label class="lbl" for="zoho-time">Time</label>
+                    <input class="fi" type="time" id="zoho-time" />
+                  </div>
+                </div>
+                <div class="fg">
+                  <label class="lbl" for="zoho-reason">Reason</label>
+                  <textarea class="fi" id="zoho-reason" placeholder="Describe the purpose of the meeting…"></textarea>
+                </div>
+                <button class="btn btn-orange" onclick="submitZohoRequest()">Submit Appointment Request</button>
+                <div id="zoho-status" class="alert alert-ok"></div>
+              </div>
             </div>
-            <div class="form-group">
-              <label class="form-label">Date</label>
-              <input class="form-input" type="date" id="zoho-date" />
+
+            <div class="card">
+              <div class="card-hd">
+                <div>
+                  <div class="card-title">Send CC Link</div>
+                  <div class="card-desc">Look up a customer and send a credit card link via SMS</div>
+                </div>
+                <div class="card-ico">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="row-2" style="margin-bottom:0.8rem;">
+                  <div class="fg" style="margin-bottom:0;">
+                    <label class="lbl" for="cc-first-name">First Name</label>
+                    <input class="fi" type="text" id="cc-first-name" placeholder="Jane" />
+                  </div>
+                  <div class="fg" style="margin-bottom:0;">
+                    <label class="lbl" for="cc-phone">Phone Number</label>
+                    <input class="fi" type="tel" id="cc-phone" placeholder="+1 416 555 0100" />
+                  </div>
+                </div>
+                <div class="customer-found" id="cc-customer-found"></div>
+                <button class="btn btn-primary" id="cc-find-btn" onclick="findCustomerForCC()">Find Customer</button>
+                <button class="btn btn-success" id="cc-send-btn" style="display:none;" onclick="sendCCLink()">Send CC Link via SMS</button>
+                <div id="cc-msg" class="alert alert-ok"></div>
+              </div>
             </div>
-            <div class="form-group">
-              <label class="form-label">Time</label>
-              <input class="form-input" type="time" id="zoho-time" />
-            </div>
-            <div class="form-group">
-              <label class="form-label">Reason</label>
-              <textarea class="form-textarea" id="zoho-reason" placeholder="Reason for appointment…"></textarea>
-            </div>
-            <button class="btn-primary btn-orange" onclick="submitZohoRequest()">
-              Submit Appointment Request
-            </button>
-            <div id="zoho-status" class="msg msg-success"></div>
+
           </div>
-
-        </div>
-
-        <!-- Settings + CC Link cards -->
-        <div class="card-row" style="margin-top:1rem;">
-
-          <div class="card">
-            <div class="card-header">
-              <div class="card-title">Call Settings</div>
-              <div class="card-subtitle">Configure AI call behaviour</div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Short-call threshold (seconds)</label>
-              <input class="form-input" type="number" id="short-call-threshold" min="0" max="3600" placeholder="30" />
-            </div>
-            <button class="btn-primary" id="save-settings-btn" onclick="saveSettings()">Save Settings</button>
-            <button class="btn-secondary" id="backfill-btn" onclick="backfillInconclusive()" style="margin-top:0.5rem;">Tag Untagged Calls as Inconclusive</button>
-            <div id="settings-msg" class="msg msg-success"></div>
-          </div>
-
-          <div class="card">
-            <div class="card-header">
-              <div class="card-title">Send CC Link</div>
-              <div class="card-subtitle">Look up a customer and send them a credit card link</div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">First Name</label>
-              <input class="form-input" type="text" id="cc-first-name" placeholder="Jane" />
-            </div>
-            <div class="form-group">
-              <label class="form-label">Phone Number</label>
-              <input class="form-input" type="tel" id="cc-phone" placeholder="+1 416 555 0100" />
-            </div>
-            <div id="cc-customer-found" style="display:none; padding:0.6rem 0.85rem; background:rgba(22,163,74,0.08); border:1px solid rgba(22,163,74,0.2); border-radius:10px; margin-bottom:0.9rem; font-size:0.82rem; color:#15803D;"></div>
-            <button class="btn-primary" id="cc-find-btn" onclick="findCustomerForCC()">Find Customer</button>
-            <button class="btn-primary btn-orange" id="cc-send-btn" style="display:none; margin-top:0.55rem;" onclick="sendCCLink()">Send CC Link via SMS</button>
-            <div id="cc-msg" class="msg msg-success"></div>
-          </div>
-
         </div>
 
       </div>
     </div>
 
-    <!-- ── Confirm modal ──────────────────────────────────── -->
-    <div class="modal-backdrop" id="confirm-backdrop">
-      <div class="modal">
-        <div class="modal-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#EA580C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-          </svg>
+    <!-- shadcn Alert Dialog — Repopulate confirm -->
+    <div class="alert-overlay" id="confirm-overlay">
+      <div class="alert-dialog">
+        <div class="alert-dialog-header">
+          <div class="alert-dialog-title">Repopulate Local Data?</div>
+          <div class="alert-dialog-desc">This will refresh the local database with the latest treatments, employees, and rooms from the remote source. Existing data will be updated or added — nothing will be deleted.</div>
         </div>
-        <div class="modal-title">Repopulate Local Data?</div>
-        <div class="modal-body">
-          This will refresh the local database with the latest treatments, employees, and rooms from the remote source. Existing data will be updated or added — nothing will be deleted.
-        </div>
-        <div class="modal-actions">
-          <button class="btn-cancel" onclick="closeConfirm()">Cancel</button>
-          <button class="btn-confirm" onclick="confirmRepopulate()">Yes, Repopulate</button>
+        <div class="alert-dialog-footer">
+          <button class="btn btn-outline" onclick="closeConfirm()">Cancel</button>
+          <button class="btn btn-orange" onclick="confirmRepopulate()">Yes, Repopulate</button>
         </div>
       </div>
     </div>
 
     <script>
+      // Sidebar
       function toggleSidebar() {
-        const sidebar = document.getElementById("sidebar");
-        const overlay = document.getElementById("sidebar-overlay");
-        const isOpen = sidebar.classList.toggle("sidebar-open");
-        overlay.classList.toggle("visible", isOpen);
+        const s = document.getElementById('sidebar'), o = document.getElementById('sidebar-overlay');
+        const open = s.classList.toggle('open');
+        o.classList.toggle('visible', open);
       }
-
       function closeSidebar() {
-        document.getElementById("sidebar").classList.remove("sidebar-open");
-        document.getElementById("sidebar-overlay").classList.remove("visible");
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('sidebar-overlay').classList.remove('visible');
       }
 
-      let authCredentials = "";
-      const zohoHardcodedName   = "Bijal Patel";
-      const zohoHardcodedMailId = "bijal@blomedry.com";
-      const zohoBaseUrl         = "https://calendar.zoho.com/eventreq/zz080112308e7a876686e756ec062dec68f649128461b60bfb7a1b8bb4c85f04ee55f11eb6c4aa91e80ae10528e8a78a8a43aabd10";
-
+      // Date
       (function () {
-        const now  = new Date();
-        const long = now.toLocaleDateString("en-US", { weekday:"short", month:"short", day:"numeric", year:"numeric" });
-        const short= now.toLocaleDateString("en-US", { month:"short", day:"numeric" });
-        document.getElementById("topbar-date-str").textContent = long;
-        document.getElementById("topbar-date").textContent     = "Today · " + short;
+        const now = new Date();
+        document.getElementById('date-badge').textContent =
+          now.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', year:'numeric' });
       })();
 
-      function formatDateForZoho(v) {
-        if (!v) return "";
-        const d = new Date(v);
-        if (Number.isNaN(d.getTime())) return "";
-        return String(d.getMonth()+1).padStart(2,"0") + "/" + String(d.getDate()).padStart(2,"0") + "/" + d.getFullYear();
+      // Slider
+      function onSliderInput(v) {
+        const n = parseInt(v);
+        const slider = document.getElementById('short-call-slider');
+        const pct = (n / parseInt(slider.max)) * 100;
+        slider.style.setProperty('--pct', pct + '%');
+        document.getElementById('slider-display').textContent = fmtSec(n);
+      }
+      function fmtSec(s) {
+        if (s === 0) return '0s';
+        if (s >= 60) {
+          const m = Math.floor(s / 60), r = s % 60;
+          return r > 0 ? `${m}m ${r}s` : `${m}m`;
+        }
+        return `${s}s`;
       }
 
-      function submitZohoRequest() {
-        const date   = document.getElementById("zoho-date").value;
-        const time   = document.getElementById("zoho-time").value;
-        const reason = document.getElementById("zoho-reason").value.trim();
-        const el     = document.getElementById("zoho-status");
-        el.style.display = "none";
-        if (!date || !time || !reason) {
-          el.textContent = "Please fill in date, time, and reason.";
-          el.className = "msg msg-error"; el.style.display = "block"; return;
-        }
-        const url = `${zohoBaseUrl}?name=${encodeURIComponent(zohoHardcodedName)}&mailId=${encodeURIComponent(zohoHardcodedMailId)}&date=${encodeURIComponent(formatDateForZoho(date))}&time=${encodeURIComponent(time)}&reason=${encodeURIComponent(reason)}`;
-        try {
-          window.open(url, "_blank");
-          el.textContent = "Appointment request sent — a new tab has been opened.";
-          el.className = "msg msg-success"; el.style.display = "block";
-        } catch {
-          el.textContent = "Unable to open the request. Please try again.";
-          el.className = "msg msg-error"; el.style.display = "block";
-        }
-      }
+      // Auth
+      let auth = '';
+      const ZOHO_NAME = 'Bijal Patel';
+      const ZOHO_MAIL = 'bijal@blomedry.com';
+      const ZOHO_BASE = 'https://calendar.zoho.com/eventreq/zz080112308e7a876686e756ec062dec68f649128461b60bfb7a1b8bb4c85f04ee55f11eb6c4aa91e80ae10528e8a78a8a43aabd10';
 
-      window.addEventListener("load", function () {
-        authCredentials = sessionStorage.getItem("authCredentials");
-        if (!authCredentials) { window.location.href = "/admin/login"; return; }
-        fetch("/api/get/auth-test", { headers: { Authorization: authCredentials } })
+      window.addEventListener('load', function () {
+        auth = sessionStorage.getItem('authCredentials');
+        if (!auth) { location.href = '/admin/login'; return; }
+        fetch('/api/get/auth-test', { headers: { Authorization: auth } })
           .then(r => { if (!r.ok) logout(); else { loadCounts(); loadSettings(); } })
           .catch(() => logout());
       });
 
       function logout() {
-        sessionStorage.removeItem("authCredentials");
-        window.location.href = "/admin/login";
+        sessionStorage.removeItem('authCredentials');
+        location.href = '/admin/login';
       }
 
       async function loadCounts() {
         const [tRes, eRes] = await Promise.allSettled([
-          fetch("/admin/treatments", { headers: { Authorization: authCredentials } }).then(r => r.json()),
-          fetch("/admin/employees",  { headers: { Authorization: authCredentials } }).then(r => r.json()),
+          fetch('/admin/treatments', { headers: { Authorization: auth } }).then(r => r.json()),
+          fetch('/admin/employees',  { headers: { Authorization: auth } }).then(r => r.json()),
         ]);
-        if (tRes.status === "fulfilled" && tRes.value.ok)
-          document.getElementById("stat-treatments-count").textContent = (tRes.value.treatments || []).length;
-        if (eRes.status === "fulfilled" && eRes.value.ok)
-          document.getElementById("stat-employees-count").textContent = (eRes.value.employees || []).length;
+        if (tRes.status === 'fulfilled' && tRes.value.ok)
+          document.getElementById('stat-treatments').textContent = (tRes.value.treatments || []).length;
+        if (eRes.status === 'fulfilled' && eRes.value.ok)
+          document.getElementById('stat-employees').textContent  = (eRes.value.employees  || []).length;
       }
 
+      // Zoho
+      function fmtDateZoho(v) {
+        if (!v) return '';
+        const d = new Date(v);
+        if (isNaN(d)) return '';
+        return String(d.getMonth()+1).padStart(2,'0') + '/' + String(d.getDate()).padStart(2,'0') + '/' + d.getFullYear();
+      }
+
+      function submitZohoRequest() {
+        const date = document.getElementById('zoho-date').value;
+        const time = document.getElementById('zoho-time').value;
+        const reason = document.getElementById('zoho-reason').value.trim();
+        const el   = document.getElementById('zoho-status');
+        el.style.display = 'none';
+        if (!date || !time || !reason) {
+          el.textContent = 'Please fill in all fields.';
+          el.className = 'alert alert-err'; el.style.display = 'block'; return;
+        }
+        const url = `${ZOHO_BASE}?name=${encodeURIComponent(ZOHO_NAME)}&mailId=${encodeURIComponent(ZOHO_MAIL)}&date=${encodeURIComponent(fmtDateZoho(date))}&time=${encodeURIComponent(time)}&reason=${encodeURIComponent(reason)}`;
+        try {
+          window.open(url, '_blank');
+          el.textContent = 'Appointment request sent — a new tab has been opened.';
+          el.className = 'alert alert-ok'; el.style.display = 'block';
+        } catch {
+          el.textContent = 'Unable to open the request. Please try again.';
+          el.className = 'alert alert-err'; el.style.display = 'block';
+        }
+      }
+
+      // Repopulate — shadcn Alert Dialog
       function repopulateData() {
-        document.getElementById("success-message").style.display = "none";
-        document.getElementById("error-message").style.display   = "none";
-        document.getElementById("confirm-backdrop").classList.add("visible");
+        document.getElementById('repopulate-ok').style.display  = 'none';
+        document.getElementById('repopulate-err').style.display = 'none';
+        document.getElementById('confirm-overlay').classList.add('show');
       }
-
-      function closeConfirm() {
-        document.getElementById("confirm-backdrop").classList.remove("visible");
-      }
+      function closeConfirm() { document.getElementById('confirm-overlay').classList.remove('show'); }
+      document.getElementById('confirm-overlay').addEventListener('click', function (e) { if (e.target === this) closeConfirm(); });
 
       async function confirmRepopulate() {
         closeConfirm();
-        const btn = document.getElementById("repopulate-btn");
-        const ok  = document.getElementById("success-message");
-        const err = document.getElementById("error-message");
-        ok.style.display = err.style.display = "none";
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner"></span> Repopulating…';
+        const btn = document.getElementById('repopulate-btn');
+        const ok  = document.getElementById('repopulate-ok');
+        const err = document.getElementById('repopulate-err');
+        ok.style.display = err.style.display = 'none';
+        btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Repopulating…';
         try {
-          const res = await fetch("/api/populateLocal", { headers: { Authorization: authCredentials } });
+          const res = await fetch('/api/populateLocal', { headers: { Authorization: auth } });
           if (!res.ok) throw new Error(res.statusText);
-          ok.textContent = "Data repopulated successfully!"; ok.style.display = "block";
+          ok.textContent = 'Data repopulated successfully!'; ok.style.display = 'block';
           loadCounts();
         } catch {
-          err.textContent = "Failed to repopulate. Please try again."; err.style.display = "block";
+          err.textContent = 'Failed to repopulate. Please try again.'; err.style.display = 'block';
         } finally {
-          btn.disabled = false; btn.textContent = "Repopulate Local Data";
+          btn.disabled = false; btn.textContent = 'Repopulate Local Data';
         }
       }
 
-      document.getElementById("confirm-backdrop").addEventListener("click", function (e) {
-        if (e.target === this) closeConfirm();
-      });
-
-      let ccCustomerId = null;
-      let ccCustomerPhone = null;
-      let ccFirstName = "";
-
-      async function findCustomerForCC() {
-        const firstName = document.getElementById("cc-first-name").value.trim();
-        const phone     = document.getElementById("cc-phone").value.trim();
-        const msgEl     = document.getElementById("cc-msg");
-        const foundEl   = document.getElementById("cc-customer-found");
-        const sendBtn   = document.getElementById("cc-send-btn");
-        const findBtn   = document.getElementById("cc-find-btn");
-        msgEl.style.display = "none";
-        foundEl.style.display = "none";
-        sendBtn.style.display = "none";
-        ccCustomerId = null; ccCustomerPhone = null; ccFirstName = "";
-
-        if (!firstName || !phone) {
-          msgEl.textContent = "Please enter both first name and phone number.";
-          msgEl.className = "msg msg-error"; msgEl.style.display = "block"; return;
-        }
-
-        findBtn.disabled = true;
-        findBtn.innerHTML = '<span class="spinner"></span> Searching…';
-        try {
-          const res = await fetch("/api/post/customer", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: authCredentials },
-            body: JSON.stringify({ firstName, phone }),
-          });
-          const data = await res.json();
-          if (data.success && data.customer) {
-            const c = data.customer;
-            ccCustomerId    = c.CustomerID;
-            ccCustomerPhone = c.Customer?.CellPhone || c.Customer?.HomePhone || phone;
-            ccFirstName     = c.Customer?.FirstName || firstName;
-            const fullName  = `${c.Customer?.FirstName || ""} ${c.Customer?.LastName || ""}`.trim() || firstName;
-            foundEl.textContent = `Found: ${fullName} (ID ${ccCustomerId}) — will send to ${ccCustomerPhone}`;
-            foundEl.style.display = "block";
-            sendBtn.style.display = "block";
-          } else {
-            msgEl.textContent = data.message || "Customer not found.";
-            msgEl.className = "msg msg-error"; msgEl.style.display = "block";
-          }
-        } catch {
-          msgEl.textContent = "Search failed. Please try again.";
-          msgEl.className = "msg msg-error"; msgEl.style.display = "block";
-        } finally {
-          findBtn.disabled = false; findBtn.textContent = "Find Customer";
-        }
-      }
-
-      async function sendCCLink() {
-        const msgEl   = document.getElementById("cc-msg");
-        const sendBtn = document.getElementById("cc-send-btn");
-        msgEl.style.display = "none";
-        if (!ccCustomerId || !ccCustomerPhone) return;
-
-        sendBtn.disabled = true;
-        sendBtn.innerHTML = '<span class="spinner"></span> Sending…';
-        try {
-          const res = await fetch("/api/post/send-cc-link", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: authCredentials },
-            body: JSON.stringify({ customerId: ccCustomerId, phone: ccCustomerPhone, firstName: ccFirstName }),
-          });
-          const data = await res.json();
-          if (data.success) {
-            msgEl.textContent = "Message sent.";
-            msgEl.className = "msg msg-success";
-            msgEl.style.display = "block";
-          } else {
-            throw new Error(data.error || "Failed to send");
-          }
-        } catch (err) {
-          msgEl.textContent = err.message || "Failed to send CC link.";
-          msgEl.className = "msg msg-error"; msgEl.style.display = "block";
-        } finally {
-          sendBtn.disabled = false; sendBtn.textContent = "Send CC Link via SMS";
-        }
-      }
-
+      // Settings
       async function loadSettings() {
         try {
-          const res = await fetch("/admin/settings", { headers: { Authorization: authCredentials } });
+          const res  = await fetch('/admin/settings', { headers: { Authorization: auth } });
           const data = await res.json();
           if (data.ok) {
-            document.getElementById("short-call-threshold").value = data.settings.shortCallThresholdSeconds;
+            const v = data.settings.shortCallThresholdSeconds;
+            document.getElementById('short-call-slider').value = v;
+            onSliderInput(v);
           }
         } catch {}
       }
 
       async function saveSettings() {
-        const btn = document.getElementById("save-settings-btn");
-        const msgEl = document.getElementById("settings-msg");
-        msgEl.style.display = "none";
-        const val = parseInt(document.getElementById("short-call-threshold").value, 10);
-        if (isNaN(val) || val < 0) {
-          msgEl.textContent = "Please enter a valid number of seconds.";
-          msgEl.className = "msg msg-error"; msgEl.style.display = "block"; return;
-        }
-        btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Saving…';
+        const btn   = document.getElementById('save-settings-btn');
+        const msgEl = document.getElementById('settings-msg');
+        msgEl.style.display = 'none';
+        const val = parseInt(document.getElementById('short-call-slider').value, 10);
+        btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Saving…';
         try {
-          const res = await fetch("/admin/settings", {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json", Authorization: authCredentials },
+          const res  = await fetch('/admin/settings', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', Authorization: auth },
             body: JSON.stringify({ shortCallThresholdSeconds: val }),
           });
           const data = await res.json();
           if (data.ok) {
-            msgEl.textContent = "Settings saved!"; msgEl.className = "msg msg-success"; msgEl.style.display = "block";
+            msgEl.textContent = 'Settings saved!'; msgEl.className = 'alert alert-ok'; msgEl.style.display = 'block';
           } else {
-            msgEl.textContent = data.error || "Failed to save."; msgEl.className = "msg msg-error"; msgEl.style.display = "block";
+            msgEl.textContent = data.error || 'Failed to save.'; msgEl.className = 'alert alert-err'; msgEl.style.display = 'block';
           }
         } catch {
-          msgEl.textContent = "Failed to save settings."; msgEl.className = "msg msg-error"; msgEl.style.display = "block";
+          msgEl.textContent = 'Failed to save settings.'; msgEl.className = 'alert alert-err'; msgEl.style.display = 'block';
         } finally {
-          btn.disabled = false; btn.textContent = "Save Settings";
+          btn.disabled = false; btn.textContent = 'Save Settings';
         }
       }
 
       async function backfillInconclusive() {
-        const btn = document.getElementById("backfill-btn");
-        const msgEl = document.getElementById("settings-msg");
-        msgEl.style.display = "none";
-        btn.disabled = true; btn.innerHTML = '<span class="spinner" style="border-top-color:#4F46E5; border-color:#E2E8F0; border-top-color:#4F46E5;"></span> Running…';
+        const btn   = document.getElementById('backfill-btn');
+        const msgEl = document.getElementById('settings-msg');
+        msgEl.style.display = 'none';
+        btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Running…';
         try {
-          const res = await fetch("/admin/calls/backfill-inconclusive", {
-            method: "POST",
-            headers: { Authorization: authCredentials },
-          });
+          const res  = await fetch('/admin/calls/backfill-inconclusive', { method: 'POST', headers: { Authorization: auth } });
           const data = await res.json();
           if (data.ok) {
             msgEl.textContent = `Backfill done — ${data.updated} call(s) updated.`;
-            msgEl.className = "msg msg-success"; msgEl.style.display = "block";
+            msgEl.className = 'alert alert-ok'; msgEl.style.display = 'block';
           } else {
-            msgEl.textContent = data.error || "Backfill failed.";
-            msgEl.className = "msg msg-error"; msgEl.style.display = "block";
+            msgEl.textContent = data.error || 'Backfill failed.'; msgEl.className = 'alert alert-err'; msgEl.style.display = 'block';
           }
         } catch {
-          msgEl.textContent = "Backfill request failed.";
-          msgEl.className = "msg msg-error"; msgEl.style.display = "block";
+          msgEl.textContent = 'Backfill request failed.'; msgEl.className = 'alert alert-err'; msgEl.style.display = 'block';
         } finally {
-          btn.disabled = false; btn.textContent = "Tag Untagged Calls as Inconclusive";
+          btn.disabled = false; btn.textContent = 'Tag Untagged Calls as Inconclusive';
+        }
+      }
+
+      // CC Link
+      let ccId = null, ccPhone = null, ccFirst = '';
+
+      async function findCustomerForCC() {
+        const firstName = document.getElementById('cc-first-name').value.trim();
+        const phone     = document.getElementById('cc-phone').value.trim();
+        const msgEl     = document.getElementById('cc-msg');
+        const foundEl   = document.getElementById('cc-customer-found');
+        const sendBtn   = document.getElementById('cc-send-btn');
+        const findBtn   = document.getElementById('cc-find-btn');
+        msgEl.style.display = foundEl.style.display = 'none'; sendBtn.style.display = 'none';
+        ccId = null; ccPhone = null; ccFirst = '';
+
+        if (!firstName || !phone) {
+          msgEl.textContent = 'Please enter both first name and phone number.';
+          msgEl.className = 'alert alert-err'; msgEl.style.display = 'block'; return;
+        }
+
+        findBtn.disabled = true; findBtn.innerHTML = '<span class="spin"></span> Searching…';
+        try {
+          const res  = await fetch('/api/post/customer', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: auth },
+            body: JSON.stringify({ firstName, phone }),
+          });
+          const data = await res.json();
+          if (data.success && data.customer) {
+            const c = data.customer;
+            ccId    = c.CustomerID;
+            ccPhone = c.Customer?.CellPhone || c.Customer?.HomePhone || phone;
+            ccFirst = c.Customer?.FirstName || firstName;
+            const full = `${c.Customer?.FirstName || ''} ${c.Customer?.LastName || ''}`.trim() || firstName;
+            foundEl.textContent = `Found: ${full} (ID ${ccId}) — will send to ${ccPhone}`;
+            foundEl.style.display = 'block'; sendBtn.style.display = 'block';
+          } else {
+            msgEl.textContent = data.message || 'Customer not found.';
+            msgEl.className = 'alert alert-err'; msgEl.style.display = 'block';
+          }
+        } catch {
+          msgEl.textContent = 'Search failed. Please try again.';
+          msgEl.className = 'alert alert-err'; msgEl.style.display = 'block';
+        } finally {
+          findBtn.disabled = false; findBtn.textContent = 'Find Customer';
+        }
+      }
+
+      async function sendCCLink() {
+        const msgEl   = document.getElementById('cc-msg');
+        const sendBtn = document.getElementById('cc-send-btn');
+        msgEl.style.display = 'none';
+        if (!ccId || !ccPhone) return;
+        sendBtn.disabled = true; sendBtn.innerHTML = '<span class="spin"></span> Sending…';
+        try {
+          const res  = await fetch('/api/post/send-cc-link', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: auth },
+            body: JSON.stringify({ customerId: ccId, phone: ccPhone, firstName: ccFirst }),
+          });
+          const data = await res.json();
+          if (data.success) {
+            msgEl.textContent = 'Message sent successfully.';
+            msgEl.className = 'alert alert-ok'; msgEl.style.display = 'block';
+          } else throw new Error(data.error || 'Failed to send');
+        } catch (e) {
+          msgEl.textContent = e.message || 'Failed to send CC link.';
+          msgEl.className = 'alert alert-err'; msgEl.style.display = 'block';
+        } finally {
+          sendBtn.disabled = false; sendBtn.textContent = 'Send CC Link via SMS';
         }
       }
     </script>
