@@ -14,6 +14,8 @@ import {
   getVapiCostByMonth,
   updateCallTags,
   sendCCLinkToCustomer,
+  sendMonthlyStatsReport,
+  sendEmail,
 } from "../controllers/postController";
 import {
   sendMessageToAdminController,
@@ -45,5 +47,8 @@ postRouter.post("/vapi/webhook", vapiCallDataWebhook);
 postRouter.post("/calls/costByMonth/", getVapiCostByMonth);
 postRouter.patch("/calls/:id/tags", updateCallTags);
 postRouter.post("/send-cc-link", sendCCLinkToCustomer);
+
+postRouter.post("/email/stats", sendMonthlyStatsReport);
+postRouter.post("/email/send", sendEmail);
 export default postRouter;
 

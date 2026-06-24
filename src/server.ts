@@ -10,7 +10,6 @@ app.listen(config.port, async () => {
     `Server running on port ${config.port} (http://localhost:${config.port})`
   );
   await connectDB();
-
   const env = process.env.NODE_ENV || "development";
   env === "production" ? await sendMessageSMS(process.env.DEV_PHONE?.toString() ?? "", `SRVR+DB CONNECTED ${convertISOtoFriendly(new Date().toISOString())}`):null;
 });
