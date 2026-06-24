@@ -69,7 +69,12 @@ export function renderMonthlyStatsEmail(stats: MonthlyStatsObject): string {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="supported-color-schemes" content="light dark" />
     <title>Your AI Receptionist — ${stats.month} ${stats.year}</title>
+    <style>
+      :root { color-scheme: light dark; supported-color-schemes: light dark; }
+    </style>
   </head>
   <body style="margin:0;padding:0;background:#0f0f11;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0f0f11;padding:32px 0;">
@@ -82,7 +87,7 @@ export function renderMonthlyStatsEmail(stats: MonthlyStatsObject): string {
               <td style="background:#0f0f11;background-image:linear-gradient(135deg,#18181b 0%,#27272a 100%);padding:40px 40px 44px;text-align:center;">
                 <div style="font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:#8b8b94;">Blo Milton · AI Receptionist</div>
                 <div style="font-size:13px;color:#a1a1aa;margin-top:22px;">Revenue your AI booked in ${stats.month} ${stats.year}</div>
-                <div style="font-size:52px;line-height:1.05;font-weight:800;color:#ffffff;margin-top:8px;letter-spacing:-1px;">${currency(stats.totalRevenueMade)}</div>
+                <div style="font-size:52px;line-height:1.05;font-weight:800;color:#fafafa;margin-top:8px;letter-spacing:-1px;">${currency(stats.totalRevenueMade)}</div>
                 <div style="display:inline-block;margin-top:18px;padding:7px 16px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.14);border-radius:999px;font-size:13px;color:#e4e4e7;">
                   Answered every call · day &amp; night · ${stats.totalCalls} time${stats.totalCalls === 1 ? "" : "s"}
                 </div>
