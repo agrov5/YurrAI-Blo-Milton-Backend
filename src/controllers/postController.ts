@@ -30,7 +30,7 @@ import {
 } from "../models/Vapi";
 import { getSettings } from "../models/Settings";
 import { sendMessageToAdmin, sendMessageMMS } from "../util/phone_util";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 
 
 // Helper function
@@ -436,9 +436,8 @@ export const vapiCallDataWebhook = async (req: Request, res: Response) => {
     geminiTagCall(savedCall.summary, savedCall.transcript)
       .then((tags) => VapiCallModel.findByIdAndUpdate(savedCall._id, { tags }))
       .catch((err) => {
+        // Leave the call untagged on failure — the dashboard surfaces these as "No Tags"
         console.error("Auto-tag failed for call", savedCall._id, err);
-        VapiCallModel.findByIdAndUpdate(savedCall._id, { tags: ["Inconclusive"] })
-          .catch((e) => console.error("Inconclusive fallback failed", savedCall._id, e));
       });
 
     // Short-call alert — fire-and-forget
@@ -475,8 +474,8 @@ export const vapiCallDataWebhook = async (req: Request, res: Response) => {
 };
 
 
-const PREDEFINED_TAGS = [
-  // Primary intent
+// Why did they call? Exactly one is assigned.
+const INTENT_TAGS = [
   "New Appointment Request",
   "Reschedule Request",
   "Cancel Request",
@@ -485,7 +484,10 @@ const PREDEFINED_TAGS = [
   "Service Question",
   "Existing Appointment Question",
   "Wrong Department / Not a Client",
-  // Resolution
+];
+
+// What actually happened? At most one is assigned.
+const RESOLUTION_TAGS = [
   "Appointment Booked",
   "Appointment Rescheduled",
   "Appointment Canceled",
@@ -494,7 +496,10 @@ const PREDEFINED_TAGS = [
   "Message Taken / Callback Requested",
   "Message sent to Admin",
   "Caller Declined Further Service",
-  // Failure modes
+];
+
+// What went wrong, if anything? At most one is assigned.
+const FAILURE_TAGS = [
   "Hangup During Intake",
   "Silent / No Response",
   "Couldn't Collect Required Info",
@@ -503,7 +508,6 @@ const PREDEFINED_TAGS = [
   "Language Barrier",
   "Tool / Calendar Error",
   "Bad Audio / Couldn't Understand",
-  "Inconclusive",
 ];
 
 async function geminiTagCall(summary: string | null | undefined, transcript: string | null | undefined): Promise<string[]> {
@@ -512,11 +516,9 @@ async function geminiTagCall(summary: string | null | undefined, transcript: str
 
   const ai = new GoogleGenAI({ apiKey });
 
-  const prompt = `You are analyzing a phone call from a beauty salon (Blo Blowout Bar). Based on the call summary and transcript below, assign the most relevant tags from the list.
+  const prompt = `You are analyzing a phone call from a beauty salon (Blo Blowout Bar). Based on the call summary and transcript below, classify the call.
 
-Tags are grouped into three categories — assign one or more from each relevant category:
-
-PRIMARY INTENT (why did they call?):
+PRIMARY INTENT (why did they call?) — choose exactly one:
 - "New Appointment Request": Caller wanted to book a new appointment
 - "Reschedule Request": Caller wanted to move an existing appointment (use even if it failed)
 - "Cancel Request": Caller wanted to cancel an appointment (use even if it failed)
@@ -526,7 +528,7 @@ PRIMARY INTENT (why did they call?):
 - "Existing Appointment Question": Caller asked to confirm details of an existing appointment
 - "Wrong Department / Not a Client": Spam, vendor, sales, or clearly wrong number
 
-RESOLUTION (what actually happened?):
+RESOLUTION (what actually happened?) — choose one, or leave null if nothing was resolved:
 - "Appointment Booked": A new appointment was successfully booked
 - "Appointment Rescheduled": An existing appointment was successfully rescheduled
 - "Appointment Canceled": An appointment was successfully canceled
@@ -536,7 +538,7 @@ RESOLUTION (what actually happened?):
 - "Message sent to Admin": A message was relayed or sent to the admin/staff
 - "Caller Declined Further Service": Caller chose not to proceed after receiving info
 
-FAILURE MODES (if something went wrong):
+FAILURE MODE (if something went wrong) — choose one, or leave null if the call went fine:
 - "Hangup During Intake": Caller hung up before the interaction was complete
 - "Silent / No Response": No audible response from the caller
 - "Couldn't Collect Required Info": Needed info (name, contact, etc.) was not obtained
@@ -545,26 +547,46 @@ FAILURE MODES (if something went wrong):
 - "Language Barrier": Communication failed due to language
 - "Tool / Calendar Error": A booking system or integration error occurred
 - "Bad Audio / Couldn't Understand": Call quality prevented understanding
-- "Inconclusive": None of the above apply, or the call purpose is completely unclear
+
+Examples:
+- A caller books a haircut → primaryIntent "New Appointment Request", resolution "Appointment Booked", failureMode null.
+- A caller wants to reschedule but no times fit → primaryIntent "Reschedule Request", resolution null, failureMode "No Availability / No Suitable Times".
 
 Call Summary: ${summary || "N/A"}
-Call Transcript: ${transcript ? transcript.substring(0, 3000) : "N/A"}
-
-Respond ONLY with a valid JSON array of applicable tag strings exactly as written above.
-Example: ["New Appointment Request", "Appointment Booked"]
-Use "Inconclusive" only if truly nothing else fits.`;
+Call Transcript: ${transcript || "N/A"}`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash-lite",
+    model: "gemini-3.5-flash",
     contents: prompt,
+    config: {
+      temperature: 0,
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          primaryIntent: { type: Type.STRING, enum: INTENT_TAGS },
+          resolution: { type: Type.STRING, enum: RESOLUTION_TAGS, nullable: true },
+          failureMode: { type: Type.STRING, enum: FAILURE_TAGS, nullable: true },
+        },
+        required: ["primaryIntent"],
+        propertyOrdering: ["primaryIntent", "resolution", "failureMode"],
+      },
+    },
   });
 
-  const rawText = response.text?.trim() ?? "[]";
+  const rawText = response.text?.trim() ?? "{}";
   console.log("[geminiTagCall] raw response text:", rawText);
-  const jsonMatch = rawText.match(/\[[\s\S]*?\]/);
-  const parsed: string[] = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
-  const valid = parsed.filter((t) => PREDEFINED_TAGS.includes(t));
-  const result = valid.length > 0 ? valid : ["Inconclusive"];
+
+  const parsed = JSON.parse(rawText) as {
+    primaryIntent?: string;
+    resolution?: string | null;
+    failureMode?: string | null;
+  };
+
+  // Enum-constrained output guarantees valid values; filter guards against null/empties.
+  const result = [parsed.primaryIntent, parsed.resolution, parsed.failureMode]
+    .filter((t): t is string => typeof t === "string" && t.length > 0);
+
   console.log("[geminiTagCall] tags assigned:", result);
   return result;
 }
