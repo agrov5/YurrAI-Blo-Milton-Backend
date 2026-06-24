@@ -17,7 +17,8 @@
     "build": "npm i && tsc && npm run copy-public",
     "copy-public": "npx copyfiles -u 1 src/public/**/* dist/",
     "start": "cross-env NODE_ENV=production && node dist/server.js",
-    "dev": "cross-env NODE_ENV=development npm run build && node dist/server.js"
+    "dev": "cross-env NODE_ENV=development npm run build && node dist/server.js",
+    "backfill-cad": "tsc && node dist/scripts/backfillCadCost.js"
   },
   "devDependencies": {
     "@eslint/js": "^9.35.0",

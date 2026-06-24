@@ -37,6 +37,7 @@ import {
   getMonthYear,
 } from "../models/MonthlyStats";
 import { sendMonthlyStatsEmail, sendCustomEmail } from "../util/resend_util";
+import { convertUsdToCad } from "../util/currency_util";
 
 // Helper function
 const cleanAppointment = (appointment: any) => ({
@@ -441,6 +442,11 @@ export const vapiCallDataWebhook = async (req: Request, res: Response) => {
   try {
     const body = req.body as VapiWebhookBody;
     const summary = extractEndOfCallData(body);
+
+    // Vapi reports cost in USD; convert to CAD before persisting so every
+    // stored cost (and the stats derived from it) is in CAD.
+    summary.cost = await convertUsdToCad(summary.cost);
+
     const savedCall = await VapiCallModel.create(summary);
 
     console.log("Received VAPI call data webhook, saved to", savedCall._id);

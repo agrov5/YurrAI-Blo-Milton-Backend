@@ -73,6 +73,8 @@ export interface VapiWebhookMessage {
 
 export interface VapiCallDocument extends ExtractedVapiCallSummary, Document {
   callSummary?: ExtractedVapiCallSummary | any;
+  /** Currency that `cost` is stored in. Costs are persisted in CAD. */
+  costCurrency?: string;
 }
 
 const VapiCallSchema = new Schema<VapiCallDocument>(
@@ -92,6 +94,8 @@ const VapiCallSchema = new Schema<VapiCallDocument>(
     stereoRecordingUrl: { type: String, required: false, default: null },
 
     cost: { type: Number, required: false, default: null },
+    // Vapi bills in USD; we convert and store `cost` in CAD on write.
+    costCurrency: { type: String, required: false, default: "CAD" },
 
     callId: { type: String, required: false, default: null },
     assistantId: { type: String, required: false, default: null },
