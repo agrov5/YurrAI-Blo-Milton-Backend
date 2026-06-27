@@ -347,7 +347,7 @@
             </div>
             <div class="compose-field type">
               <label class="search-label">Type</label>
-              <select class="search-input" id="composeType">
+              <select class="search-input" id="composeType" onchange="onTypeChange()">
                 <option value="SMS">SMS</option>
                 <option value="MMS">MMS</option>
               </select>
@@ -562,16 +562,31 @@
       }
 
       // ── Compose ──
+      // Keep these in sync with getMessageCharLimit() on the server.
+      const CHAR_LIMITS = { SMS: 160, MMS: 1600 };
+
       function onTargetChange() {
         const target = document.getElementById("composeTarget").value;
         document.getElementById("composePhoneField").style.display =
           target === "customer" ? "flex" : "none";
       }
 
+      // Switching type re-caps the textarea and trims any overflow so the body
+      // can never exceed the active limit.
+      function onTypeChange() {
+        const limit = CHAR_LIMITS[document.getElementById("composeType").value];
+        const bodyEl = document.getElementById("composeBody");
+        bodyEl.maxLength = limit;
+        if (bodyEl.value.length > limit) bodyEl.value = bodyEl.value.slice(0, limit);
+        updateCharCount();
+      }
+
       function updateCharCount() {
         const len = document.getElementById("composeBody").value.length;
-        document.getElementById("composeCharCount").textContent =
-          `${len} character${len === 1 ? "" : "s"}`;
+        const limit = CHAR_LIMITS[document.getElementById("composeType").value];
+        const el = document.getElementById("composeCharCount");
+        el.textContent = `${len} / ${limit} characters`;
+        el.style.color = len >= limit ? "var(--amber)" : "";
       }
 
       function setComposeStatus(text, kind) {
@@ -629,6 +644,7 @@
         const now = new Date();
         document.getElementById("monthSelector").value = now.getMonth() + 1;
         document.getElementById("yearSelector").value = now.getFullYear();
+        onTypeChange(); // set the initial char cap & counter
         loadMessages();
       });
     </script>

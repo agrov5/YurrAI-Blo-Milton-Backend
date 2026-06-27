@@ -54,6 +54,15 @@ export function getMessageCost(messageType: MessageType): number {
   return messageType === "MMS" ? MMS_COST_CAD : SMS_COST_CAD;
 }
 
+// Max message body length per type. SMS is the standard single-segment GSM
+// limit; MMS allows a much larger text payload (voip.ms accepts up to ~1600).
+export const SMS_CHAR_LIMIT = 160;
+export const MMS_CHAR_LIMIT = 1600;
+
+export function getMessageCharLimit(messageType: MessageType): number {
+  return messageType === "MMS" ? MMS_CHAR_LIMIT : SMS_CHAR_LIMIT;
+}
+
 // Normalize a phone number to its last 10 digits so values with/without a
 // country code or formatting compare equal (e.g. "+1 (905) 555-1234" vs
 // "9055551234").

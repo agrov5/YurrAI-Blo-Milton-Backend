@@ -13,6 +13,7 @@ import { VapiCallModel } from "../models/Vapi";
 import { MessageLogModel } from "../models/MessageLog";
 import { MonthlyCallStatsModel, getMonthYear } from "../models/MonthlyStats";
 import { sendMessage } from "../util/phone_util";
+import { getMessageCharLimit } from "../models/MessageLog";
 
 const router = Router();
 
@@ -322,6 +323,15 @@ router.post(
 
     if (!body || !body.trim()) {
       res.status(400).json({ ok: false, error: "Message body is required" });
+      return;
+    }
+
+    const charLimit = getMessageCharLimit(type);
+    if (body.trim().length > charLimit) {
+      res.status(400).json({
+        ok: false,
+        error: `${type} messages are limited to ${charLimit} characters`,
+      });
       return;
     }
 
