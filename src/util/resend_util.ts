@@ -74,9 +74,20 @@ export function renderMonthlyStatsEmail(stats: MonthlyStatsObject): string {
     <title>Your AI Receptionist — ${stats.month} ${stats.year}</title>
     <style>
       :root { color-scheme: light dark; supported-color-schemes: light dark; }
+      /*
+       * Gmail (Android/iOS) and Outlook apply a "smart invert" in dark mode that
+       * darkens light text sitting on our already-dark hero, which made the big
+       * revenue figure collapse into near-black and disappear. These overrides
+       * pin the hero text back to legible colors when a client recolors them.
+       * [data-ogsc]/[data-ogsb] = Gmail; u + .body = the Gmail/Apple Mail wrapper.
+       */
+      [data-ogsc] .hero-amount, u + .body .hero-amount { color: #fafafa !important; }
+      [data-ogsc] .hero-eyebrow, u + .body .hero-eyebrow { color: #c7c7d1 !important; }
+      [data-ogsc] .hero-sub, u + .body .hero-sub { color: #c7c7d1 !important; }
+      [data-ogsc] .hero-pill, u + .body .hero-pill { color: #ededf0 !important; }
     </style>
   </head>
-  <body style="margin:0;padding:0;background:#0f0f11;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <body class="body" style="margin:0;padding:0;background:#0f0f11;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0f0f11;padding:32px 0;">
       <tr>
         <td align="center">
@@ -85,10 +96,10 @@ export function renderMonthlyStatsEmail(stats: MonthlyStatsObject): string {
             <!-- Hero: revenue the AI booked -->
             <tr>
               <td style="background:#0f0f11;background-image:linear-gradient(135deg,#18181b 0%,#27272a 100%);padding:40px 40px 44px;text-align:center;">
-                <div style="font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:#8b8b94;">Blo Milton · AI Receptionist</div>
-                <div style="font-size:13px;color:#a1a1aa;margin-top:22px;">Revenue your AI booked in ${stats.month} ${stats.year}</div>
-                <div style="font-size:52px;line-height:1.05;font-weight:800;color:#fafafa;margin-top:8px;letter-spacing:-1px;">${currency(stats.totalRevenueMade)}</div>
-                <div style="display:inline-block;margin-top:18px;padding:7px 16px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.14);border-radius:999px;font-size:13px;color:#e4e4e7;">
+                <div class="hero-eyebrow" style="font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:#8b8b94;">Blo Milton · AI Receptionist</div>
+                <div class="hero-sub" style="font-size:13px;color:#a1a1aa;margin-top:22px;">Revenue your AI booked in ${stats.month} ${stats.year}</div>
+                <div class="hero-amount" style="font-size:52px;line-height:1.05;font-weight:800;color:#fafafa;margin-top:8px;letter-spacing:-1px;">${currency(stats.totalRevenueMade)}</div>
+                <div class="hero-pill" style="display:inline-block;margin-top:18px;padding:7px 16px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.14);border-radius:999px;font-size:13px;color:#e4e4e7;">
                   Answered every call · day &amp; night · ${stats.totalCalls} time${stats.totalCalls === 1 ? "" : "s"}
                 </div>
               </td>

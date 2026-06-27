@@ -2,6 +2,7 @@
 import { ArgumentErrors, Treatment } from "./Treatment";
 import { Room } from "./Room";
 import { Employee } from "./Employee";
+import { convertISOtoFriendly } from "../util/db_util";
 import {
   LookupOption,
   Money,
@@ -70,6 +71,28 @@ export {
   CustomerStats,
   DepositOptions,
 };
+
+export interface CleanAppointmentCustomer {
+  id?: number;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+}
+
+export interface CleanAppointment {
+  appointmentId?: number;
+  status?: string;
+  startDateTime?: string;
+  endDateTime?: string;
+  startDateTimeISO?: string;
+  endDateTimeISO?: string;
+  customer: CleanAppointmentCustomer;
+  treatment?: string;
+  employee?: string | null;
+  finalTotal?: number;
+  notes?: string;
+}
 
 export interface CancelAppointment {
   appointmentId: number;

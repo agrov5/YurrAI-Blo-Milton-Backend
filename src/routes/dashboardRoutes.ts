@@ -10,6 +10,8 @@ import {
 import { EmployeeModel } from "../models/Employee";
 import { getSettings } from "../models/Settings";
 import { VapiCallModel } from "../models/Vapi";
+import { MessageLogModel } from "../models/MessageLog";
+import { MonthlyCallStatsModel, getMonthYear } from "../models/MonthlyStats";
 
 const router = Router();
 
@@ -164,6 +166,134 @@ router.patch("/settings", authMiddleware, async (req: Request, res: Response) =>
     res.json({ ok: true, settings: { shortCallThresholdSeconds: settings.shortCallThresholdSeconds } });
   } catch (err) {
     res.status(500).json({ ok: false, error: "Failed to save settings" });
+  }
+});
+
+// ── VoIP & Booker API (protected) ─────────────────────────────────────────────
+
+// voip.ms phone-line pricing for the call DID: per-minute usage plus a flat
+// monthly fee. Override via env if the plan changes.
+const VOIP_PER_MINUTE_CAD = process.env.VOIP_PER_MINUTE_CAD
+  ? Number(process.env.VOIP_PER_MINUTE_CAD)
+  : 0.009;
+const VOIP_MONTHLY_BASE_CAD = process.env.VOIP_MONTHLY_BASE_CAD
+  ? Number(process.env.VOIP_MONTHLY_BASE_CAD)
+  : 1.1;
+
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
+/**
+ * @route   GET /admin/messages
+ * @desc    Monthly VoIP & Booker overview: every SMS/MMS sent with SMS/MMS cost
+ *          split, Booker request count, and voip.ms call-line cost derived from
+ *          Vapi call minutes ($/min + flat monthly fee).
+ * @query   month (1-12), year — defaults to the current month.
+ * @access  Protected
+ */
+router.get("/messages", authMiddleware, async (req: Request, res: Response) => {
+  const { month, year } = req.query as Record<string, string>;
+
+  try {
+    const now = new Date();
+    const targetMonth = month ? parseInt(month, 10) : now.getMonth() + 1;
+    const targetYear = year ? parseInt(year, 10) : now.getFullYear();
+
+    if (
+      Number.isNaN(targetMonth) ||
+      targetMonth < 1 ||
+      targetMonth > 12 ||
+      Number.isNaN(targetYear)
+    ) {
+      res.status(400).json({ ok: false, error: "Invalid month or year" });
+      return;
+    }
+
+    const startDate = new Date(targetYear, targetMonth - 1, 1);
+    const endDate = new Date(targetYear, targetMonth, 1);
+
+    const messages = await MessageLogModel.find({
+      createdAt: { $gte: startDate, $lt: endDate },
+    })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Aggregate message costs, split by SMS vs MMS.
+    let smsCost = 0;
+    let mmsCost = 0;
+    let smsCount = 0;
+    let mmsCount = 0;
+    let failedCount = 0;
+    for (const m of messages) {
+      if (m.messageType === "MMS") {
+        mmsCount++;
+        mmsCost += m.cost || 0;
+      } else {
+        smsCount++;
+        smsCost += m.cost || 0;
+      }
+      if (!m.success) failedCount++;
+    }
+    const totalMessageCost = smsCost + mmsCost;
+
+    // Pull the matching monthly stats doc for the Booker request counter.
+    const { month: monthName } = getMonthYear(startDate);
+    const monthlyStats = await MonthlyCallStatsModel.findOne({
+      month: monthName,
+      year: targetYear,
+    }).lean();
+
+    // voip.ms call-line cost from this month's Vapi call minutes.
+    const callAgg = await VapiCallModel.aggregate([
+      {
+        $match: {
+          startedAt: {
+            $gte: startDate.toISOString(),
+            $lt: endDate.toISOString(),
+          },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          callCount: { $sum: 1 },
+          callMinutes: { $sum: { $ifNull: ["$durationMinutes", 0] } },
+        },
+      },
+    ]);
+    const callCount = callAgg[0]?.callCount || 0;
+    const callMinutes = callAgg[0]?.callMinutes || 0;
+    // Flat monthly fee only applies once any usage exists for the month.
+    const voipCallCost =
+      callMinutes * VOIP_PER_MINUTE_CAD +
+      (callCount > 0 ? VOIP_MONTHLY_BASE_CAD : 0);
+
+    res.json({
+      ok: true,
+      month: targetMonth,
+      year: targetYear,
+      pricing: {
+        voipPerMinute: VOIP_PER_MINUTE_CAD,
+        voipMonthlyBase: VOIP_MONTHLY_BASE_CAD,
+      },
+      stats: {
+        messageCount: messages.length,
+        smsCount,
+        mmsCount,
+        failedCount,
+        smsCost: round2(smsCost),
+        mmsCost: round2(mmsCost),
+        totalCost: round2(totalMessageCost),
+        bookerRequests: monthlyStats?.totalBookerRequests || 0,
+        callCount,
+        callMinutes: round2(callMinutes),
+        voipCallCost: round2(voipCallCost),
+        grandTotalCost: round2(totalMessageCost + voipCallCost),
+      },
+      messages,
+    });
+  } catch (error) {
+    console.error("Failed to fetch VoIP & Booker stats:", error);
+    res.status(500).json({ ok: false, error: "Unable to fetch stats" });
   }
 });
 

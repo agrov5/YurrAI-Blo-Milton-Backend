@@ -14,6 +14,7 @@ import {
   AddAppointmentNotes,
   AgentAppointment,
   CancelAppointment,
+  CleanAppointment,
   CreateAppointmentResponse,
   FullAppointmentObject,
 } from "../models/Appointment";
@@ -37,13 +38,31 @@ import {
   CreditCard,
 } from "../models/Appointment";
 import { Order } from "../models/Order";
+import { convertISOtoFriendly } from "./db_util";
+import { incrementBookerRequestCount } from "../models/MonthlyStats";
+
+// Dedicated axios instance for all Booker API traffic. Using a separate client
+// (instead of the global axios) keeps the request interceptor below scoped to
+// Booker calls only — voip.ms and other axios usage are unaffected.
+const bookerClient = axios.create({
+  baseURL: process.env.AXIOS_BASE_URL,
+});
+
+// Every outgoing Booker request bumps the current month's counter. This is
+// fire-and-forget: we never block (or fail) a Booker call on the stats write.
+bookerClient.interceptors.request.use((requestConfig) => {
+  incrementBookerRequestCount().catch((err) =>
+    console.error("Failed to increment Booker request count:", err),
+  );
+  return requestConfig;
+});
 
 // const generateAccessToken = async () => {
 //   try {
 //     // Header: {"Content-Type": "application/x-www-form-urlencoded", "Ocp-Apim-Subscription-Key": "your_subscription_key"}
 //     // Body: {"grant_type": "personal_access_token", "client_id": "your_client_id", "client_secret": "your_client_secret", "scope": "merchant", "personal_access_token": "your_personal_access_token"}
 
-//     const response = await axios.post(
+//     const response = await bookerClient.post(
 //       "v5/auth/connect/token",
 //       {
 //         grant_type: "personal_access_token",
@@ -112,7 +131,7 @@ const generateAccessToken = async (): Promise<string> => {
   // Create a new in-flight request
   tokenRequestPromise = (async () => {
     try {
-      const response = await axios.post(
+      const response = await bookerClient.post(
         "v5/auth/connect/token",
         {
           grant_type: "personal_access_token",
@@ -170,13 +189,36 @@ const getAccessToken = async (): Promise<string> => {
   return token;
 };
 
+// Helper function
+export const cleanAppointment = (appointment: any) => ({
+  appointmentId: appointment.ID,
+  status: appointment.Status?.Name,
+  startDateTime: convertISOtoFriendly(appointment.StartDateTimeOffset),
+  endDateTime: convertISOtoFriendly(appointment.EndDateTimeOffset),
+  startDateTimeISO: appointment.StartDateTimeOffset,
+  endDateTimeISO: appointment.EndDateTimeOffset,
+  customer: {
+    id: appointment.CustomerID,
+    firstName: appointment.CustomerFirstName,
+    lastName: appointment.CustomerLastName,
+    email: appointment.CustomerEmail,
+    phone: appointment.CustomerMobilePhone || appointment.CustomerHomePhone,
+  },
+  treatment: appointment.TreatmentName,
+  employee: appointment.Employee
+    ? `${appointment.Employee.FirstName} ${appointment.Employee.LastName}`
+    : null,
+  finalTotal: appointment.FinalTotal?.Amount,
+  notes: appointment.Notes,
+});
+
 // Remove global accessToken, generate per function
 export const locationID = process.env.LOCATION_ID; // 46929 - Production, 3749 - Dev
 
 export const findEmployees = async () => {
   try {
     const accessToken = await getAccessToken();
-    const response = await axios.post(
+    const response = await bookerClient.post(
       "/v4.1/merchant/employees",
       {
         access_token: accessToken,
@@ -199,7 +241,7 @@ export const findEmployees = async () => {
 export const findTreatments = async () => {
   try {
     const accessToken = await getAccessToken();
-    const response = await axios.post(
+    const response = await bookerClient.post(
       "/v4.1/merchant/treatments",
       {
         access_token: accessToken,
@@ -222,7 +264,7 @@ export const findTreatments = async () => {
 export const findRooms = async () => {
   try {
     const accessToken = await getAccessToken();
-    const response = await axios.post(
+    const response = await bookerClient.post(
       "/v4.1/merchant/rooms",
       {
         access_token: accessToken,
@@ -267,7 +309,7 @@ export const findAvailableDates = async (options: {
       }
     }
 
-    const response = await axios.get(
+    const response = await bookerClient.get(
       `/v5/realtime_availability/AvailableDates?${params.toString()}`,
       {
         headers: {
@@ -308,7 +350,7 @@ export const findAvailableTimes = async (options: {
       params.append("employeeId", options.employeeId.toString());
     }
 
-    const response = await axios.get(
+    const response = await bookerClient.get(
       `/v5/realtime_availability/availability/1day/?${params.toString()}`,
       {
         headers: {
@@ -324,8 +366,16 @@ export const findAvailableTimes = async (options: {
   }
 };
 
-export async function checkCustomerExists(phone: string, firstNameRequiredFlag: true, firstName?: string): Promise<ExistingCustomer | null>;
-export async function checkCustomerExists(phone: string, firstNameRequiredFlag: false, firstName?: string): Promise<ExistingCustomer[] | null>;
+export async function checkCustomerExists(
+  phone: string,
+  firstNameRequiredFlag: true,
+  firstName?: string,
+): Promise<ExistingCustomer | null>;
+export async function checkCustomerExists(
+  phone: string,
+  firstNameRequiredFlag: false,
+  firstName?: string,
+): Promise<ExistingCustomer[] | null>;
 export async function checkCustomerExists(
   phone: string,
   firstNameRequiredFlag = true,
@@ -333,7 +383,7 @@ export async function checkCustomerExists(
 ): Promise<ExistingCustomer | ExistingCustomer[] | null> {
   try {
     const accessToken = await getAccessToken();
-    const response = await axios.post(
+    const response = await bookerClient.post(
       "/v4.1/merchant/customers",
       {
         access_token: accessToken,
@@ -373,7 +423,7 @@ export const getCustomerCreditCardInfo = async (
 ): Promise<CreditCardRecord | null> => {
   try {
     const accessToken = await getAccessToken();
-    const response = await axios.post(
+    const response = await bookerClient.post(
       "v4.1/merchant/customer/creditcards",
       {
         access_token: accessToken,
@@ -408,7 +458,7 @@ export const findCustomerOrders = async (
 ) => {
   try {
     const accessToken = await getAccessToken();
-    const response = await axios.post(
+    const response = await bookerClient.post(
       "/v4.1/merchant/orders",
       {
         access_token: accessToken,
@@ -441,7 +491,7 @@ export const findCustomerOrders = async (
 export const getOrder = async (orderId: number): Promise<Order | null> => {
   try {
     const accessToken = await getAccessToken();
-    const response = await axios.get(
+    const response = await bookerClient.get(
       `/v4.1/merchant/order/${orderId}?access_token=${accessToken}`,
       {
         headers: {
@@ -482,7 +532,7 @@ export const addPaymentToOrder = async (
     const order = await getOrder(orderId);
     const amount = order?.FinalTotal ?? null;
 
-    const response = await axios.post(
+    const response = await bookerClient.post(
       `/v4.1/merchant/order/${orderId}/add_payment`,
       {
         access_token: accessToken,
@@ -1026,7 +1076,7 @@ export const createAppointment = async (
 
     let cardOnFile = sendSMS ? false : true;
 
-    const response = await axios.post<CreateAppointmentResponse>(
+    const response = await bookerClient.post<CreateAppointmentResponse>(
       "/v4.1/merchant/appointment",
       appointmentPayload,
       {
@@ -1046,7 +1096,7 @@ export const createAppointment = async (
         sendMessageMMS(appointment.phone.toString(), message).catch((error) => {
           console.error("Error sending SMS via phone:", error);
         });
-        // Send SMS to Admin saying payment on appointment missing.
+        // Send SMS to Admin saying payment on appointment missing. 
         sendMessageToAdmin(
           `${appointment.firstName} ${appointment.lastName[0]}. (${cleanPhone(appointment.phone.toString())}) has booked ${appointment.treatmentName} on ${appointment.appointmentDate} @ ${appointment.startTime} (PayMis)`,
           "SMS",
@@ -1165,7 +1215,7 @@ export const getWidgetAuthToken = async (): Promise<string> => {
   try {
     const accessToken = await getAccessToken();
     console.log("Attempting to get widget auth token...");
-    const response = await axios.get("v4.1/merchant/ccwidget/auth", {
+    const response = await bookerClient.get("v4.1/merchant/ccwidget/auth", {
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
@@ -1223,7 +1273,7 @@ export const getCustomerAppointments = async (options: {
       params.append("fromStartDate", convert24toISO("00:00", options.date));
     }
 
-    const response = await axios.get(
+    const response = await bookerClient.get(
       `/v4.1/merchant/customer/${options.customerId}/appointments?${params.toString()}`,
       {
         headers: {
@@ -1289,15 +1339,43 @@ export const getCustomerAppointments = async (options: {
   }
 };
 
-export const cancelAppointment = async (appointment: CancelAppointment) => {
+export const getAppointmentById = async (
+  appointmentId: number,
+  // clean?: boolean,
+): Promise<CleanAppointment | null> => {
+  try {
+    const accessToken = await getAccessToken();
+    const response = await bookerClient.get(
+      `/v4.1/merchant/appointment/${appointmentId}?access_token=${accessToken}`,
+      {
+        headers: {
+          "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
+        },
+      },
+    );
+
+    if (!response.data.IsSuccess || !response.data.Appointment) {
+      return null;
+    }
+
+    return cleanAppointment(response.data.Appointment);
+  } catch (error) {
+    console.error("Error getting appointment by ID:", error);
+    throw error;
+  }
+};
+
+export const cancelAppointment = async (
+  appointment: CancelAppointment,
+): Promise<CreateAppointmentResponse> => {
   try {
     const accessToken = await generateAccessToken();
-    const response = await axios.put(
+    const response = await bookerClient.put(
       "v4.1/merchant/appointment/cancel",
       {
         access_token: accessToken,
         ID: appointment.appointmentId,
-        // ChargeNow: false,
+        // ChargeNow: false, // Only charge if the appointment is being cancelled within the 24hrs.
       },
       {
         headers: {
@@ -1306,9 +1384,17 @@ export const cancelAppointment = async (appointment: CancelAppointment) => {
       },
     );
 
-    return response.data;
+    return {
+      ...response.data,
+      Appointment: response.data.Appointment,
+    };
   } catch (error) {
     console.error("Error cancelling appointment:", error);
+    return {
+      IsSuccess: false,
+      ErrorMessage: "Failed to cancel appointment. Please try again later.",
+      Appointment: undefined,
+    };
   }
 };
 
@@ -1318,7 +1404,7 @@ export const addNotesToAppointment = async (
   try {
     const accessToken = await generateAccessToken();
 
-    const response = await axios.put(
+    const response = await bookerClient.put(
       `v4.1/merchant/appointment/${appointment.appointmentId}/notes`,
       {
         access_token: accessToken,

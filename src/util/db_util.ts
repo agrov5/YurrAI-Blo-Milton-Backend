@@ -171,6 +171,23 @@ export const convertISOtoFriendly = (isoStr: string) => {
   return friendlyDate;
 };
 
+export function convertToMMDD(dateStr: string): string {
+  // Remove " at" so the native Date constructor can parse it correctly
+  const cleanString = dateStr.replace(/\s+at\s+/i, " ");
+  const date = new Date(cleanString);
+
+  // Check for invalid date inputs
+  if (isNaN(date.getTime())) {
+    throw new Error("Invalid date format provided.");
+  }
+
+  // Extract and pad month (0-11, so add 1) and day
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${month}/${day}`;
+}
+
 const ISO_DATE_TIME_REGEX =
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,7})?)?(?:Z|[+-]\d{2}:\d{2})?$/;
 const TIME_FIELD_REGEX = /(time|start|end|from|to)/i;

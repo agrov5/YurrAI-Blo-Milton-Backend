@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VoIP &amp; Booker — Blo Milton</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+      :root {
+        --bg:        #050505;
+        --surface:   #0e0e0e;
+        --surface-2: #161616;
+        --surface-3: #1c1c1c;
+        --border:    rgba(255,255,255,0.07);
+        --border-hi: rgba(255,255,255,0.13);
+        --text:      #f2f2f2;
+        --text-2:    #c8c8c8;
+        --muted:     #787878;
+        --muted-2:   #4a4a4a;
+        --green:     #22c55e;
+        --amber:     #fbbf24;
+        --red:       #f87171;
+        --sidebar-w: 228px;
+        --topbar-h:  60px;
+        --r:         8px;
+        --r-lg:      12px;
+        --r-xl:      16px;
+      }
+
+      body {
+        font-family: "Figtree", system-ui, sans-serif;
+        background: var(--bg); color: var(--text);
+        min-height: 100dvh; display: flex; overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+      }
+      body::before {
+        content: ""; position: fixed; inset: 0;
+        background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.028) 1px, transparent 0);
+        background-size: 24px 24px; pointer-events: none; z-index: 0;
+      }
+
+      /* ── Sidebar ── */
+      .sidebar {
+        width: var(--sidebar-w); min-height: 100vh; background: #000;
+        border-right: 1px solid var(--border); display: flex; flex-direction: column;
+        position: fixed; left: 0; top: 0; z-index: 100; padding: 0 0 1.5rem;
+      }
+      .sidebar-brand { display: flex; align-items: center; gap: 0.6rem; padding: 1.1rem 1.25rem 0; height: var(--topbar-h); }
+      .brand-mark { width: 28px; height: 28px; border-radius: 7px; background: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+      .brand-mark svg { width: 16px; height: 16px; }
+      .brand-name { font-size: 0.9rem; font-weight: 700; color: var(--text); letter-spacing: -0.01em; }
+      .sidebar-nav { padding: 1.125rem 0.75rem 1rem; display: flex; flex-direction: column; gap: 2px; flex: 1; }
+      .nav-item {
+        display: flex; align-items: center; gap: 0.65rem; padding: 0.58rem 0.75rem;
+        border-radius: var(--r); color: var(--muted); text-decoration: none;
+        font-size: 0.86rem; font-weight: 500; transition: background 0.15s, color 0.15s, border-color 0.15s;
+        cursor: pointer; border: 1px solid transparent; background: none; width: 100%; text-align: left;
+      }
+      .nav-item svg { width: 15px; height: 15px; flex-shrink: 0; }
+      .nav-item:hover { background: rgba(255,255,255,0.04); color: var(--text-2); }
+      .nav-item.is-active { background: rgba(255,255,255,0.07); color: var(--text); border-color: var(--border-hi); font-weight: 600; }
+      .sidebar-divider { margin: 0.75rem 1rem; height: 1px; background: var(--border); }
+      .sidebar-status { display: flex; align-items: center; gap: 0.5rem; padding: 0 1.25rem; font-size: 0.74rem; color: var(--muted); }
+      .pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; animation: pulse-anim 2.4s ease-in-out infinite; }
+      @keyframes pulse-anim { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.7); } }
+
+      /* ── Main ── */
+      .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; position: relative; z-index: 1; }
+      .topbar {
+        height: var(--topbar-h); border-bottom: 1px solid var(--border);
+        background: rgba(5,5,5,0.88); backdrop-filter: blur(16px);
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 0 2rem; position: sticky; top: 0; z-index: 50; gap: 1rem; flex-wrap: wrap;
+      }
+      .topbar-left { display: flex; align-items: center; gap: 1rem; }
+      .page-title { font-size: 0.9rem; font-weight: 600; color: var(--text); letter-spacing: -0.01em; white-space: nowrap; }
+      .topbar-right { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+      .back-btn {
+        display: flex; align-items: center; gap: 0.4rem; background: rgba(255,255,255,0.04);
+        border: 1px solid var(--border); color: var(--muted); padding: 0.38rem 0.9rem;
+        border-radius: 999px; cursor: pointer; font-size: 0.75rem; font-weight: 600; font-family: inherit;
+        transition: background 0.14s, color 0.14s, border-color 0.14s; text-decoration: none; white-space: nowrap;
+      }
+      .back-btn:hover { background: rgba(255,255,255,0.08); color: var(--text-2); border-color: var(--border-hi); }
+      .selector-group { display: flex; align-items: center; gap: 0.45rem; }
+      .selector-label { font-size: 0.72rem; font-weight: 600; color: var(--muted); white-space: nowrap; letter-spacing: 0.01em; }
+      .selector-input {
+        background: transparent; border: 1px solid var(--border); color: var(--text);
+        padding: 0.42rem 0.75rem; border-radius: var(--r); font-size: 0.8rem; font-family: inherit;
+        cursor: pointer; outline: none; transition: border-color 0.14s, box-shadow 0.14s;
+      }
+      .selector-input:focus { border-color: rgba(255,255,255,0.3); box-shadow: 0 0 0 3px rgba(255,255,255,0.04); }
+      .selector-input option { background: #0e0e0e; color: var(--text); }
+
+      /* ── Content / stats ── */
+      .content { padding: 2rem; max-width: 1320px; width: 100%; }
+      .stat-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 0.875rem; margin-bottom: 1.75rem; }
+      .stat-tile {
+        background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg);
+        padding: 1.2rem 1.4rem; display: flex; flex-direction: column; gap: 0.75rem;
+        transition: border-color 0.2s; position: relative; overflow: hidden;
+      }
+      .stat-tile::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 1px; background: var(--tile-accent, rgba(255,255,255,0.15)); opacity: 0.6; }
+      .stat-tile:hover { border-color: var(--border-hi); }
+      .tile-icon { width: 30px; height: 30px; border-radius: var(--r); display: flex; align-items: center; justify-content: center; background: var(--tile-icon-bg, rgba(255,255,255,0.06)); flex-shrink: 0; }
+      .tile-icon svg { width: 15px; height: 15px; }
+      .tile-bottom { display: flex; flex-direction: column; gap: 0.15rem; }
+      .tile-val { font-size: 1.75rem; font-weight: 700; color: var(--text); line-height: 1; letter-spacing: -0.025em; font-variant-numeric: tabular-nums; }
+      .tile-sub { font-size: 0.72rem; color: var(--muted); font-weight: 500; }
+      .tile-lbl { font-size: 0.7rem; color: var(--muted); font-weight: 500; letter-spacing: 0.025em; text-transform: uppercase; margin-top: 0.15rem; }
+
+      /* ── Search bar ── */
+      .search-bar { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 1rem 1.25rem; margin-bottom: 1rem; }
+      .search-field { display: flex; flex-direction: column; gap: 0.3rem; flex: 1; min-width: 140px; }
+      .search-label { font-size: 0.67rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+      .search-input { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 0.5rem 0.875rem; border-radius: var(--r); font-size: 0.825rem; font-family: inherit; outline: none; transition: border-color 0.14s, box-shadow 0.14s; }
+      .search-input:focus { border-color: rgba(255,255,255,0.3); box-shadow: 0 0 0 3px rgba(255,255,255,0.04); }
+      .search-input::placeholder { color: var(--muted-2); }
+      .search-input option { background: #0e0e0e; color: var(--text); }
+      .search-count { font-size: 0.74rem; color: var(--muted); align-self: flex-end; white-space: nowrap; font-weight: 500; }
+
+      /* ── Messages table ── */
+      .history-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-xl); padding: 1.5rem; transition: border-color 0.2s; }
+      .section-head { border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 1.25rem; }
+      .section-title { font-size: 0.88rem; font-weight: 700; color: var(--text); margin-bottom: 0.2rem; letter-spacing: -0.01em; }
+      .section-subtitle { font-size: 0.78rem; color: var(--muted); }
+
+      .msg-table { width: 100%; border-collapse: collapse; }
+      .msg-table thead th {
+        text-align: left; font-size: 0.63rem; color: var(--muted-2); text-transform: uppercase;
+        letter-spacing: 0.06em; font-weight: 700; padding: 0 0.75rem 0.75rem; border-bottom: 1px solid var(--border);
+      }
+      .msg-table tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+      .msg-table tbody tr:hover { background: var(--surface-2); }
+      .msg-table td { padding: 0.8rem 0.75rem; font-size: 0.82rem; color: var(--text-2); vertical-align: top; }
+      .msg-date { white-space: nowrap; color: var(--muted); font-variant-numeric: tabular-nums; }
+      .msg-body { max-width: 460px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; color: var(--text-2); }
+      .msg-toggle { background: none; border: none; color: var(--muted); font-family: inherit; font-size: 0.74rem; font-weight: 600; cursor: pointer; padding: 0; text-decoration: underline; white-space: nowrap; }
+      .msg-toggle:hover { color: var(--text); }
+      .msg-cost { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+      .badge { display: inline-flex; align-items: center; padding: 0.18rem 0.55rem; border-radius: 999px; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.03em; white-space: nowrap; border: 1px solid var(--border-hi); }
+      .badge-sms { background: rgba(14,165,233,0.1); color: #38bdf8; border-color: rgba(14,165,233,0.25); }
+      .badge-mms { background: rgba(168,85,247,0.1); color: #c084fc; border-color: rgba(168,85,247,0.25); }
+      .badge-admin, .badge-dev, .badge-customer { text-transform: capitalize; }
+      .badge-admin { background: rgba(239,68,68,0.12); color: #f87171; border-color: rgba(239,68,68,0.3); }
+      .badge-dev { background: rgba(251,191,36,0.12); color: #fbbf24; border-color: rgba(251,191,36,0.3); }
+      .badge-customer { background: rgba(45,212,191,0.12); color: #2dd4bf; border-color: rgba(45,212,191,0.3); }
+      .badge-ok { background: rgba(34,197,94,0.1); color: var(--green); border-color: rgba(34,197,94,0.25); }
+      .badge-fail { background: rgba(239,68,68,0.1); color: var(--red); border-color: rgba(239,68,68,0.25); }
+
+      .loading-state, .no-data { padding: 3rem 1rem; text-align: center; color: var(--muted); font-size: 0.85rem; }
+      .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border-hi); border-top-color: var(--text); border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 0.5rem; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+
+      @media (max-width: 880px) {
+        .stat-strip { grid-template-columns: repeat(2, 1fr); }
+        .sidebar { display: none; }
+        .main { margin-left: 0; }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-mark">
+          <svg viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M7.5 1C7.5 1 3 4.5 3 8.5C3 11.538 5.462 14 8.5 14C11.538 14 14 11.538 14 8.5C14 4.5 7.5 1 7.5 1Z" fill="#09090b"/>
+            <path d="M7.5 5.5C7.5 5.5 5.5 7.5 5.5 10" stroke="white" stroke-width="1.25" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="brand-name">Blo Milton</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a class="nav-item" href="/dashboard.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </a>
+        <a class="nav-item" href="/call-stats.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.16 6.16l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92v2z"/></svg>
+          Call Stats
+        </a>
+        <a class="nav-item is-active" href="/messages.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          VoIP &amp; Booker
+        </a>
+        <a class="nav-item" href="/manage.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          Staff &amp; Treatments
+        </a>
+      </nav>
+
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-status">
+        <span class="pulse-dot"></span>
+        All systems operational
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <a class="back-btn" href="/dashboard.html">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Back
+          </a>
+          <h1 class="page-title">VoIP &amp; Booker</h1>
+        </div>
+        <div class="topbar-right">
+          <div class="selector-group">
+            <label class="selector-label">Month</label>
+            <select class="selector-input" id="monthSelector" onchange="loadMessages()">
+              <option value="1">January</option><option value="2">February</option>
+              <option value="3">March</option><option value="4">April</option>
+              <option value="5">May</option><option value="6">June</option>
+              <option value="7">July</option><option value="8">August</option>
+              <option value="9">September</option><option value="10">October</option>
+              <option value="11">November</option><option value="12">December</option>
+            </select>
+          </div>
+          <div class="selector-group">
+            <label class="selector-label">Year</label>
+            <select class="selector-input" id="yearSelector" onchange="loadMessages()">
+              <option value="2024">2024</option><option value="2025">2025</option>
+              <option value="2026">2026</option><option value="2027">2027</option>
+            </select>
+          </div>
+        </div>
+      </header>
+
+      <div class="content">
+        <!-- Stat strip -->
+        <div class="stat-strip">
+          <!-- Grand total: messages + VoIP call line -->
+          <div class="stat-tile" style="--tile-accent: rgba(255,255,255,0.5); --tile-icon-bg: rgba(255,255,255,0.07);">
+            <div class="tile-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#f2f2f2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+            </div>
+            <div class="tile-bottom">
+              <div class="tile-val" id="grandTotalValue">$0.00</div>
+              <div class="tile-sub" id="grandTotalSub">Messages + VoIP</div>
+              <div class="tile-lbl">Total Cost (CAD)</div>
+            </div>
+          </div>
+
+          <!-- Messages sent -->
+          <div class="stat-tile" style="--tile-accent: rgba(14,165,233,0.6); --tile-icon-bg: rgba(14,165,233,0.08);">
+            <div class="tile-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            </div>
+            <div class="tile-bottom">
+              <div class="tile-val" id="messageCountValue">0</div>
+              <div class="tile-sub" id="messageBreakdown">0 SMS · 0 MMS</div>
+              <div class="tile-lbl">Messages Sent</div>
+            </div>
+          </div>
+
+          <!-- Message cost with SMS/MMS split -->
+          <div class="stat-tile" style="--tile-accent: rgba(45,212,191,0.6); --tile-icon-bg: rgba(45,212,191,0.08);">
+            <div class="tile-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="13" y2="13"/></svg>
+            </div>
+            <div class="tile-bottom">
+              <div class="tile-val" id="messageCostValue">$0.00</div>
+              <div class="tile-sub" id="messageCostSplit">SMS $0.00 · MMS $0.00</div>
+              <div class="tile-lbl">Message Cost (CAD)</div>
+            </div>
+          </div>
+
+          <!-- VoIP call-line cost from Vapi minutes -->
+          <div class="stat-tile" style="--tile-accent: rgba(129,140,248,0.6); --tile-icon-bg: rgba(129,140,248,0.08);">
+            <div class="tile-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.16 6.16l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92v2z"/></svg>
+            </div>
+            <div class="tile-bottom">
+              <div class="tile-val" id="voipCostValue">$0.00</div>
+              <div class="tile-sub" id="voipCostSub">0 min</div>
+              <div class="tile-lbl">VoIP Call Cost (CAD)</div>
+            </div>
+          </div>
+
+          <!-- Booker request tile: color escalates with volume -->
+          <div class="stat-tile" id="bookerTile" style="--tile-accent: rgba(34,197,94,0.6); --tile-icon-bg: rgba(34,197,94,0.08);">
+            <div class="tile-icon" id="bookerIcon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 019 9M4 4a16 16 0 0116 16"/><circle cx="5" cy="19" r="1"/></svg>
+            </div>
+            <div class="tile-bottom">
+              <div class="tile-val" id="bookerRequestsValue">0</div>
+              <div class="tile-sub" id="bookerLevelLabel">Low usage</div>
+              <div class="tile-lbl">Booker API Requests</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="search-bar">
+          <div class="search-field">
+            <label class="search-label">Search Body / Number</label>
+            <input class="search-input" type="text" id="filterText" placeholder="Search message text or number…" oninput="applyFilters()" />
+          </div>
+          <div class="search-field" style="flex:0 0 140px;">
+            <label class="search-label">Type</label>
+            <select class="search-input" id="filterType" onchange="applyFilters()">
+              <option value="">All</option>
+              <option value="SMS">SMS</option>
+              <option value="MMS">MMS</option>
+            </select>
+          </div>
+          <div class="search-field" style="flex:0 0 160px;">
+            <label class="search-label">Recipient</label>
+            <select class="search-input" id="filterRecipient" onchange="applyFilters()">
+              <option value="">All</option>
+              <option value="customer">Customer</option>
+              <option value="admin">Admin</option>
+              <option value="dev">Dev</option>
+            </select>
+          </div>
+          <span class="search-count" id="searchCount"></span>
+        </div>
+
+        <!-- Table -->
+        <div class="history-section">
+          <div class="section-head">
+            <div class="section-title">Sent Messages</div>
+            <p class="section-subtitle">All SMS &amp; MMS sent in the selected month with per-message cost, most recent first</p>
+          </div>
+          <div id="messagesList"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let allMessages = [];
+
+      function formatCurrency(n) {
+        return "$" + (Number(n) || 0).toLocaleString("en-CA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+      function formatDate(iso) {
+        if (!iso) return "—";
+        const d = new Date(iso);
+        if (isNaN(d.getTime())) return "—";
+        return d.toLocaleString("en-CA", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+      }
+      function escapeHtml(s) {
+        return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+      }
+
+      // Color the Booker request tile based on monthly volume.
+      function colorBookerTile(count) {
+        const tile = document.getElementById("bookerTile");
+        const icon = document.getElementById("bookerIcon");
+        const label = document.getElementById("bookerLevelLabel");
+        let color, text;
+        if (count >= 5000)      { color = "#f87171"; text = "High usage";     }
+        else if (count >= 2500) { color = "#fbbf24"; text = "Moderate usage"; }
+        else                    { color = "#22c55e"; text = "Low usage";      }
+        // Derive rgba accents from the chosen hex.
+        const hexToRgb = (h) => [1,3,5].map((i) => parseInt(h.slice(i, i+2), 16));
+        const [r, g, b] = hexToRgb(color);
+        tile.style.setProperty("--tile-accent", `rgba(${r},${g},${b},0.6)`);
+        tile.style.setProperty("--tile-icon-bg", `rgba(${r},${g},${b},0.08)`);
+        icon.querySelector("svg").setAttribute("stroke", color);
+        label.textContent = text;
+        label.style.color = color;
+      }
+
+      const BODY_TRUNCATE_LEN = 300;
+
+      // Renders a message body, truncating to 300 chars with a toggle when longer.
+      function renderBody(body) {
+        const full = String(body || "");
+        if (full.length <= BODY_TRUNCATE_LEN) return escapeHtml(full);
+        const short = full.slice(0, BODY_TRUNCATE_LEN);
+        return `<span class="msg-truncated">${escapeHtml(short)}<span class="msg-ellipsis">…</span></span>` +
+          `<span class="msg-full" hidden>${escapeHtml(full)}</span>` +
+          ` <button type="button" class="msg-toggle" onclick="toggleBody(this)">Show more</button>`;
+      }
+
+      function toggleBody(btn) {
+        const cell = btn.parentElement;
+        const truncated = cell.querySelector(".msg-truncated");
+        const full = cell.querySelector(".msg-full");
+        const expanded = full.hasAttribute("hidden") === false;
+        if (expanded) {
+          full.setAttribute("hidden", "");
+          truncated.removeAttribute("hidden");
+          btn.textContent = "Show more";
+        } else {
+          full.removeAttribute("hidden");
+          truncated.setAttribute("hidden", "");
+          btn.textContent = "Show less";
+        }
+      }
+
+      function renderTable(messages) {
+        const el = document.getElementById("messagesList");
+        if (!messages.length) {
+          el.innerHTML = `<div class="no-data">No messages found for this month.</div>`;
+          return;
+        }
+        const rows = messages.map((m) => `
+          <tr>
+            <td class="msg-date">${formatDate(m.createdAt)}</td>
+            <td><span class="badge ${m.messageType === "MMS" ? "badge-mms" : "badge-sms"}">${escapeHtml(m.messageType)}</span></td>
+            <td><span class="badge badge-${escapeHtml(m.recipientType || "customer")}">${escapeHtml(m.recipientType || "customer")}</span></td>
+            <td>${escapeHtml(m.to || "—")}</td>
+            <td class="msg-body">${renderBody(m.messageBody)}</td>
+            <td class="msg-cost">${formatCurrency(m.cost)}</td>
+            <td><span class="badge ${m.success ? "badge-ok" : "badge-fail"}">${m.success ? "Sent" : "Failed"}</span></td>
+          </tr>`).join("");
+        el.innerHTML = `
+          <table class="msg-table">
+            <thead><tr>
+              <th>Date</th><th>Type</th><th>Recipient</th><th>To</th><th>Message</th><th>Cost</th><th>Status</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>`;
+      }
+
+      function applyFilters() {
+        const text = document.getElementById("filterText").value.toLowerCase().trim();
+        const type = document.getElementById("filterType").value;
+        const recipient = document.getElementById("filterRecipient").value;
+        const filtered = allMessages.filter((m) => {
+          if (type && m.messageType !== type) return false;
+          if (recipient && (m.recipientType || "customer") !== recipient) return false;
+          if (text) {
+            const hay = `${m.messageBody || ""} ${m.to || ""}`.toLowerCase();
+            if (!hay.includes(text)) return false;
+          }
+          return true;
+        });
+        document.getElementById("searchCount").textContent =
+          `${filtered.length} of ${allMessages.length} message${allMessages.length === 1 ? "" : "s"}`;
+        renderTable(filtered);
+      }
+
+      async function loadMessages() {
+        const month = document.getElementById("monthSelector").value;
+        const year = document.getElementById("yearSelector").value;
+        const listEl = document.getElementById("messagesList");
+        listEl.innerHTML = `<div class="loading-state"><span class="spinner"></span> Loading messages…</div>`;
+
+        const authCredentials = sessionStorage.getItem("authCredentials");
+        if (!authCredentials) {
+          listEl.innerHTML = `<div class="no-data">Authentication required. Please <a href="/admin/login" style="color:rgba(255,255,255,0.7);font-weight:600;text-decoration:underline;">sign in</a>.</div>`;
+          return;
+        }
+
+        try {
+          const res = await fetch(`/admin/messages?month=${month}&year=${year}`, {
+            headers: { "Content-Type": "application/json", Authorization: authCredentials },
+          });
+          const data = await res.json();
+          if (!data.ok) { listEl.innerHTML = `<div class="no-data">Error loading messages.</div>`; return; }
+
+          const s = data.stats;
+          const p = data.pricing || { voipPerMinute: 0.009, voipMonthlyBase: 1.1 };
+
+          document.getElementById("grandTotalValue").textContent = formatCurrency(s.grandTotalCost);
+          document.getElementById("grandTotalSub").textContent =
+            `Msg ${formatCurrency(s.totalCost)} · VoIP ${formatCurrency(s.voipCallCost)}`;
+
+          document.getElementById("messageCountValue").textContent = s.messageCount;
+          const failNote = s.failedCount ? ` · ${s.failedCount} failed` : "";
+          document.getElementById("messageBreakdown").textContent = `${s.smsCount} SMS · ${s.mmsCount} MMS${failNote}`;
+
+          document.getElementById("messageCostValue").textContent = formatCurrency(s.totalCost);
+          document.getElementById("messageCostSplit").textContent =
+            `SMS ${formatCurrency(s.smsCost)} · MMS ${formatCurrency(s.mmsCost)}`;
+
+          document.getElementById("voipCostValue").textContent = formatCurrency(s.voipCallCost);
+          document.getElementById("voipCostSub").textContent =
+            `${(s.callMinutes || 0).toLocaleString("en-CA")} min @ $${p.voipPerMinute}/min + ${formatCurrency(p.voipMonthlyBase)}/mo`;
+
+          document.getElementById("bookerRequestsValue").textContent = (s.bookerRequests || 0).toLocaleString("en-CA");
+          colorBookerTile(s.bookerRequests || 0);
+
+          allMessages = data.messages || [];
+          applyFilters();
+        } catch (e) {
+          console.error(e);
+          listEl.innerHTML = `<div class="no-data">Failed to load messages.</div>`;
+        }
+      }
+
+      window.addEventListener("DOMContentLoaded", () => {
+        const now = new Date();
+        document.getElementById("monthSelector").value = now.getMonth() + 1;
+        document.getElementById("yearSelector").value = now.getFullYear();
+        loadMessages();
+      });
+    </script>
+  </body>
+</html>

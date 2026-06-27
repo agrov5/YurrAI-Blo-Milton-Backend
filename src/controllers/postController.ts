@@ -10,10 +10,13 @@ import {
   findAvailableTimes,
   generateCCWidgetURL,
   findCustomerOrders,
+  cleanAppointment,
+  getAppointmentById,
 } from "../util/booker_util";
 import {
   AgentAppointment,
   CancelAppointment,
+  CleanAppointment,
   CreateAppointmentResponse,
 } from "../models/Appointment";
 import {
@@ -21,6 +24,7 @@ import {
   convertBookerAvailabilityEmployeeIdsToNames,
   ISOToFriendlyTime,
   convertISOtoFriendly,
+  convertToMMDD,
 } from "../util/db_util";
 import {
   ExtractedVapiCallSummary,
@@ -38,27 +42,6 @@ import {
 } from "../models/MonthlyStats";
 import { sendMonthlyStatsEmail, sendCustomEmail } from "../util/resend_util";
 import { convertUsdToCad } from "../util/currency_util";
-
-// Helper function
-const cleanAppointment = (appointment: any) => ({
-  appointmentId: appointment.ID,
-  status: appointment.Status?.Name,
-  startDateTime: convertISOtoFriendly(appointment.StartDateTimeOffset),
-  endDateTime: convertISOtoFriendly(appointment.EndDateTimeOffset),
-  customer: {
-    id: appointment.CustomerID,
-    firstName: appointment.CustomerFirstName,
-    lastName: appointment.CustomerLastName,
-    email: appointment.CustomerEmail,
-    phone: appointment.CustomerMobilePhone || appointment.CustomerHomePhone,
-  },
-  treatment: appointment.TreatmentName,
-  employee: appointment.Employee
-    ? `${appointment.Employee.FirstName} ${appointment.Employee.LastName}`
-    : null,
-  finalTotal: appointment.FinalTotal?.Amount,
-  notes: appointment.Notes,
-});
 
 export const postCreateAppointment = async (req: Request, res: Response) => {
   try {
@@ -88,7 +71,10 @@ export const postCreateAppointment = async (req: Request, res: Response) => {
       // Add the booked appointment's final total to this month's revenue —
       // fire-and-forget so a stats failure never blocks the booking response.
       addRevenueToCurrentMonth(cleaned.finalTotal).catch((err) =>
-        console.error("Failed to add appointment revenue to monthly stats:", err),
+        console.error(
+          "Failed to add appointment revenue to monthly stats:",
+          err,
+        ),
       );
 
       res.status(200).json({
@@ -187,6 +173,7 @@ export const postAvailableTimes = async (req: Request, res: Response) => {
     });
   }
 };
+
 export const postCancelAppointment = async (req: Request, res: Response) => {
   try {
     const appointment: CancelAppointment = req.body;
@@ -197,6 +184,39 @@ export const postCancelAppointment = async (req: Request, res: Response) => {
         success: false,
         message: "Missing required fields. Please provide appointmentId",
       });
+    }
+
+    const existingAppointment: CleanAppointment | null =
+      await getAppointmentById(appointment.appointmentId);
+
+    if (!existingAppointment) {
+      return res.status(404).json({
+        success: false,
+        message: `Appointment with id ${appointment.appointmentId} not found`,
+      });
+    }
+
+    // Disallow cancellations within 24 hours of the appointment start time.
+    // Use the raw ISO timestamp — `startDateTime` is a human-readable string
+    // that `new Date(...)` cannot parse.
+    if (existingAppointment.startDateTimeISO) {
+      const startTime = new Date(
+        existingAppointment.startDateTimeISO,
+      ).getTime();
+      const hoursUntilStart = (startTime - Date.now()) / (1000 * 60 * 60);
+
+      if (hoursUntilStart < 24) {
+        await sendMessageToAdmin(
+          `Cancel within 24 hours requested by ${existingAppointment.customer.firstName} ${existingAppointment.customer.lastName?.[0]}. for ${existingAppointment.treatment} on ${convertToMMDD(existingAppointment.startDateTime || "")}`,
+          "SMS",
+        );
+        return res.status(400).json({
+          success: false,
+          message:
+            "Appointments cannot be cancelled within 24 hours of the start time. A message has been sent to Blo Milton team and they will follow up.",
+          locationID: locationID,
+        });
+      }
     }
 
     const cancelAppointmentResponse: CreateAppointmentResponse =
@@ -214,7 +234,8 @@ export const postCancelAppointment = async (req: Request, res: Response) => {
       res.status(400).json({
         success: false,
         message:
-          "Failed to create appointment. Please check the details and try again",
+          cancelAppointmentResponse.ErrorMessage ||
+          "Failed to cancel appointment. Please check the details and try again",
         locationID: locationID,
         errors: cancelAppointmentResponse.ErrorMessage || "Unknown error",
       });
@@ -462,18 +483,22 @@ export const vapiCallDataWebhook = async (req: Request, res: Response) => {
     // Short-call alert — fire-and-forget
     const durSec =
       savedCall.durationSeconds ??
-      (savedCall.durationMinutes != null ? savedCall.durationMinutes * 60 : null);
+      (savedCall.durationMinutes != null
+        ? savedCall.durationMinutes * 60
+        : null);
     if (durSec != null) {
       getSettings()
         .then((settings) => {
           if (durSec < settings.shortCallThresholdSeconds) {
-            const caller = savedCall.callerName || savedCall.callerNumber || "Unknown";
-            const msg =
-              `${caller} (${savedCall.callerNumber || "Unknown"}) lasted only ${Math.round(durSec)}s`
+            const caller =
+              savedCall.callerName || savedCall.callerNumber || "Unknown";
+            const msg = `${caller} (${savedCall.callerNumber || "Unknown"}) lasted only ${Math.round(durSec)}s`;
             return sendMessageToAdmin(msg, "SMS");
           }
         })
-        .catch((err) => console.error("Short-call alert failed for call", savedCall._id, err));
+        .catch((err) =>
+          console.error("Short-call alert failed for call", savedCall._id, err),
+        );
     }
 
     res.status(200).json({
@@ -501,10 +526,14 @@ export const sendCCLinkToCustomer = async (req: Request, res: Response) => {
     };
 
     if (!customerId || typeof customerId !== "number") {
-      return res.status(400).json({ success: false, message: "customerId (number) is required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "customerId (number) is required" });
     }
     if (!phone?.trim()) {
-      return res.status(400).json({ success: false, message: "phone is required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "phone is required" });
     }
 
     const url = generateCCWidgetURL(customerId);
@@ -532,7 +561,9 @@ export const updateCallTags = async (req: Request, res: Response) => {
     const { tags } = req.body as { tags: string[] };
 
     if (!Array.isArray(tags)) {
-      return res.status(400).json({ success: false, message: "tags must be an array" });
+      return res
+        .status(400)
+        .json({ success: false, message: "tags must be an array" });
     }
 
     const sanitized = tags.map((t) => String(t).trim()).filter(Boolean);
@@ -543,7 +574,9 @@ export const updateCallTags = async (req: Request, res: Response) => {
     );
 
     if (!call) {
-      return res.status(404).json({ success: false, message: "Call not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Call not found" });
     }
 
     res.json({ success: true, tags: call.tags });
@@ -555,7 +588,6 @@ export const updateCallTags = async (req: Request, res: Response) => {
     });
   }
 };
-
 
 export const getVapiCostByMonth = async (req: Request, res: Response) => {
   const body: { month: string; year: string } = req.body;
@@ -655,7 +687,9 @@ export const sendMonthlyStatsReport = async (req: Request, res: Response) => {
     const year = body.year != null ? Number(body.year) : current.year;
 
     if (!Number.isInteger(year)) {
-      return res.status(400).json({ success: false, message: "year must be a valid number" });
+      return res
+        .status(400)
+        .json({ success: false, message: "year must be a valid number" });
     }
 
     const stats = await populateMonthlyStats(month, year);
@@ -687,18 +721,27 @@ export const sendEmail = async (req: Request, res: Response) => {
     };
 
     if (!to || (Array.isArray(to) && to.length === 0)) {
-      return res.status(400).json({ success: false, message: "'to' is required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "'to' is required" });
     }
     if (!subject?.trim()) {
-      return res.status(400).json({ success: false, message: "'subject' is required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "'subject' is required" });
     }
     if (!html && !text) {
-      return res.status(400).json({ success: false, message: "Either 'html' or 'text' is required" });
+      return res.status(400).json({
+        success: false,
+        message: "Either 'html' or 'text' is required",
+      });
     }
 
     const data = await sendCustomEmail({ to, subject, html, text });
 
-    res.status(200).json({ success: true, message: "Email sent", id: data?.id, sentTo: to });
+    res
+      .status(200)
+      .json({ success: true, message: "Email sent", id: data?.id, sentTo: to });
   } catch (error) {
     console.error("Error sending email:", error);
     res.status(500).json({
@@ -708,4 +751,3 @@ export const sendEmail = async (req: Request, res: Response) => {
     });
   }
 };
-

@@ -11,6 +11,11 @@ export interface MonthlyStatsObject {
   averageCostPerCall: number;
   callMongoIds: string[];
   totalRevenueMade: number;
+  // Number of HTTP requests made to the Booker API this month.
+  totalBookerRequests: number;
+  // SMS/MMS sent this month and their accumulated estimated cost (CAD).
+  totalMessagesSent: number;
+  totalMessageCost: number;
 }
 
 export interface MonthlyCallStatsDocument extends MonthlyStatsObject, Document {}
@@ -28,6 +33,10 @@ const MonthlyCallStatsSchema = new Schema<MonthlyCallStatsDocument>(
     // Revenue is accumulated incrementally as appointments are booked, so it is
     // never recomputed from calls — populate() preserves whatever has been added.
     totalRevenueMade: { type: Number, default: 0 },
+    // Accumulated incrementally and preserved by populate(), like revenue.
+    totalBookerRequests: { type: Number, default: 0 },
+    totalMessagesSent: { type: Number, default: 0 },
+    totalMessageCost: { type: Number, default: 0 },
   },
   { timestamps: true },
 );
@@ -103,7 +112,12 @@ export async function populateMonthlyStats(
         averageCostPerCall,
         callMongoIds: base.callMongoIds || [],
       },
-      $setOnInsert: { totalRevenueMade: 0 },
+      $setOnInsert: {
+        totalRevenueMade: 0,
+        totalBookerRequests: 0,
+        totalMessagesSent: 0,
+        totalMessageCost: 0,
+      },
     },
     { new: true, upsert: true, setDefaultsOnInsert: true },
   );
@@ -122,6 +136,38 @@ export async function addRevenueToCurrentMonth(amount: number | null | undefined
   await MonthlyCallStatsModel.findOneAndUpdate(
     { month, year },
     { $inc: { totalRevenueMade: amount } },
+    { upsert: true, new: true, setDefaultsOnInsert: true },
+  );
+}
+
+/**
+ * Increments the current month's Booker API request counter, creating the
+ * month document if needed. Fire-and-forget friendly — callers should not
+ * block on this.
+ */
+export async function incrementBookerRequestCount(): Promise<void> {
+  const { month, year } = getMonthYear();
+  await MonthlyCallStatsModel.findOneAndUpdate(
+    { month, year },
+    { $inc: { totalBookerRequests: 1 } },
+    { upsert: true, new: true, setDefaultsOnInsert: true },
+  );
+}
+
+/**
+ * Records a sent message against the current month: bumps the message count
+ * and adds its estimated cost (CAD). No-ops for invalid costs but still counts.
+ */
+export async function addMessageToCurrentMonth(
+  cost: number | null | undefined,
+): Promise<void> {
+  const safeCost =
+    typeof cost === "number" && Number.isFinite(cost) && cost > 0 ? cost : 0;
+
+  const { month, year } = getMonthYear();
+  await MonthlyCallStatsModel.findOneAndUpdate(
+    { month, year },
+    { $inc: { totalMessagesSent: 1, totalMessageCost: safeCost } },
     { upsert: true, new: true, setDefaultsOnInsert: true },
   );
 }
