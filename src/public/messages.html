@@ -65,6 +65,22 @@
       .nav-item.is-active { background: rgba(255,255,255,0.07); color: var(--text); border-color: var(--border-hi); font-weight: 600; }
       .sidebar-divider { margin: 0.75rem 1rem; height: 1px; background: var(--border); }
       .sidebar-status { display: flex; align-items: center; gap: 0.5rem; padding: 0 1.25rem; font-size: 0.74rem; color: var(--muted); }
+
+      /* Mobile nav: hamburger + slide-in sidebar overlay */
+      .hamburger {
+        display: none; align-items: center; justify-content: center;
+        width: 32px; height: 32px; background: transparent;
+        border: 1px solid var(--border); border-radius: var(--r);
+        color: var(--muted); cursor: pointer; transition: background 0.14s, color 0.14s; flex-shrink: 0;
+      }
+      .hamburger svg { width: 16px; height: 16px; }
+      .hamburger:hover { background: var(--surface-2); color: var(--text); }
+      .sidebar-overlay {
+        display: none; position: fixed; inset: 0;
+        background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+        z-index: 99; opacity: 0; transition: opacity 0.25s; pointer-events: none;
+      }
+      .sidebar-overlay.visible { opacity: 1; pointer-events: all; }
       .pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; animation: pulse-anim 2.4s ease-in-out infinite; }
       @keyframes pulse-anim { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.7); } }
 
@@ -129,7 +145,8 @@
       .section-title { font-size: 0.88rem; font-weight: 700; color: var(--text); margin-bottom: 0.2rem; letter-spacing: -0.01em; }
       .section-subtitle { font-size: 0.78rem; color: var(--muted); }
 
-      .msg-table { width: 100%; border-collapse: collapse; }
+      .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .msg-table { width: 100%; border-collapse: collapse; min-width: 720px; }
       .msg-table thead th {
         text-align: left; font-size: 0.63rem; color: var(--muted-2); text-transform: uppercase;
         letter-spacing: 0.06em; font-weight: 700; padding: 0 0.75rem 0.75rem; border-bottom: 1px solid var(--border);
@@ -184,16 +201,33 @@
       .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border-hi); border-top-color: var(--text); border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 0.5rem; }
       @keyframes spin { to { transform: rotate(360deg); } }
 
-      @media (max-width: 880px) {
-        .stat-strip { grid-template-columns: repeat(2, 1fr); }
-        .sidebar { display: none; }
+      @media (max-width: 1024px) { .stat-strip { grid-template-columns: repeat(2, 1fr); } }
+      @media (max-width: 768px) {
+        .hamburger { display: flex; }
+        .sidebar { transform: translateX(-100%); transition: transform 0.27s cubic-bezier(0.4,0,0.2,1); }
+        .sidebar.open { transform: translateX(0); }
+        .sidebar-overlay { display: block; }
         .main { margin-left: 0; }
+        .content { padding: 1rem; }
+        .topbar { padding: 0 1rem; }
+        .page-title { font-size: 0.85rem; }
+        .history-section, .compose-card { padding: 1.1rem; }
+        .compose-field.target, .compose-field.type { flex: 1 1 100%; }
+        .compose-actions { flex-wrap: wrap; gap: 0.6rem 1rem; }
+        .compose-hint { margin-left: 0; flex-basis: 100%; }
+      }
+      @media (max-width: 480px) {
+        .stat-strip { grid-template-columns: 1fr; }
+        .selector-group { flex: 1; }
+        .selector-input { flex: 1; }
       }
     </style>
   </head>
   <body>
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
     <!-- Sidebar -->
-    <aside class="sidebar">
+    <aside class="sidebar" id="sidebar">
       <div class="sidebar-brand">
         <div class="brand-mark">
           <svg viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -234,6 +268,9 @@
     <div class="main">
       <header class="topbar">
         <div class="topbar-left">
+          <button class="hamburger" onclick="toggleSidebar()" aria-label="Toggle navigation">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
           <a class="back-btn" href="/dashboard.html">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             Back
@@ -409,6 +446,16 @@
     <script>
       let allMessages = [];
 
+      function toggleSidebar() {
+        const s = document.getElementById("sidebar"), o = document.getElementById("sidebar-overlay");
+        const open = s.classList.toggle("open");
+        o.classList.toggle("visible", open);
+      }
+      function closeSidebar() {
+        document.getElementById("sidebar").classList.remove("open");
+        document.getElementById("sidebar-overlay").classList.remove("visible");
+      }
+
       function formatCurrency(n) {
         return "$" + (Number(n) || 0).toLocaleString("en-CA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       }
@@ -486,12 +533,14 @@
             <td><span class="badge ${m.success ? "badge-ok" : "badge-fail"}">${m.success ? "Sent" : "Failed"}</span></td>
           </tr>`).join("");
         el.innerHTML = `
+          <div class="table-scroll">
           <table class="msg-table">
             <thead><tr>
               <th>Date</th><th>Type</th><th>Recipient</th><th>To</th><th>Message</th><th>Cost</th><th>Status</th>
             </tr></thead>
             <tbody>${rows}</tbody>
-          </table>`;
+          </table>
+          </div>`;
       }
 
       function applyFilters() {
