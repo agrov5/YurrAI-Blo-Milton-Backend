@@ -12,6 +12,7 @@ import { getSettings } from "../models/Settings";
 import { VapiCallModel } from "../models/Vapi";
 import { MessageLogModel } from "../models/MessageLog";
 import { MonthlyCallStatsModel, getMonthYear } from "../models/MonthlyStats";
+import { sendMessage } from "../util/phone_util";
 
 const router = Router();
 
@@ -296,6 +297,70 @@ router.get("/messages", authMiddleware, async (req: Request, res: Response) => {
     res.status(500).json({ ok: false, error: "Unable to fetch stats" });
   }
 });
+
+/**
+ * @route   POST /admin/messages/send
+ * @desc    Send an SMS/MMS from the dashboard. `target` resolves the
+ *          destination: "admin" → ADMIN_PHONE, "dev" → DEV_PHONE, "customer" →
+ *          the supplied `phone`. The send is logged like any other message.
+ * @body    { target: "admin"|"dev"|"customer", phone?, body, messageType }
+ * @access  Protected
+ */
+router.post(
+  "/messages/send",
+  authMiddleware,
+  async (req: Request, res: Response) => {
+    const { target, phone, body, messageType } = req.body as {
+      target?: "admin" | "dev" | "customer";
+      phone?: string;
+      body?: string;
+      messageType?: string;
+    };
+
+    const type =
+      String(messageType).toUpperCase() === "MMS" ? "MMS" : "SMS";
+
+    if (!body || !body.trim()) {
+      res.status(400).json({ ok: false, error: "Message body is required" });
+      return;
+    }
+
+    // Resolve the destination number from the chosen target.
+    let to: string | undefined;
+    if (target === "admin") to = process.env.ADMIN_PHONE;
+    else if (target === "dev") to = process.env.DEV_PHONE;
+    else if (target === "customer") to = phone?.trim();
+    else {
+      res.status(400).json({ ok: false, error: "Invalid target" });
+      return;
+    }
+
+    if (!to) {
+      res.status(400).json({
+        ok: false,
+        error:
+          target === "customer"
+            ? "Phone number is required"
+            : `${target} phone number is not configured`,
+      });
+      return;
+    }
+
+    try {
+      const success = await sendMessage(to, body.trim(), type);
+      if (!success) {
+        res
+          .status(502)
+          .json({ ok: false, error: "voip.ms rejected the message" });
+        return;
+      }
+      res.json({ ok: true, to, messageType: type });
+    } catch (error) {
+      console.error("Failed to send message:", error);
+      res.status(500).json({ ok: false, error: "Unable to send message" });
+    }
+  },
+);
 
 // ── Call backfill (protected) ─────────────────────────────────────────────────
 

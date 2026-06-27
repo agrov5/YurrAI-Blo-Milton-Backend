@@ -153,6 +153,33 @@
       .badge-ok { background: rgba(34,197,94,0.1); color: var(--green); border-color: rgba(34,197,94,0.25); }
       .badge-fail { background: rgba(239,68,68,0.1); color: var(--red); border-color: rgba(239,68,68,0.25); }
 
+      /* ── Compose card ── */
+      .compose-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-xl); padding: 1.5rem; margin-bottom: 1rem; transition: border-color 0.2s; }
+      .compose-row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end; margin-bottom: 0.875rem; }
+      .compose-field { display: flex; flex-direction: column; gap: 0.3rem; }
+      .compose-field.target { flex: 0 0 180px; }
+      .compose-field.type { flex: 0 0 120px; }
+      .compose-field.phone { flex: 1; min-width: 180px; }
+      .compose-field.full { width: 100%; }
+      .compose-textarea { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 0.6rem 0.875rem; border-radius: var(--r); font-size: 0.85rem; font-family: inherit; outline: none; resize: vertical; min-height: 84px; line-height: 1.5; transition: border-color 0.14s, box-shadow 0.14s; }
+      .compose-textarea:focus { border-color: rgba(255,255,255,0.3); box-shadow: 0 0 0 3px rgba(255,255,255,0.04); }
+      .compose-textarea::placeholder { color: var(--muted-2); }
+      .compose-actions { display: flex; align-items: center; gap: 1rem; }
+      .btn-send {
+        display: inline-flex; align-items: center; gap: 0.45rem; background: var(--text); color: #050505;
+        border: 1px solid var(--text); padding: 0.55rem 1.25rem; border-radius: var(--r); cursor: pointer;
+        font-size: 0.82rem; font-weight: 700; font-family: inherit; transition: opacity 0.14s, transform 0.05s;
+      }
+      .btn-send:hover { opacity: 0.88; }
+      .btn-send:active { transform: translateY(1px); }
+      .btn-send:disabled { opacity: 0.45; cursor: not-allowed; }
+      .btn-send svg { width: 14px; height: 14px; }
+      .compose-status { font-size: 0.8rem; font-weight: 500; }
+      .compose-status.ok { color: var(--green); }
+      .compose-status.err { color: var(--red); }
+      .compose-status.muted { color: var(--muted); }
+      .compose-hint { font-size: 0.72rem; color: var(--muted); margin-left: auto; }
+
       .loading-state, .no-data { padding: 3rem 1rem; text-align: center; color: var(--muted); font-size: 0.85rem; }
       .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border-hi); border-top-color: var(--text); border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 0.5rem; }
       @keyframes spin { to { transform: rotate(360deg); } }
@@ -296,6 +323,49 @@
               <div class="tile-sub" id="bookerLevelLabel">Low usage</div>
               <div class="tile-lbl">Booker API Requests</div>
             </div>
+          </div>
+        </div>
+
+        <!-- Compose / send a message -->
+        <div class="compose-card">
+          <div class="section-head" style="border:none;padding:0;margin-bottom:1rem;">
+            <div class="section-title">Send a Message</div>
+            <p class="section-subtitle">Send an SMS or MMS to the admin, the dev line, or any customer number</p>
+          </div>
+          <div class="compose-row">
+            <div class="compose-field target">
+              <label class="search-label">Send To</label>
+              <select class="search-input" id="composeTarget" onchange="onTargetChange()">
+                <option value="admin">Admin</option>
+                <option value="dev">Dev</option>
+                <option value="customer">Customer (number)</option>
+              </select>
+            </div>
+            <div class="compose-field phone" id="composePhoneField" style="display:none;">
+              <label class="search-label">Phone Number</label>
+              <input class="search-input" type="tel" id="composePhone" placeholder="e.g. 19055551234" />
+            </div>
+            <div class="compose-field type">
+              <label class="search-label">Type</label>
+              <select class="search-input" id="composeType">
+                <option value="SMS">SMS</option>
+                <option value="MMS">MMS</option>
+              </select>
+            </div>
+          </div>
+          <div class="compose-row">
+            <div class="compose-field full">
+              <label class="search-label">Message</label>
+              <textarea class="compose-textarea" id="composeBody" placeholder="Type your message…" oninput="updateCharCount()"></textarea>
+            </div>
+          </div>
+          <div class="compose-actions">
+            <button class="btn-send" id="composeSend" onclick="sendComposedMessage()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              Send
+            </button>
+            <span class="compose-status muted" id="composeStatus"></span>
+            <span class="compose-hint" id="composeCharCount">0 characters</span>
           </div>
         </div>
 
@@ -488,6 +558,70 @@
         } catch (e) {
           console.error(e);
           listEl.innerHTML = `<div class="no-data">Failed to load messages.</div>`;
+        }
+      }
+
+      // ── Compose ──
+      function onTargetChange() {
+        const target = document.getElementById("composeTarget").value;
+        document.getElementById("composePhoneField").style.display =
+          target === "customer" ? "flex" : "none";
+      }
+
+      function updateCharCount() {
+        const len = document.getElementById("composeBody").value.length;
+        document.getElementById("composeCharCount").textContent =
+          `${len} character${len === 1 ? "" : "s"}`;
+      }
+
+      function setComposeStatus(text, kind) {
+        const el = document.getElementById("composeStatus");
+        el.textContent = text;
+        el.className = `compose-status ${kind || "muted"}`;
+      }
+
+      async function sendComposedMessage() {
+        const target = document.getElementById("composeTarget").value;
+        const phone = document.getElementById("composePhone").value.trim();
+        const messageType = document.getElementById("composeType").value;
+        const body = document.getElementById("composeBody").value.trim();
+        const btn = document.getElementById("composeSend");
+
+        if (!body) { setComposeStatus("Message body is required.", "err"); return; }
+        if (target === "customer" && !phone) {
+          setComposeStatus("Phone number is required.", "err");
+          return;
+        }
+
+        const authCredentials = sessionStorage.getItem("authCredentials");
+        if (!authCredentials) {
+          setComposeStatus("Authentication required. Please sign in.", "err");
+          return;
+        }
+
+        btn.disabled = true;
+        setComposeStatus("Sending…", "muted");
+        try {
+          const res = await fetch("/admin/messages/send", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: authCredentials },
+            body: JSON.stringify({ target, phone, body, messageType }),
+          });
+          const data = await res.json();
+          if (!res.ok || !data.ok) {
+            setComposeStatus(data.error || "Failed to send message.", "err");
+            return;
+          }
+          setComposeStatus(`Sent ${data.messageType} to ${data.to}.`, "ok");
+          document.getElementById("composeBody").value = "";
+          updateCharCount();
+          // Reflect the just-sent message in the table & totals.
+          loadMessages();
+        } catch (e) {
+          console.error(e);
+          setComposeStatus("Failed to send message.", "err");
+        } finally {
+          btn.disabled = false;
         }
       }
 

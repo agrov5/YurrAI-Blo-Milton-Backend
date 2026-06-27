@@ -16,6 +16,38 @@ function wasSuccessful(data: unknown): boolean {
   );
 }
 
+/**
+ * Generic send used by the dashboard compose form. Sends an SMS/MMS to any
+ * destination number and logs it — `logMessage` derives the recipientType
+ * (admin/dev/customer) from the number, so admin/dev sends are tagged correctly.
+ * Returns whether voip.ms accepted the message.
+ */
+export async function sendMessage(
+  to: string,
+  body: string,
+  messageType: "SMS" | "MMS" = "SMS",
+): Promise<boolean> {
+  let success = false;
+  try {
+    const response = await axios.get(BASE_URL, {
+      params: {
+        api_username: API_USER,
+        api_password: API_PASSWORD,
+        method: messageType === "MMS" ? "sendMMS" : "sendSMS",
+        dst: to,
+        message: body,
+        did: DID,
+      },
+    });
+    console.log(response.data);
+    success = wasSuccessful(response.data);
+  } catch (error) {
+    console.error("Error sending message:", error);
+  }
+  await logMessage({ messageType, messageBody: body, to, success });
+  return success;
+}
+
 export async function sendMessageMMS(to: string, body: string) {
   let success = false;
   try {
