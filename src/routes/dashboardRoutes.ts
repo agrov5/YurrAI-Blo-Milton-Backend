@@ -235,7 +235,6 @@ router.get("/messages", authMiddleware, async (req: Request, res: Response) => {
       }
       if (!m.success) failedCount++;
     }
-    const totalMessageCost = smsCost + mmsCost;
 
     // Pull the matching monthly stats doc for the Booker request counter.
     const { month: monthName } = getMonthYear(startDate);
@@ -269,6 +268,12 @@ router.get("/messages", authMiddleware, async (req: Request, res: Response) => {
       callMinutes * VOIP_PER_MINUTE_CAD +
       (callCount > 0 ? VOIP_MONTHLY_BASE_CAD : 0);
 
+    // Message count & total cost come from the persisted monthly counter
+    // (incremented on every send), so they survive message-log pruning. The
+    // SMS/MMS split is still derived live from the surviving docs.
+    const storedMessageCount = monthlyStats?.totalMessagesSent || 0;
+    const storedMessageCost = monthlyStats?.totalMessageCost || 0;
+
     res.json({
       ok: true,
       month: targetMonth,
@@ -278,18 +283,18 @@ router.get("/messages", authMiddleware, async (req: Request, res: Response) => {
         voipMonthlyBase: VOIP_MONTHLY_BASE_CAD,
       },
       stats: {
-        messageCount: messages.length,
+        messageCount: storedMessageCount,
         smsCount,
         mmsCount,
         failedCount,
         smsCost: round2(smsCost),
         mmsCost: round2(mmsCost),
-        totalCost: round2(totalMessageCost),
+        totalCost: round2(storedMessageCost),
         bookerRequests: monthlyStats?.totalBookerRequests || 0,
         callCount,
         callMinutes: round2(callMinutes),
         voipCallCost: round2(voipCallCost),
-        grandTotalCost: round2(totalMessageCost + voipCallCost),
+        grandTotalCost: round2(storedMessageCost + voipCallCost),
       },
       messages,
     });
