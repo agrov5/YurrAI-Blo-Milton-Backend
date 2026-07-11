@@ -642,11 +642,11 @@
 
           <div class="stat-tile" style="--tile-accent: rgba(129,140,248,0.6); --tile-icon-bg: rgba(129,140,248,0.08);">
             <div class="tile-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
             </div>
             <div class="tile-bottom">
-              <div class="tile-val" id="averageMinutesValue">0</div>
-              <div class="tile-lbl">Avg Min / Call</div>
+              <div class="tile-val" id="revenueValue">$0.00</div>
+              <div class="tile-lbl">Revenue</div>
             </div>
           </div>
         </div>
@@ -1005,12 +1005,10 @@
           if (c.cost) totalCost += c.cost;
           if (c.durationMinutes) totalMinutes += c.durationMinutes;
         });
-        const avg = calls.length > 0 ? totalMinutes / calls.length : 0;
         return {
           callCount: calls.length,
           totalCost: Math.round(totalCost * 100) / 100,
           totalMinutes: Math.round(totalMinutes * 100) / 100,
-          averageMinutes: Math.round(avg * 100) / 100,
         };
       }
 
@@ -1207,9 +1205,14 @@
         }
 
         try {
-          const res  = await fetch("/api/get/calls", {
-            headers: { "Content-Type": "application/json", Authorization: authCredentials }
-          });
+          const [res, revenueRes] = await Promise.all([
+            fetch("/api/get/calls", {
+              headers: { "Content-Type": "application/json", Authorization: authCredentials }
+            }),
+            fetch(`/api/get/calls/stats?month=${month}&year=${year}`, {
+              headers: { "Content-Type": "application/json", Authorization: authCredentials }
+            }),
+          ]);
           const data = await res.json();
 
           if (!data.success) { callsList.innerHTML = `<div class="no-calls">Error loading call data.</div>`; return; }
@@ -1221,7 +1224,13 @@
           document.getElementById("callCountValue").textContent      = stats.callCount;
           document.getElementById("totalCostValue").textContent      = formatCurrency(stats.totalCost);
           document.getElementById("totalMinutesValue").textContent   = stats.totalMinutes.toFixed(2);
-          document.getElementById("averageMinutesValue").textContent = stats.averageMinutes.toFixed(2);
+
+          let revenue = 0;
+          try {
+            const revenueData = await revenueRes.json();
+            if (revenueData.success) revenue = revenueData.stats.totalRevenueMade || 0;
+          } catch (e) { console.error("Failed to load revenue:", e); }
+          document.getElementById("revenueValue").textContent = formatCurrency(revenue);
 
           renderPieChart(allMonthCalls);
 

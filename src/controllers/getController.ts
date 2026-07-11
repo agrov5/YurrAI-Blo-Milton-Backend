@@ -3,6 +3,7 @@ import { ITreatment, TreatmentModel } from "../models/Treatment";
 import { EmployeeModel, IEmployee } from "../models/Employee";
 import { IRoom, RoomModel } from "../models/Room";
 import { VapiCallModel } from "../models/Vapi";
+import { MonthlyCallStatsModel } from "../models/MonthlyStats";
 import { RequestLogModel } from "../models/RequestLog";
 import {
   findAvailableDates,
@@ -597,7 +598,16 @@ export const getCallStats = async (req: Request, res: Response) => {
       if (call.durationMinutes) totalMinutes += call.durationMinutes;
     });
 
-    const averageMinutes = callCount > 0 ? totalMinutes / callCount : 0;
+    // Revenue is accumulated incrementally as appointments are booked (never
+    // recomputed here); average minutes/call is likewise only ever finalized
+    // when the monthly report email goes out, so it isn't tallied on every load.
+    const monthName = new Date(targetYear, targetMonth - 1, 1).toLocaleString("default", {
+      month: "long",
+    });
+    const monthlyStats = await MonthlyCallStatsModel.findOne({
+      month: monthName,
+      year: targetYear,
+    }).lean();
 
     res.status(200).json({
       success: true,
@@ -608,7 +618,7 @@ export const getCallStats = async (req: Request, res: Response) => {
         callCount,
         totalCost: Math.round(totalCost * 100) / 100,
         totalMinutes: Math.round(totalMinutes * 100) / 100,
-        averageMinutes: Math.round(averageMinutes * 100) / 100,
+        totalRevenueMade: Math.round((monthlyStats?.totalRevenueMade || 0) * 100) / 100,
       },
       calls: calls,
     });

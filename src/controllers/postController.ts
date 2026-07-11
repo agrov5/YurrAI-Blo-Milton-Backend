@@ -34,7 +34,7 @@ import {
 } from "../models/Vapi";
 import { getSettings } from "../models/Settings";
 import { sendMessageToAdmin, sendMessageMMS } from "../util/phone_util";
-import { geminiTagCall } from "../util/gemini_util";
+import { tagCall } from "../util/ai_util";
 import {
   populateMonthlyStats,
   addRevenueToCurrentMonth,
@@ -227,7 +227,7 @@ export const postCancelAppointment = async (req: Request, res: Response) => {
         success: true,
         message: "Appointment cancelled successfully",
         locationID: locationID,
-        appointment: cancelAppointmentResponse.Appointment,
+        appointment: cleanAppointment(cancelAppointmentResponse.Appointment),
         appointmentId: cancelAppointmentResponse.Appointment?.ID,
       });
     } else {
@@ -473,7 +473,7 @@ export const vapiCallDataWebhook = async (req: Request, res: Response) => {
     console.log("Received VAPI call data webhook, saved to", savedCall._id);
 
     // Auto-tag in the background — don't block the webhook response
-    geminiTagCall(savedCall.summary, savedCall.transcript)
+    tagCall(savedCall.summary, savedCall.transcript)
       .then((tags) => VapiCallModel.findByIdAndUpdate(savedCall._id, { tags }))
       .catch((err) => {
         // Leave the call untagged on failure — the dashboard surfaces these as "No Tags"
