@@ -531,6 +531,7 @@ export const addPaymentToOrder = async (
     const accessToken = await getAccessToken();
     const order = await getOrder(orderId);
     const amount = order?.FinalTotal ?? null;
+    // const amount = 0.01
 
     const response = await bookerClient.post(
       `/v4.1/merchant/order/${orderId}/add_payment`,
@@ -539,6 +540,7 @@ export const addPaymentToOrder = async (
         PaymentItem: {
           CreditCard: paymentItem,
           Amount: amount,
+          IsHold: true,
           Method: { Name: "Credit Card", ID: 1 },
         },
       },
@@ -552,7 +554,7 @@ export const addPaymentToOrder = async (
     if (!response.data.IsSuccess) {
       console.error(
         "Error adding payment to order:",
-        response.data.ErrorMessage,
+        response.data.ErrorMessage || response.data.ArgumentErrors || response.data || "Unknown error",
       );
     }
 

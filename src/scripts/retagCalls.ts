@@ -21,24 +21,35 @@ import { tagCall } from "../util/ai_util";
  *
  * Usage:
  *   npm run retag-calls -- --count 20          # oldest N calls, earliest first
+ *   npm run retag-calls -- --untagged          # only calls with no tags
+ *   npm run retag-calls -- --untagged --count 20
  *   npm run retag-calls -- --callId abc123
  *   npm run retag-calls -- --callId abc123,def456 --callId ghi789
  *
  * `--callId` accepts a comma-separated list and/or repeated flags; it matches
- * against both the Vapi `callId` field and the Mongo `_id`. `--count` and
- * `--callId` are mutually exclusive.
+ * against both the Vapi `callId` field and the Mongo `_id`. `--callId` cannot be
+ * combined with `--count` or `--untagged`; `--count` acts as a limit on
+ * `--untagged`.
  */
 async function retagCalls() {
-  const { count, callIds } = parseArgs(process.argv.slice(2));
+  const { count, callIds, untagged } = parseArgs(process.argv.slice(2));
 
   await connectDB();
 
   try {
-    const calls = callIds
-      ? await VapiCallModel.find({
-          $or: [{ callId: { $in: callIds } }, { _id: { $in: safeObjectIds(callIds) } }],
-        })
-      : await VapiCallModel.find({}).sort({ startedAt: 1 }).limit(count!);
+    let calls;
+    if (callIds) {
+      calls = await VapiCallModel.find({
+        $or: [{ callId: { $in: callIds } }, { _id: { $in: safeObjectIds(callIds) } }],
+      });
+    } else {
+      const filter = untagged
+        ? { $or: [{ tags: { $exists: false } }, { tags: { $size: 0 } }] }
+        : {};
+      const query = VapiCallModel.find(filter).sort({ startedAt: 1 });
+      if (count !== undefined) query.limit(count);
+      calls = await query;
+    }
 
     if (callIds) {
       const found = new Set(calls.map((c) => c.callId));
@@ -74,13 +85,16 @@ async function retagCalls() {
   }
 }
 
-function parseArgs(argv: string[]): { count?: number; callIds?: string[] } {
+function parseArgs(argv: string[]): { count?: number; callIds?: string[]; untagged?: boolean } {
   const callIds: string[] = [];
   let count: number | undefined;
+  let untagged = false;
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
-    if (arg === "--count") {
+    if (arg === "--untagged") {
+      untagged = true;
+    } else if (arg === "--count") {
       const val = argv[++i];
       count = parseInt(val, 10);
       if (!Number.isFinite(count) || count <= 0) {
@@ -93,16 +107,16 @@ function parseArgs(argv: string[]): { count?: number; callIds?: string[] } {
     }
   }
 
-  if (count !== undefined && callIds.length > 0) {
-    throw new Error("--count and --callId are mutually exclusive");
+  if (callIds.length > 0 && (count !== undefined || untagged)) {
+    throw new Error("--callId cannot be combined with --count or --untagged");
   }
-  if (count === undefined && callIds.length === 0) {
+  if (count === undefined && callIds.length === 0 && !untagged) {
     throw new Error(
-      "Usage: retag-calls -- --count <N>  OR  retag-calls -- --callId <id1,id2,...>",
+      "Usage: retag-calls -- --count <N>  OR  --untagged [--count <N>]  OR  --callId <id1,id2,...>",
     );
   }
 
-  return { count, callIds: callIds.length > 0 ? callIds : undefined };
+  return { count, callIds: callIds.length > 0 ? callIds : undefined, untagged };
 }
 
 function safeObjectIds(ids: string[]): string[] {

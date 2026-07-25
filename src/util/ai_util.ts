@@ -3,7 +3,7 @@ import axios from "axios";
 // Hack Club AI is an OpenAI-compatible proxy. https://docs.ai.hackclub.com/
 const HACKCLUB_AI_URL =
   "https://ai.hackclub.com/proxy/v1/chat/completions";
-const TAGGING_MODEL = "openrouter/free";
+const TAGGING_MODEL = "moonshotai/kimi-k3";
 
 // Why did they call? Exactly one is assigned.
 export const INTENT_TAGS = [
@@ -157,3 +157,4 @@ Call Transcript: ${transcript || "N/A"}`;
   console.log("[tagCall] tags assigned:", result);
   return result;
 }
+
