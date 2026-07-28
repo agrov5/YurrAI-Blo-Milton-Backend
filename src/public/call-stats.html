@@ -620,7 +620,8 @@
             </div>
           </div>
 
-          <div class="stat-tile" style="--tile-accent: rgba(34,197,94,0.6); --tile-icon-bg: rgba(34,197,94,0.08);">
+          <!-- Total Cost Tile -->
+          <!-- <div class="stat-tile" style="--tile-accent: rgba(34,197,94,0.6); --tile-icon-bg: rgba(34,197,94,0.08);">
             <div class="tile-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
             </div>
@@ -628,7 +629,7 @@
               <div class="tile-val" id="totalCostValue">$0.00</div>
               <div class="tile-lbl">Total Cost (CAD)</div>
             </div>
-          </div>
+          </div> -->
 
           <div class="stat-tile" style="--tile-accent: rgba(251,146,60,0.6); --tile-icon-bg: rgba(251,146,60,0.08);">
             <div class="tile-icon">
@@ -942,10 +943,6 @@
                   <div class="call-info-value">${duration}</div>
                 </div>
                 <div class="call-info-item">
-                  <div class="call-info-label">Cost</div>
-                  <div class="call-info-value">${cost}</div>
-                </div>
-                <div class="call-info-item">
                   <div class="call-info-label">Caller</div>
                   <div class="call-info-value">${escapeHtml(caller)}</div>
                 </div>
@@ -1222,7 +1219,7 @@
 
           const stats = calculateStats(allMonthCalls);
           document.getElementById("callCountValue").textContent      = stats.callCount;
-          document.getElementById("totalCostValue").textContent      = formatCurrency(stats.totalCost);
+          // document.getElementById("totalCostValue").textContent      = formatCurrency(stats.totalCost);
           document.getElementById("totalMinutesValue").textContent   = stats.totalMinutes.toFixed(2);
 
           let revenue = 0;
