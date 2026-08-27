@@ -145,3 +145,7 @@ dist
 package-lock.json
 
 dist/
+# local env files (never commit - contain secrets)
+environments/.env.development
+environments/*.env*
+.env.dev
