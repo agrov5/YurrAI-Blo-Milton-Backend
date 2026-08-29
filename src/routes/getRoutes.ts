@@ -16,6 +16,7 @@ import {
   getVapiCalls,
   getRequestLogs,
   getCallStats,
+  getCallRecording
 } from "../controllers/getController";
 import { phoneController } from "../controllers/phoneController";
 import { get } from "http";
@@ -45,6 +46,8 @@ getRouter.get("/widget/auth", getWidgetAuth);
 getRouter.get("/calls/stats", getCallStats);
 getRouter.get("/calls", getVapiCalls);
 getRouter.get("/logs", getRequestLogs);
+
+getRouter.get("/callRecording/:callId", getCallRecording);
 
 /**
  * @route   GET /health

@@ -19,6 +19,7 @@ import {
   convertBookerAvailabilityToFriendlyTime,
   ISOToFriendlyTime,
 } from "../util/db_util";
+import { getMonoCallRecordingUrl } from "../util/vapi_util";
 
 export const getTreatments = async (req: Request, res: Response) => {
   try {
@@ -626,6 +627,43 @@ export const getCallStats = async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       message: "Failed to retrieve call statistics",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+
+export const getCallRecording = async (req: Request, res: Response) => {
+  const { callId } = req.params;
+
+  if (!callId || typeof callId !== "string") {
+    return res.status(400).json({
+      success: false,
+      message: "Call ID is required and must be a string",
+    });
+  }
+
+  try {
+    const callRecordingUrl = await getMonoCallRecordingUrl(callId);
+
+    if (!callRecordingUrl) {
+      return res.status(404).json({
+        success: false,
+        message: `No call found with ID ${callId}`,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Call recording URL retrieved successfully",
+      callId: callId,
+      recordingUrl: callRecordingUrl,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve call recording",
       error: error instanceof Error ? error.message : "Unknown error",
     });
   }
