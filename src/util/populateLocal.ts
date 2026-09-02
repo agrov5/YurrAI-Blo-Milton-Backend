@@ -8,7 +8,7 @@ import {
 import { FindTreatmentsResponse, TreatmentModel } from "../models/Treatment";
 import { FindRoomsResponse, RoomModel } from "../models/Room";
 import { FindEmployeesResponse, EmployeeModel } from "../models/Employee";
-import { clearDB } from "../config/database";
+import { clearDBForPopulate } from "../config/database";
 import { sortEmployeeIdsInTreatementsByRank } from "./db_util";
 
 // Example function to run and populate local DB
@@ -17,7 +17,7 @@ async function runPopulateFunctions() {
   const useFindAndUpdate = true;
 
   if (!useFindAndUpdate) {
-    await clearDB();
+    await clearDBForPopulate();
   }
 
   try {

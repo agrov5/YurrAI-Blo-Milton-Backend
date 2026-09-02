@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { RequestLogModel } from "../models/RequestLog";
 import { clearLogs } from "../middlewares/loggerMiddleware";
 import { TreatmentModel } from "../models/Treatment";
-import { clearDB } from "../config/database";
+import { clearDBForPopulate } from "../config/database";
 
 export const deleteServerLogs = async (req: Request, res: Response) => {
   try {
@@ -17,7 +17,7 @@ export const deleteServerLogs = async (req: Request, res: Response) => {
 
 export const dropDatabase = async (req: Request, res: Response) => {
   try {
-    await clearDB();
+    await clearDBForPopulate();
     res.json({ ok: true, message: "Database cleared" });
   } catch (error) {
     console.error("Failed to clear database:", error);

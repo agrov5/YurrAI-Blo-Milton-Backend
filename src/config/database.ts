@@ -21,10 +21,22 @@ export const disconnectDB = async () => {
   }
 };
 
-export const clearDB = async () => {
+export const clearDBForPopulate = async () => {
   try {
-    await mongoose.connection.db.dropDatabase();
-    console.log("Cleared MongoDB database");
+    for (const collection of ["employees", "rooms", "treatments"]) {
+      try {
+        await mongoose.connection.db.dropCollection(collection);
+        console.log(`Dropped MongoDB collection: ${collection}`);
+      } catch (error) {
+        const mongoError = error as { codeName?: string; code?: number };
+        if (
+          mongoError.codeName !== "NamespaceNotFound" &&
+          mongoError.code !== 26
+        ) {
+          throw error;
+        }
+      }
+    }
   } catch (error) {
     console.error("Error clearing MongoDB database:", error);
   }
