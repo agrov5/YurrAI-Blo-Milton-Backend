@@ -99,8 +99,8 @@ async function runPopulateFunctions() {
         if (
           treatment.IsActive &&
           !treatment.IsDeleted &&
-          !treatment.Name?.trimEnd().endsWith("(Internal Add-on)")
-          // treatment.AllowCustomersToBookOnline
+          !treatment.Name?.trimEnd().endsWith("(Internal Add-on)") &&
+          treatment.AllowCustomersToBookOnline
         ) {
           // Filter to only include valid employee and room IDs
           const filteredEmployeeIDs = treatment.EmployeeIDs || [];
