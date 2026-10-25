@@ -19,11 +19,19 @@ export const treatmentLookup = (treatId: number) => {
   return treatment;
 };
 
+// Booker treatment names carry stray leading/trailing spaces, and callers (the
+// voice agent) don't reliably reproduce them, so match ignoring surrounding
+// whitespace and case. An exact match still wins.
 export const treatmentLookupByName = async (name: string) => {
-  const treatment = await TreatmentModel.findOne({
-    TreatmentName: name,
+  const exact = await TreatmentModel.findOne({ TreatmentName: name }).exec();
+  if (exact) return exact;
+
+  const trimmed = (name ?? "").trim();
+  if (!trimmed) return null;
+  const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return TreatmentModel.findOne({
+    TreatmentName: new RegExp(`^\\s*${escaped}\\s*$`, "i"),
   }).exec();
-  return treatment;
 };
 
 export const getTreatmentIds = async () => {

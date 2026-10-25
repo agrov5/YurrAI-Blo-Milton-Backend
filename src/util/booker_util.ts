@@ -867,7 +867,9 @@ export const createAppointment = async (
         `Checking availability for ${treatment.EmployeeIDs.length} employees for treatment ID ${treatmentId}`,
       );
 
-      const results = await Promise.all(
+      // allSettled: one failed Booker request for a single employee must not
+      // discard the employees that are actually available.
+      const settled = await Promise.allSettled(
         treatment.EmployeeIDs.map(async (empId) => {
           console.log(`Checking employee ID: ${empId}`);
           const availability = await findAvailableTimes({
@@ -903,7 +905,18 @@ export const createAppointment = async (
         }),
       );
 
-      return results.find((id) => id !== null) ?? null;
+      for (const result of settled) {
+        if (result.status === "rejected") {
+          console.error("Employee availability check failed:", result.reason);
+        }
+      }
+
+      return (
+        settled.find(
+          (r): r is PromiseFulfilledResult<number> =>
+            r.status === "fulfilled" && r.value !== null,
+        )?.value ?? null
+      );
     } catch (error) {
       console.error("Error determining employee ID:", error);
       return null;

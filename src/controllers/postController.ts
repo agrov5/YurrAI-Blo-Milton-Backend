@@ -102,6 +102,16 @@ export const postCreateAppointment = async (req: Request, res: Response) => {
     });
   }
 };
+// YYYY-MM-DD strictly before today (server-local), or false if unparseable.
+const isPastDate = (date: string): boolean => {
+  const parsed = new Date(date);
+  if (isNaN(parsed.getTime())) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  parsed.setHours(0, 0, 0, 0);
+  return parsed < today;
+};
+
 export const postAvailableDates = async (req: Request, res: Response) => {
   const body: {
     fromDate: string;
@@ -115,6 +125,12 @@ export const postAvailableDates = async (req: Request, res: Response) => {
       return res.status(400).json({
         success: false,
         message: "Both fromDate and toDate are required",
+      });
+    }
+    if (isPastDate(body.fromDate) || isPastDate(body.toDate)) {
+      return res.status(400).json({
+        success: false,
+        message: `Date ${isPastDate(body.fromDate) ? body.fromDate : body.toDate} has already passed. Use a date from today onward (check the current year with get_health).`,
       });
     }
     const availableDates = await findAvailableDates(body);
@@ -151,6 +167,12 @@ export const postAvailableTimes = async (req: Request, res: Response) => {
       });
     }
 
+    if (isPastDate(body.date)) {
+      return res.status(400).json({
+        success: false,
+        message: `Date ${body.date} has already passed. Use a date from today onward (check the current year with get_health).`,
+      });
+    }
     const availableTimes = await findAvailableTimes(body);
     const timesWithEmployeeNames =
       await convertBookerAvailabilityEmployeeIdsToNames(availableTimes);
