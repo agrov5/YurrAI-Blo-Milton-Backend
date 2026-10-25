@@ -20,6 +20,7 @@ import { tagCall } from "../util/ai_util";
  * currently have.
  *
  * Usage:
+ *   npm run retag-calls -- --all               # every call in the collection
  *   npm run retag-calls -- --count 20          # oldest N calls, earliest first
  *   npm run retag-calls -- --untagged          # only calls with no tags
  *   npm run retag-calls -- --untagged --count 20
@@ -32,7 +33,7 @@ import { tagCall } from "../util/ai_util";
  * `--untagged`.
  */
 async function retagCalls() {
-  const { count, callIds, untagged } = parseArgs(process.argv.slice(2));
+  const { count, callIds, untagged, all } = parseArgs(process.argv.slice(2));
 
   await connectDB();
 
@@ -47,7 +48,7 @@ async function retagCalls() {
         ? { $or: [{ tags: { $exists: false } }, { tags: { $size: 0 } }] }
         : {};
       const query = VapiCallModel.find(filter).sort({ startedAt: 1 });
-      if (count !== undefined) query.limit(count);
+      if (count !== undefined && !all) query.limit(count);
       calls = await query;
     }
 
@@ -85,15 +86,18 @@ async function retagCalls() {
   }
 }
 
-function parseArgs(argv: string[]): { count?: number; callIds?: string[]; untagged?: boolean } {
+function parseArgs(argv: string[]): { count?: number; callIds?: string[]; untagged?: boolean; all?: boolean } {
   const callIds: string[] = [];
   let count: number | undefined;
   let untagged = false;
+  let all = false;
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === "--untagged") {
       untagged = true;
+    } else if (arg === "--all") {
+      all = true;
     } else if (arg === "--count") {
       const val = argv[++i];
       count = parseInt(val, 10);
@@ -107,16 +111,16 @@ function parseArgs(argv: string[]): { count?: number; callIds?: string[]; untagg
     }
   }
 
-  if (callIds.length > 0 && (count !== undefined || untagged)) {
-    throw new Error("--callId cannot be combined with --count or --untagged");
+  if (callIds.length > 0 && (count !== undefined || untagged || all)) {
+    throw new Error("--callId cannot be combined with --count, --untagged, or --all");
   }
-  if (count === undefined && callIds.length === 0 && !untagged) {
+  if (count === undefined && callIds.length === 0 && !untagged && !all) {
     throw new Error(
-      "Usage: retag-calls -- --count <N>  OR  --untagged [--count <N>]  OR  --callId <id1,id2,...>",
+      "Usage: retag-calls -- --all  OR  --count <N>  OR  --untagged [--count <N>]  OR  --callId <id1,id2,...>",
     );
   }
 
-  return { count, callIds: callIds.length > 0 ? callIds : undefined, untagged };
+  return { count, callIds: callIds.length > 0 ? callIds : undefined, untagged, all };
 }
 
 function safeObjectIds(ids: string[]): string[] {

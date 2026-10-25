@@ -540,7 +540,10 @@ export const addPaymentToOrder = async (
         PaymentItem: {
           CreditCard: paymentItem,
           Amount: amount,
-          IsHold: true,
+          // IsPreAuthTransaction: false,
+          // IsDeposit: false,
+          // IsHold: false,
+          // IsPaid: false,
           Method: { Name: "Credit Card", ID: 1 },
         },
       },

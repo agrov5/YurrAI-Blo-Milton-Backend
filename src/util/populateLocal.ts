@@ -14,7 +14,7 @@ import { sortEmployeeIdsInTreatementsByRank } from "./db_util";
 // Example function to run and populate local DB
 async function runPopulateFunctions() {
   // Global toggle for all models
-  const useFindAndUpdate = true;
+  const useFindAndUpdate = false;
 
   if (!useFindAndUpdate) {
     await clearDBForPopulate();
@@ -41,7 +41,7 @@ async function runPopulateFunctions() {
             { ID: employee.ID },
             {
               ID: employee.ID,
-              FullName: employee.FirstName + " " + employee.LastName,
+              FullName: employee.FirstName,
               Rank: employee.Rank,
               DisplayName: employee.DisplayName,
               FirstName: employee.FirstName,
@@ -53,7 +53,7 @@ async function runPopulateFunctions() {
         } else {
           await EmployeeModel.create({
             ID: employee.ID,
-            FullName: employee.FirstName + " " + employee.LastName,
+            FullName: employee.FirstName,
             Rank: employee.Rank,
             DisplayName: employee.DisplayName,
             FirstName: employee.FirstName,
@@ -99,22 +99,26 @@ async function runPopulateFunctions() {
         if (
           treatment.IsActive &&
           !treatment.IsDeleted &&
+          !treatment.Name?.trimEnd().endsWith("(Internal Add-on)") &&
           treatment.AllowCustomersToBookOnline
         ) {
           // Filter to only include valid employee and room IDs
-          const filteredEmployeeIDs = (treatment.EmployeeIDs || []).filter(
-            (id) => validEmployeeIds.has(id),
-          );
-          const filteredRoomIDs = (treatment.RoomIDs || []).filter((id) =>
-            validRoomIds.has(id),
-          );
+          const filteredEmployeeIDs = (treatment.EmployeeIDs || [])
+          // .filter(
+          //   (id) => validEmployeeIds.has(id),
+          // );
+
+          const filteredRoomIDs = (treatment.RoomIDs || [])
+          // .filter((id) =>
+          //   validRoomIds.has(id),
+          // );
 
           if (useFindAndUpdate) {
             await TreatmentModel.findOneAndUpdate(
               { ID: treatment.ID },
               {
                 ID: treatment.ID,
-                TreatmentName: treatment.Name,
+                TreatmentName: (treatment.Name ?? "").trimStart(),
                 Price: treatment.Price,
                 Category: treatment.Category,
                 SubCategory: treatment.SubCategory,
@@ -127,7 +131,7 @@ async function runPopulateFunctions() {
           } else {
             await TreatmentModel.create({
               ID: treatment.ID,
-              TreatmentName: treatment.Name,
+              TreatmentName: (treatment.Name ?? "").trimStart(),
               Price: treatment.Price,
               Category: treatment.Category,
               SubCategory: treatment.SubCategory,

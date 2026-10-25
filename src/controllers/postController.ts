@@ -259,7 +259,7 @@ export const getCustomer = async (req: Request, res: Response) => {
       });
     }
 
-    const result = await checkCustomerExists(body.phone, false);
+    const result = await checkCustomerExists(body.phone, false, body.firstName);
     if (result) {
       const multiple = result.length > 1;
       res.status(200).json({

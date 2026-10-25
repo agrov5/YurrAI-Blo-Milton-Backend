@@ -21,6 +21,8 @@ export const disconnectDB = async () => {
   }
 };
 
+// Only the Booker-synced collections are dropped. Never add "vapicalls" or
+// "requestlogs" here — call history and request logs must survive a repopulate.
 export const clearDBForPopulate = async () => {
   try {
     for (const collection of ["employees", "rooms", "treatments"]) {
