@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 import { Treatment, TreatmentModel } from "../models/Treatment";
 import { generateWidgetToken } from "./widget_token_util";
 import {
@@ -660,7 +660,12 @@ export const createAppointment = async (
       Appointment: undefined,
     };
   }
-  const roomID = treatmentDoc.RoomIDs[0];
+  const roomIDs = treatmentDoc.RoomIDs;
+
+  // Booker rejects a booking with "Sorry! The room is not available at this
+  // time ..." when the chosen room is taken, even if the employee is free.
+  const isRoomUnavailable = (message?: string): boolean =>
+    /room is not available/i.test(message ?? "");
 
   const getEmployeeId = async (name: string): Promise<number | null> => {
     const employee = await employeeLookupByName(name);
@@ -1067,42 +1072,81 @@ export const createAppointment = async (
         "00:00",
         appointment.appointmentDate,
       ),
-      AppointmentTreatmentDTOs: [
-        {
-          TreatmentID: treatmentID,
-          EmployeeID: employeeID,
-          RoomID: roomID,
-          EmployeeWasRequested: appointment.employeeName ? true : false,
-          StartTimeOffset: convert24toISO(
-            appointment.startTime,
-            appointment.appointmentDate,
-          ),
-          EndTimeOffset: await determineEndTime(
-            appointment.startTime,
-            treatmentID || 0,
-            appointment.appointmentDate,
-          ),
-        },
-      ],
     };
 
-    // Log the payload for debugging
-    console.log(
-      "Creating appointment with payload:",
-      JSON.stringify(appointmentPayload, null, 2),
-    );
+    const treatmentDTO = {
+      TreatmentID: treatmentID,
+      EmployeeID: employeeID,
+      EmployeeWasRequested: appointment.employeeName ? true : false,
+      StartTimeOffset: convert24toISO(
+        appointment.startTime,
+        appointment.appointmentDate,
+      ),
+      EndTimeOffset: await determineEndTime(
+        appointment.startTime,
+        treatmentID || 0,
+        appointment.appointmentDate,
+      ),
+    };
 
     let cardOnFile = sendSMS ? false : true;
 
-    const response = await bookerClient.post<CreateAppointmentResponse>(
-      "/v4.1/merchant/appointment",
-      appointmentPayload,
-      {
-        headers: {
-          "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
-        },
-      },
-    );
+    // Try each room configured for the treatment in order, moving on to the
+    // next one whenever Booker says the room is taken. Any other result
+    // (success or a different error) stops the loop.
+    let response: AxiosResponse<CreateAppointmentResponse> | undefined;
+    for (const roomID of roomIDs) {
+      const roomPayload = {
+        ...appointmentPayload,
+        AppointmentTreatmentDTOs: [{ ...treatmentDTO, RoomID: roomID }],
+      };
+
+      // Log the payload for debugging
+      console.log(
+        "Creating appointment with payload:",
+        JSON.stringify(roomPayload, null, 2),
+      );
+
+      try {
+        response = await bookerClient.post<CreateAppointmentResponse>(
+          "/v4.1/merchant/appointment",
+          roomPayload,
+          {
+            headers: {
+              "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
+            },
+          },
+        );
+      } catch (error: any) {
+        if (!isRoomUnavailable(error.response?.data?.ErrorMessage)) {
+          throw error;
+        }
+        response = undefined;
+        console.warn(`Room ${roomID} not available, trying next room`);
+        continue;
+      }
+
+      if (!isRoomUnavailable(response.data?.ErrorMessage)) {
+        break;
+      }
+      response = undefined;
+      console.warn(`Room ${roomID} not available, trying next room`);
+    }
+
+    if (!response) {
+      return {
+        IsSuccess: false,
+        ErrorMessage: `No rooms are available for '${appointment.treatmentName}' on ${appointment.appointmentDate} at ${appointment.startTime} (all ${roomIDs.length} rooms are booked). Please choose a different time.`,
+        Appointment: undefined,
+        cardOnFile: false,
+      };
+    }
+
+    // Don't send confirmation texts or charge an order for a booking that
+    // Booker rejected.
+    if (!response.data?.IsSuccess) {
+      return { ...response.data, cardOnFile: false };
+    }
 
     if (sendSMS) {
       const appointmentObj = response.data?.Appointment;
