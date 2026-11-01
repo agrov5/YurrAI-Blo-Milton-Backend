@@ -24,6 +24,7 @@ import {
   convertISOtoFriendly,
   convertBookerAvailabilityEmployeeIdsToNames,
   convertBookerAvailabilityToFriendlyTime,
+  todayInBusinessTimeZone,
 } from "../util/db_util";
 import { findAvailableTimes } from "../util/booker_util";
 
@@ -58,7 +59,7 @@ getRouter.get("/health", (req, res) => {
   res.status(200).json({
     status: "OK",
     today_date: convertISOtoFriendly(new Date().toISOString()),
-    today_date_system: new Date().toISOString().slice(0, 10),
+    today_date_system: todayInBusinessTimeZone(),
     service: "Blo Milton Backend API",
     locationID: process.env.LOCATION_ID,
   });

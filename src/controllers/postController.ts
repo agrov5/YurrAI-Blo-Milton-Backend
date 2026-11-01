@@ -25,6 +25,7 @@ import {
   ISOToFriendlyTime,
   convertISOtoFriendly,
   convertToMMDD,
+  todayInBusinessTimeZone,
 } from "../util/db_util";
 import {
   ExtractedVapiCallSummary,
@@ -102,14 +103,11 @@ export const postCreateAppointment = async (req: Request, res: Response) => {
     });
   }
 };
-// YYYY-MM-DD strictly before today (server-local), or false if unparseable.
+// YYYY-MM-DD strictly before today at the salon, or false if unparseable.
 const isPastDate = (date: string): boolean => {
-  const parsed = new Date(date);
-  if (isNaN(parsed.getTime())) return false;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  parsed.setHours(0, 0, 0, 0);
-  return parsed < today;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date ?? "")) return false;
+  if (isNaN(new Date(date).getTime())) return false;
+  return date < todayInBusinessTimeZone();
 };
 
 export const postAvailableDates = async (req: Request, res: Response) => {

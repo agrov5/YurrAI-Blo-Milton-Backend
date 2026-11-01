@@ -9,6 +9,8 @@ import {
   determineEndTime,
   convert24toISO,
   isoToDate,
+  wallClockToISO,
+  todayInBusinessTimeZone,
 } from "./db_util";
 import {
   AddAppointmentNotes,
@@ -603,11 +605,9 @@ export const createAppointment = async (
     };
   }
 
-  // Check if date is in the past
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  appointmentDate.setHours(0, 0, 0, 0);
-  if (appointmentDate < today) {
+  // Check if date is in the past (by the salon's calendar day; YYYY-MM-DD
+  // strings compare correctly as text)
+  if (appointment.appointmentDate < todayInBusinessTimeZone()) {
     return {
       IsSuccess: false,
       ErrorMessage: `Cannot book appointment in the past. Date '${appointment.appointmentDate}' has already passed.`,
@@ -717,15 +717,7 @@ export const createAppointment = async (
     }
 
     const [year, month, day] = requestedDate.split("-").map(Number);
-    const isoString =
-      `${year.toString().padStart(4, "0")}-${month
-        .toString()
-        .padStart(2, "0")}-${day.toString().padStart(2, "0")}` +
-      `T${hour.toString().padStart(2, "0")}:${minute
-        .toString()
-        .padStart(2, "0")}:00-04:00`;
-
-    const parsed = new Date(isoString);
+    const parsed = new Date(wallClockToISO(year, month, day, hour, minute));
     return isNaN(parsed.getTime()) ? null : parsed;
   };
 

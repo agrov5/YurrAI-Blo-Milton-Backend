@@ -90,75 +90,90 @@ export const isoToDate = (isoStr: string): string => {
   return date.toISOString().split("T")[0];
 };
 
+// The salon's timezone. All Booker wall-clock times are in this zone, and its
+// UTC offset changes with daylight saving (EDT -04:00 / EST -05:00), so the
+// offset is always computed for the specific date rather than hardcoded.
+export const businessTimeZone = () =>
+  process.env.BUSINESS_TIMEZONE || "America/Toronto";
+
+const pad2 = (n: number) => String(n).padStart(2, "0");
+
+// UTC offset (in minutes, e.g. -240 or -300) of the business timezone at an instant.
+const offsetMinutesAt = (instantMs: number): number => {
+  const name = new Intl.DateTimeFormat("en-US", {
+    timeZone: businessTimeZone(),
+    timeZoneName: "longOffset",
+  })
+    .formatToParts(new Date(instantMs))
+    .find((part) => part.type === "timeZoneName")?.value; // "GMT-04:00" or "GMT"
+  const match = name?.match(/GMT([+-])(\d{2}):(\d{2})/);
+  if (!match) return 0;
+  const minutes = Number(match[2]) * 60 + Number(match[3]);
+  return match[1] === "-" ? -minutes : minutes;
+};
+
+/**
+ * Formats a salon wall-clock time as ISO 8601 with the correct offset for that
+ * date, e.g. (2026, 10, 31, 11, 30) -> "2026-10-31T11:30:00-04:00" and
+ * (2026, 11, 7, 11, 30) -> "2026-11-07T11:30:00-05:00".
+ * Out-of-range minutes/hours roll over (e.g. an end time past midnight).
+ */
+export const wallClockToISO = (
+  year: number,
+  month: number,
+  day: number,
+  hours: number,
+  minutes: number,
+): string => {
+  // Normalise through UTC fields so the server's own timezone never matters.
+  const wall = new Date(Date.UTC(year, month - 1, day, hours, minutes, 0, 0));
+  const wallMs = wall.getTime();
+  // Two passes resolve the offset correctly on DST-transition days.
+  let offset = offsetMinutesAt(wallMs);
+  offset = offsetMinutesAt(wallMs - offset * 60 * 1000);
+
+  const sign = offset < 0 ? "-" : "+";
+  const abs = Math.abs(offset);
+  return (
+    `${wall.getUTCFullYear()}-${pad2(wall.getUTCMonth() + 1)}-${pad2(wall.getUTCDate())}` +
+    `T${pad2(wall.getUTCHours())}:${pad2(wall.getUTCMinutes())}:00` +
+    `${sign}${pad2(Math.floor(abs / 60))}:${pad2(abs % 60)}`
+  );
+};
+
+/** Today's date (YYYY-MM-DD) at the salon, regardless of the server's timezone. */
+export const todayInBusinessTimeZone = (): string =>
+  new Intl.DateTimeFormat("en-CA", {
+    timeZone: businessTimeZone(),
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+
 export const determineEndTime = async (
   startTime: string,
   treatmentId: number,
   appointmentDate: string,
 ) => {
-  const endTimeISO = await TreatmentModel.findOne({ ID: treatmentId }).then(
-    (treatment) => {
-      const [startHour, startMinute] = startTime.split(":").map(Number);
-      let totalMinutes: number;
+  const treatment = await TreatmentModel.findOne({ ID: treatmentId });
+  // Fallback to 2 hours (120 minutes)
+  const totalMinutes = treatment?.TotalDuration || 120;
 
-      if (treatment && treatment.TotalDuration) {
-        totalMinutes = treatment.TotalDuration;
-      } else {
-        // Fallback to 2 hours (120 minutes)
-        totalMinutes = 120;
-      }
-
-      const endHour = startHour + Math.floor((startMinute + totalMinutes) / 60);
-      const endMinute = (startMinute + totalMinutes) % 60;
-
-      // Parse the date string more explicitly to avoid timezone issues
-      const [year, month, day] = appointmentDate.split("-").map(Number);
-      const date = new Date(year, month - 1, day, endHour, endMinute, 0, 0);
-
-      // Format to ISO string with fixed timezone offset (-04:00 for EDT)
-      const isoString =
-        date.getFullYear() +
-        "-" +
-        String(date.getMonth() + 1).padStart(2, "0") +
-        "-" +
-        String(date.getDate()).padStart(2, "0") +
-        "T" +
-        String(date.getHours()).padStart(2, "0") +
-        ":" +
-        String(date.getMinutes()).padStart(2, "0") +
-        ":" +
-        String(date.getSeconds()).padStart(2, "0") +
-        "-04:00";
-
-      return isoString;
-    },
+  const [startHour, startMinute] = startTime.split(":").map(Number);
+  const [year, month, day] = appointmentDate.split("-").map(Number);
+  return wallClockToISO(
+    year,
+    month,
+    day,
+    startHour,
+    startMinute + totalMinutes,
   );
-
-  return endTimeISO;
 };
 
 export const convert24toISO = (time24: string, appointmentDate: string) => {
   const [hours, minutes] = time24.split(":").map(Number);
-
-  // Parse the date string more explicitly to avoid timezone issues
   const [year, month, day] = appointmentDate.split("-").map(Number);
-  const date = new Date(year, month - 1, day, hours, minutes, 0, 0);
-
-  // Format to ISO string with fixed timezone offset (-04:00 for EDT)
-  const isoString =
-    date.getFullYear() +
-    "-" +
-    String(date.getMonth() + 1).padStart(2, "0") +
-    "-" +
-    String(date.getDate()).padStart(2, "0") +
-    "T" +
-    String(date.getHours()).padStart(2, "0") +
-    ":" +
-    String(date.getMinutes()).padStart(2, "0") +
-    ":" +
-    String(date.getSeconds()).padStart(2, "0") +
-    "-04:00";
-
-  return isoString;
+  return wallClockToISO(year, month, day, hours, minutes);
 };
 
 export const convertISOtoFriendly = (isoStr: string) => {
@@ -172,7 +187,7 @@ export const convertISOtoFriendly = (isoStr: string) => {
     hour: "numeric",
     minute: "2-digit",
     hour12: false, // Use 12-hour clock (e.g., 4 PM)
-    timeZone: "America/New_York",
+    timeZone: businessTimeZone(),
   };
 
   const friendlyDate = date.toLocaleString("en-US", options);
@@ -214,7 +229,7 @@ export const ISOToFriendlyTime = (isoStr: string): string => {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
-    timeZone: "America/New_York",
+    timeZone: businessTimeZone(),
   });
 };
 
