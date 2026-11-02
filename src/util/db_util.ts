@@ -9,8 +9,21 @@ export const employeeLookup = async (empId: number) => {
   return employee;
 };
 
+// Booker names carry stray whitespace (e.g. "        Blow Out", "Victoria ")
+// and the agent's spelling varies in case/spacing, so match on the words only.
+export const looseNameRegex = (name: string): RegExp => {
+  const words = (name || "")
+    .trim()
+    .split(/\s+/)
+    .map((word) => word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  return new RegExp(`^\\s*${words.join("\\s+")}\\s*$`, "i");
+};
+
 export const employeeLookupByName = async (name: string) => {
-  const employee = await EmployeeModel.findOne({ FullName: name }).exec();
+  if (!name || !name.trim()) return null;
+  const employee = await EmployeeModel.findOne({
+    FullName: looseNameRegex(name),
+  }).exec();
   return employee;
 };
 
@@ -19,18 +32,13 @@ export const treatmentLookup = (treatId: number) => {
   return treatment;
 };
 
-// Booker treatment names carry stray leading/trailing spaces, and callers (the
-// voice agent) don't reliably reproduce them, so match ignoring surrounding
-// whitespace and case. An exact match still wins.
+// An exact match still wins; otherwise ignore stray whitespace and case.
 export const treatmentLookupByName = async (name: string) => {
+  if (!name || !name.trim()) return null;
   const exact = await TreatmentModel.findOne({ TreatmentName: name }).exec();
   if (exact) return exact;
-
-  const trimmed = (name ?? "").trim();
-  if (!trimmed) return null;
-  const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   return TreatmentModel.findOne({
-    TreatmentName: new RegExp(`^\\s*${escaped}\\s*$`, "i"),
+    TreatmentName: looseNameRegex(name),
   }).exec();
 };
 

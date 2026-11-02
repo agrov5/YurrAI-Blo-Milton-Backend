@@ -3,7 +3,6 @@ import { Treatment, TreatmentModel } from "../models/Treatment";
 import { generateWidgetToken } from "./widget_token_util";
 import {
   getTreatmentIds,
-  dateToISO,
   treatmentLookupByName,
   employeeLookupByName,
   determineEndTime,
@@ -298,7 +297,7 @@ export const findAvailableDates = async (options: {
     const params = new URLSearchParams();
     params.append("locationIds", locationID?.toString() || "");
     params.append("fromDate", convert24toISO("00:00", options.fromDate));
-    params.append("toDate", dateToISO(options.toDate));
+    params.append("toDate", convert24toISO("00:00", options.toDate));
 
     if (options.employeeId) {
       params.append("employeeId", options.employeeId.toString());
@@ -342,10 +341,15 @@ export const findAvailableTimes = async (options: {
     // Query from start of day to get full day availability and catch existing bookings
     params.append("fromDateTime", convert24toISO("00:00", options.date));
 
+    // Without a serviceId Booker returns every service at the location
+    // (100k+ characters), so never query unfiltered.
     const treatment = await treatmentLookupByName(options.treatmentName);
-    if (treatment && treatment.ID) {
-      params.append("serviceId[]", treatment.ID.toString());
+    if (!treatment || !treatment.ID) {
+      throw new Error(
+        `Treatment '${options.treatmentName}' not found. Use a name from get_treatments.`,
+      );
     }
+    params.append("serviceId[]", treatment.ID.toString());
 
     params.append("IncludeEmployees", "true");
     if (options.employeeId) {
