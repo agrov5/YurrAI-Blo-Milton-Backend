@@ -113,7 +113,6 @@ export const getTreatmentsSimplified = async (req: Request, res: Response) => {
       {
         $project: {
           _id: 0,
-          ID: 1,
           TreatmentName: 1,
           Price: "$Price.Amount",
           TotalDuration: 1,
@@ -121,12 +120,14 @@ export const getTreatmentsSimplified = async (req: Request, res: Response) => {
       },
     ]);
 
+    // One short line per treatment keeps this result small in the agent's
+    // context, where it is re-sent to the LLM on every turn of the call.
     res.status(200).json({
       success: true,
-      message: "Treatments retrieved successfully",
-      locationID: locationID,
-      count: treatments.length,
-      treatments: treatments,
+      treatments: treatments.map(
+        (t) =>
+          `${(t.TreatmentName || "").trim()} | ${t.TotalDuration} min | $${t.Price}`,
+      ),
     });
   } catch (error) {
     res.status(500).json({
@@ -230,10 +231,12 @@ export const getEmployeesSimplified = async (req: Request, res: Response) => {
     );
     res.status(200).json({
       success: true,
-      message: "Employees retrieved successfully",
-      locationID: locationID,
-      count: employees.length,
-      employees: employees,
+      employees: employees.map((e) => {
+        const aliases = e.AliasNames?.length
+          ? ` | aka ${e.AliasNames.join(", ")}`
+          : "";
+        return `${(e.FullName || "").trim()} | id ${e.ID} | ${e.Gender}${aliases}`;
+      }),
     });
   } catch (error) {
     res.status(500).json({

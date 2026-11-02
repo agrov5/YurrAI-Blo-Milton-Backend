@@ -20,8 +20,8 @@ import {
   CreateAppointmentResponse,
 } from "../models/Appointment";
 import {
-  convertBookerAvailabilityToFriendlyTime,
-  convertBookerAvailabilityEmployeeIdsToNames,
+  treatmentLookupByName,
+  businessTimeZone,
   ISOToFriendlyTime,
   convertISOtoFriendly,
   convertToMMDD,
@@ -43,6 +43,129 @@ import {
 } from "../models/MonthlyStats";
 import { sendMonthlyStatsEmail, sendCustomEmail } from "../util/resend_util";
 import { convertUsdToCad } from "../util/currency_util";
+import { EmployeeModel } from "../models/Employee";
+
+// Every tool result stays in the Vapi conversation and is re-sent to the LLM
+// on each later turn, so agent-facing responses must stay small.
+// Vapi tools call these endpoints with ?view=agent; the dashboard does not.
+const isAgentView = (req: Request) => req.query.view === "agent";
+
+const agentAppointment = (appointment: any) => {
+  const { startDateTimeISO, endDateTimeISO, customer, ...rest } =
+    cleanAppointment(appointment);
+  return { ...rest, treatment: rest.treatment?.trim() };
+};
+
+const NEAREST_ALTERNATIVES = 6;
+
+const toMinutes = (hhmm: string): number | null => {
+  const match = (hhmm || "").match(/^(\d{1,2}):?(\d{2})/);
+  return match ? Number(match[1]) * 60 + Number(match[2]) : null;
+};
+
+const formatMinutes = (minutes: number) =>
+  `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+
+// Wall-clock minutes of the day at the salon, so DST never shifts a slot.
+const isoToLocalMinutes = (iso: string): number | null =>
+  toMinutes(
+    new Date(iso).toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+      timeZone: businessTimeZone(),
+    }),
+  );
+
+// Booker returns availability as blocks, not slots: per the Availability API
+// docs, every startTimeInterval step from startDateTime to endDateTime
+// (inclusive) is a valid start, and the block's employees can take any of
+// them. Same rule as checkTimeSlotAvailability in booker_util. This expands
+// the blocks for the requested service and summarises them for the agent.
+const buildAgentAvailability = async (
+  payload: any,
+  serviceId: number,
+  requestedTime: string,
+) => {
+  const windows: { start: number; end: number; employeeIds: number[] }[] = [];
+  const staffByStart = new Map<number, Set<number>>();
+  let interval = 15;
+  let duration: number | undefined;
+
+  for (const location of Array.isArray(payload) ? payload : []) {
+    interval = Number(location?.startTimeInterval) || interval;
+    for (const category of location?.serviceCategories ?? []) {
+      for (const service of category?.services ?? []) {
+        if (service?.serviceId !== serviceId) continue;
+        duration = service.duration;
+        const blocks = [
+          ...(service.availability ?? []),
+          ...(service.callToBookAvailability ?? []),
+          ...(service.callToBookAvaiability ?? []),
+        ];
+        for (const block of blocks) {
+          const start = isoToLocalMinutes(block?.startDateTime);
+          if (start === null) continue;
+          const end = Math.max(
+            start,
+            isoToLocalMinutes(block?.endDateTime) ?? start,
+          );
+          const employeeIds: number[] = (block.employees ?? []).filter(
+            (id: unknown) => typeof id === "number",
+          );
+          windows.push({ start, end, employeeIds });
+          for (let t = start; t <= end; t += interval) {
+            const staff = staffByStart.get(t) ?? new Set<number>();
+            employeeIds.forEach((id) => staff.add(id));
+            staffByStart.set(t, staff);
+          }
+        }
+      }
+    }
+  }
+
+  const requested = toMinutes(requestedTime);
+  const requestedStaff =
+    requested === null ? undefined : staffByStart.get(requested);
+
+  const employees = await EmployeeModel.find(
+    { ID: { $in: [...(requestedStaff ?? [])] } },
+    { ID: 1, FullName: 1, DisplayName: 1, _id: 0 },
+  )
+    .lean()
+    .exec();
+  const nameById = new Map<number, string>(
+    employees.map((e: any) => [e.ID, (e.FullName || e.DisplayName || "").trim()]),
+  );
+
+  const starts = [...staffByStart.keys()].sort((a, b) => a - b);
+  const nearest =
+    requested === null
+      ? []
+      : starts
+          .filter((t) => t !== requested)
+          .sort((a, b) => Math.abs(a - requested) - Math.abs(b - requested))
+          .slice(0, NEAREST_ALTERNATIVES)
+          .sort((a, b) => a - b);
+
+  windows.sort((a, b) => a.start - b.start);
+
+  return {
+    durationMinutes: duration,
+    startEveryMinutes: interval,
+    requestedTimeAvailable: Boolean(requestedStaff),
+    staffAtRequestedTime: [...(requestedStaff ?? [])].map(
+      (id) => nameById.get(id) ?? id,
+    ),
+    nearestOtherTimes: nearest.map(
+      (t) => `${formatMinutes(t)} (${staffByStart.get(t)?.size ?? 0} staff)`,
+    ),
+    openWindows: windows.map(
+      (w) =>
+        `${formatMinutes(w.start)}${w.end > w.start ? `-${formatMinutes(w.end)}` : ""} (${w.employeeIds.length} staff)`,
+    ),
+  };
+};
 
 export const postCreateAppointment = async (req: Request, res: Response) => {
   try {
@@ -77,6 +200,15 @@ export const postCreateAppointment = async (req: Request, res: Response) => {
           err,
         ),
       );
+
+      if (isAgentView(req)) {
+        return res.status(200).json({
+          success: true,
+          message: "Appointment created successfully",
+          appointment: agentAppointment(appointmentResponse.Appointment),
+          cardOnFile: appointmentResponse.cardOnFile,
+        });
+      }
 
       res.status(200).json({
         success: true,
@@ -128,17 +260,28 @@ export const postAvailableDates = async (req: Request, res: Response) => {
     if (isPastDate(body.fromDate) || isPastDate(body.toDate)) {
       return res.status(400).json({
         success: false,
-        message: `Date ${isPastDate(body.fromDate) ? body.fromDate : body.toDate} has already passed. Use a date from today onward (check the current year with get_health).`,
+        message: `Date ${isPastDate(body.fromDate) ? body.fromDate : body.toDate} has already passed. Today is ${todayInBusinessTimeZone()}; use a date from today onward.`,
       });
     }
     const availableDates = await findAvailableDates(body);
+
+    // Flatten Booker's location > category > service nesting to the dates.
+    const dates = new Set<string>();
+    for (const location of Array.isArray(availableDates) ? availableDates : []) {
+      for (const category of location?.serviceCategories ?? []) {
+        for (const service of category?.services ?? []) {
+          for (const day of service?.availability ?? []) {
+            if (typeof day === "string") dates.add(day.slice(0, 10));
+          }
+        }
+      }
+    }
+
     res.status(200).json({
       success: true,
-      message: "Available dates retrieved successfully",
-      locationID: locationID,
       fromDate: body.fromDate,
       toDate: body.toDate,
-      dates: availableDates,
+      dates: [...dates].sort(),
     });
   } catch (error) {
     res.status(500).json({
@@ -168,22 +311,29 @@ export const postAvailableTimes = async (req: Request, res: Response) => {
     if (isPastDate(body.date)) {
       return res.status(400).json({
         success: false,
-        message: `Date ${body.date} has already passed. Use a date from today onward (check the current year with get_health).`,
+        message: `Date ${body.date} has already passed. Today is ${todayInBusinessTimeZone()}; use a date from today onward.`,
       });
     }
+
+    const treatment = await treatmentLookupByName(body.treatmentName);
+    if (!treatment || !treatment.ID) {
+      return res.status(400).json({
+        success: false,
+        message: `Treatment '${body.treatmentName}' not found. Use an exact name from get_treatments.`,
+      });
+    }
+
     const availableTimes = await findAvailableTimes(body);
-    const timesWithEmployeeNames =
-      await convertBookerAvailabilityEmployeeIdsToNames(availableTimes);
-    const times = convertBookerAvailabilityToFriendlyTime(
-      timesWithEmployeeNames,
+    const availability = await buildAgentAvailability(
+      availableTimes,
+      treatment.ID,
+      body.time,
     );
     res.status(200).json({
       success: true,
-      message: "Available times retrieved successfully",
-      locationID: locationID,
       date: body.date,
-      treatment: body.treatmentName,
-      times: times,
+      treatment: (treatment.TreatmentName || body.treatmentName).trim(),
+      ...availability,
     });
   } catch (error) {
     res.status(500).json({
@@ -243,6 +393,14 @@ export const postCancelAppointment = async (req: Request, res: Response) => {
       await cancelAppointment(appointment);
 
     if (cancelAppointmentResponse.IsSuccess) {
+      if (isAgentView(req)) {
+        return res.status(200).json({
+          success: true,
+          message: "Appointment cancelled successfully",
+          appointment: agentAppointment(cancelAppointmentResponse.Appointment),
+        });
+      }
+
       res.status(200).json({
         success: true,
         message: "Appointment cancelled successfully",
@@ -280,6 +438,18 @@ export const getCustomer = async (req: Request, res: Response) => {
     }
 
     const result = await checkCustomerExists(body.phone, false, body.firstName);
+    if (result && isAgentView(req)) {
+      return res.status(200).json({
+        success: true,
+        message:
+          result.length > 1 ? "Multiple customers found" : "Customer found",
+        customers: result.map((c) => ({
+          customerId: c.CustomerID,
+          firstName: c.Customer?.FirstName?.trim(),
+          lastName: c.Customer?.LastName?.trim(),
+        })),
+      });
+    }
     if (result) {
       const multiple = result.length > 1;
       res.status(200).json({
@@ -341,7 +511,9 @@ export const getAppointments = async (req: Request, res: Response) => {
         });
       }
 
-      const cleanedAppointment = cleanAppointment(result);
+      const cleanedAppointment = isAgentView(req)
+        ? agentAppointment(result)
+        : cleanAppointment(result);
 
       return res.status(200).json({
         success: true,
@@ -352,7 +524,17 @@ export const getAppointments = async (req: Request, res: Response) => {
     }
 
     // Handle multiple appointments return
-    const appointments = result as any[];
+    let appointments = result as any[];
+
+    // The agent only acts on upcoming appointments; past ones just add tokens.
+    if (isAgentView(req) && !body.date && !body.fromStartDate && appointments) {
+      const now = Date.now();
+      appointments = appointments.filter(
+        (a) =>
+          !a.StartDateTimeOffset ||
+          new Date(a.StartDateTimeOffset).getTime() >= now,
+      );
+    }
 
     if (!appointments || appointments.length === 0) {
       return res.status(404).json({
@@ -361,7 +543,9 @@ export const getAppointments = async (req: Request, res: Response) => {
       });
     }
 
-    const cleanedAppointments = appointments.map(cleanAppointment);
+    const cleanedAppointments = appointments.map(
+      isAgentView(req) ? agentAppointment : cleanAppointment,
+    );
 
     res.status(200).json({
       success: true,
