@@ -524,17 +524,9 @@ export const getAppointments = async (req: Request, res: Response) => {
     }
 
     // Handle multiple appointments return
-    let appointments = result as any[];
-
-    // The agent only acts on upcoming appointments; past ones just add tokens.
-    if (isAgentView(req) && !body.date && !body.fromStartDate && appointments) {
-      const now = Date.now();
-      appointments = appointments.filter(
-        (a) =>
-          !a.StartDateTimeOffset ||
-          new Date(a.StartDateTimeOffset).getTime() >= now,
-      );
-    }
+    // Oldest first: up to 5 past appointments (cancelled included), then
+    // every upcoming one. See getCustomerAppointments.
+    const appointments = result as any[];
 
     if (!appointments || appointments.length === 0) {
       return res.status(404).json({

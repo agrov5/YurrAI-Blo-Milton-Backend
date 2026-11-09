@@ -1312,44 +1312,34 @@ export const getCustomerAppointments = async (options: {
   returnSingle?: boolean;
 }): Promise<FullAppointmentObject | FullAppointmentObject[] | null> => {
   try {
-    const accessToken = await getAccessToken();
-    const onlyActive =
-      options.onlyActive !== undefined ? options.onlyActive : true;
+    // With no date filter this is a customer overview: every upcoming
+    // appointment plus the last OVERVIEW_PAST_LIMIT past ones, cancelled
+    // included.
+    const isOverview = !options.date && !options.fromStartDate;
+    const onlyActive = options.onlyActive ?? !isOverview;
 
-    // Build query parameters
-    const params = new URLSearchParams();
-    params.append("access_token", accessToken);
-    params.append("only_active", onlyActive.toString());
+    const startDate = options.fromStartDate || options.date;
+    const now = Date.now();
+    const appointments = await fetchCustomerAppointments({
+      customerId: options.customerId,
+      onlyActive,
+      fromStartDateISO: startDate
+        ? convert24toISO("00:00", startDate)
+        : undefined,
+      // Pages arrive newest first, so once enough past appointments are in
+      // hand every upcoming one is too.
+      isDone: isOverview
+        ? (fetched) =>
+            fetched.filter((a) => startTime(a) < now).length >=
+            OVERVIEW_PAST_LIMIT
+        : undefined,
+    });
 
-    // If fromStartDate is provided, use it; otherwise use date if provided
-    if (options.fromStartDate) {
-      params.append(
-        "fromStartDate",
-        convert24toISO("00:00", options.fromStartDate),
-      );
-    } else if (options.date) {
-      params.append("fromStartDate", convert24toISO("00:00", options.date));
-    }
-
-    const response = await bookerClient.get(
-      `/v4.1/merchant/customer/${options.customerId}/appointments?${params.toString()}`,
-      {
-        headers: {
-          "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
-        },
-      },
-    );
-
-    if (
-      !response.data.IsSuccess ||
-      !response.data.Appointments ||
-      response.data.Appointments.length === 0
-    ) {
+    if (appointments.length === 0) {
       return options.returnSingle ? null : [];
     }
 
-    // Filter appointments based on provided criteria
-    const appointments: FullAppointmentObject[] = response.data.Appointments;
+    sortByStartDate(appointments);
 
     const filteredAppointments = appointments.filter((appointment) => {
       // If treatmentName is provided, check if treatment name matches
@@ -1385,16 +1375,111 @@ export const getCustomerAppointments = async (options: {
       return true;
     });
 
+    const result = isOverview
+      ? lastPastPlusUpcoming(filteredAppointments, now)
+      : filteredAppointments;
+
     // Return based on returnSingle flag
     if (options.returnSingle) {
-      return filteredAppointments.length > 0 ? filteredAppointments[0] : null;
+      return result.length > 0 ? result[0] : null;
     }
 
-    return filteredAppointments;
+    return result;
   } catch (error) {
     console.error("Error getting customer appointments:", error);
     throw error;
   }
+};
+
+const OVERVIEW_PAST_LIMIT = 5;
+// Booker rejects count > 20 with "Validation Failure"; its default is 10.
+const APPOINTMENTS_PAGE_SIZE = 20;
+const APPOINTMENTS_MAX_PAGES = 25;
+
+const startTime = (appointment: FullAppointmentObject) => {
+  const time = new Date(appointment.StartDateTimeOffset || "").getTime();
+  return Number.isNaN(time) ? 0 : time;
+};
+
+// Oldest first.
+const sortByStartDate = (appointments: FullAppointmentObject[]) =>
+  appointments.sort((a, b) => startTime(a) - startTime(b));
+
+// Expects appointments sorted oldest first.
+const lastPastPlusUpcoming = (
+  appointments: FullAppointmentObject[],
+  now: number,
+) => {
+  const past = appointments.filter((a) => startTime(a) < now);
+  const upcoming = appointments.filter((a) => startTime(a) >= now);
+  return [...past.slice(-OVERVIEW_PAST_LIMIT), ...upcoming];
+};
+
+// Booker pages this endpoint (a long-time customer can have hundreds of
+// appointments) and by default orders by booking, not by date. Request pages
+// newest start first and keep going until isDone says we have enough, or the
+// pages run out.
+const fetchCustomerAppointments = async (options: {
+  customerId: number;
+  onlyActive: boolean;
+  fromStartDateISO?: string;
+  isDone?: (fetched: FullAppointmentObject[]) => boolean;
+}): Promise<FullAppointmentObject[]> => {
+  const accessToken = await getAccessToken();
+  const byId = new Map<number, FullAppointmentObject>();
+
+  for (let page = 1; page <= APPOINTMENTS_MAX_PAGES; page++) {
+    const params = new URLSearchParams();
+    params.append("access_token", accessToken);
+    params.append("only_active", options.onlyActive.toString());
+    params.append("count", APPOINTMENTS_PAGE_SIZE.toString());
+    params.append("pageNumber", page.toString());
+    params.append("sortBy", "StartDateTime");
+    params.append("sortDirection", "Descending");
+    if (options.fromStartDateISO) {
+      params.append("fromStartDate", options.fromStartDateISO);
+    }
+
+    const response = await bookerClient.get(
+      `/v4.1/merchant/customer/${options.customerId}/appointments?${params.toString()}`,
+      {
+        headers: {
+          "Ocp-Apim-Subscription-Key": process.env.BOOKER_SUBSCRIPTION_KEY,
+        },
+      },
+    );
+
+    if (!response.data.IsSuccess) {
+      console.error("Booker customer appointments request failed:", {
+        customerId: options.customerId,
+        page,
+        error: response.data.ErrorMessage,
+        argumentErrors: response.data.ArgumentErrors,
+      });
+      break;
+    }
+
+    const pageAppointments: FullAppointmentObject[] = Array.isArray(
+      response.data.Appointments,
+    )
+      ? response.data.Appointments
+      : [];
+
+    const sizeBefore = byId.size;
+    for (const appointment of pageAppointments) {
+      if (appointment.ID !== undefined) byId.set(appointment.ID, appointment);
+    }
+
+    const total = Number(response.data.TotalResults) || 0;
+    const fetched = [...byId.values()];
+    const reachedEnd =
+      pageAppointments.length < APPOINTMENTS_PAGE_SIZE ||
+      byId.size === sizeBefore || // Booker ignored pageNumber
+      (total > 0 && byId.size >= total);
+    if (reachedEnd || options.isDone?.(fetched)) break;
+  }
+
+  return [...byId.values()];
 };
 
 export const getAppointmentById = async (
