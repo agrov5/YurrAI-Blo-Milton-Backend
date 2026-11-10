@@ -524,8 +524,8 @@ export const getAppointments = async (req: Request, res: Response) => {
     }
 
     // Handle multiple appointments return
-    // Oldest first: up to 5 past appointments (cancelled included), then
-    // every upcoming one. See getCustomerAppointments.
+    // Oldest first: up to 2 past appointments (cancelled included), then
+    // the next 10 upcoming. See getCustomerAppointments.
     const appointments = result as any[];
 
     if (!appointments || appointments.length === 0) {

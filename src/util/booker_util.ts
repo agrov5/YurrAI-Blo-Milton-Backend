@@ -1312,9 +1312,9 @@ export const getCustomerAppointments = async (options: {
   returnSingle?: boolean;
 }): Promise<FullAppointmentObject | FullAppointmentObject[] | null> => {
   try {
-    // With no date filter this is a customer overview: every upcoming
-    // appointment plus the last OVERVIEW_PAST_LIMIT past ones, cancelled
-    // included.
+    // With no date filter this is a customer overview: the last
+    // OVERVIEW_PAST_LIMIT past appointments (cancelled included) plus the
+    // next OVERVIEW_UPCOMING_LIMIT upcoming ones.
     const isOverview = !options.date && !options.fromStartDate;
     const onlyActive = options.onlyActive ?? !isOverview;
 
@@ -1327,7 +1327,7 @@ export const getCustomerAppointments = async (options: {
         ? convert24toISO("00:00", startDate)
         : undefined,
       // Pages arrive newest first, so once enough past appointments are in
-      // hand every upcoming one is too.
+      // hand the nearest upcoming ones are too.
       isDone: isOverview
         ? (fetched) =>
             fetched.filter((a) => startTime(a) < now).length >=
@@ -1391,7 +1391,8 @@ export const getCustomerAppointments = async (options: {
   }
 };
 
-const OVERVIEW_PAST_LIMIT = 5;
+const OVERVIEW_PAST_LIMIT = 2;
+const OVERVIEW_UPCOMING_LIMIT = 10;
 // Booker rejects count > 20 with "Validation Failure"; its default is 10.
 const APPOINTMENTS_PAGE_SIZE = 20;
 const APPOINTMENTS_MAX_PAGES = 25;
@@ -1412,7 +1413,10 @@ const lastPastPlusUpcoming = (
 ) => {
   const past = appointments.filter((a) => startTime(a) < now);
   const upcoming = appointments.filter((a) => startTime(a) >= now);
-  return [...past.slice(-OVERVIEW_PAST_LIMIT), ...upcoming];
+  return [
+    ...past.slice(-OVERVIEW_PAST_LIMIT),
+    ...upcoming.slice(0, OVERVIEW_UPCOMING_LIMIT),
+  ];
 };
 
 // Booker pages this endpoint (a long-time customer can have hundreds of
