@@ -545,7 +545,7 @@ export const addPaymentToOrder = async (
         access_token: accessToken,
         PaymentItem: {
           CreditCard: paymentItem,
-          Amount: amount,
+          // Amount: amount,
           // IsPreAuthTransaction: false,
           // IsDeposit: false,
           // IsHold: false,
